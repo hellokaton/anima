@@ -133,6 +133,14 @@ public class JavaRecord {
         }
     }
 
+    public <T extends ActiveRecord> List<T> all() {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT * FROM ").append(tableName);
+        try (Connection conn = getSql2o().open()) {
+            return conn.createQuery(sql.toString()).executeAndFetch((Class<T>) modelClass);
+        }
+    }
+
     public <T extends ActiveRecord> List<T> limit(int limit) {
         return null;
     }
