@@ -25,7 +25,7 @@ public class SelectTest extends BaseTest {
 
     @Test
     public void testFindById() {
-        User user = User.findById(2);
+        User user = (User) User.findById(2);
         Assert.assertNotNull(user);
         Assert.assertEquals(Integer.valueOf(2), user.getId());
     }

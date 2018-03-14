@@ -17,6 +17,7 @@ package io.github.biezhi.anima.core;
 
 import io.github.biezhi.anima.annotation.AnimaIgnore;
 import io.github.biezhi.anima.annotation.Table;
+import io.github.biezhi.anima.enhancer.ResultKey;
 import io.github.biezhi.anima.enums.SupportedType;
 import io.github.biezhi.anima.exception.AnimaException;
 import io.github.biezhi.anima.utils.SqlUtils;
@@ -180,7 +181,7 @@ public class JavaRecord {
         }
     }
 
-    public <T extends Serializable> T save(Object target) {
+    public ResultKey save(Object target) {
         StringBuilder sql = new StringBuilder();
         sql.append("INSERT INTO ").append(tableName);
 
@@ -211,7 +212,7 @@ public class JavaRecord {
                 .append(placeholder.substring(1)).append(")");
 
         try (Connection conn = getSql2o().open()) {
-            return (T) conn.createQuery(sql.toString()).withParams(columnValueList).executeUpdate().getKey();
+            return new ResultKey(conn.createQuery(sql.toString()).withParams(columnValueList).executeUpdate().getKey());
         } finally {
             this.cleanParams();
         }

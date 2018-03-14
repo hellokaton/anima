@@ -2,7 +2,9 @@ package io.github.biezhi.anima;
 
 import io.github.biezhi.anima.core.Anima;
 import io.github.biezhi.anima.model.User;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.sql2o.Connection;
 import org.sql2o.Sql2o;
 
@@ -10,15 +12,16 @@ import org.sql2o.Sql2o;
  * @author biezhi
  * @date 2018/3/13
  */
+@Slf4j
 public class BaseTest {
 
-    @Before
-    public void before() {
+    @BeforeClass
+    public static void before() {
         h2();
         initData();
     }
 
-    public void initData() {
+    private static void initData() {
         new User("jack", 25).save();
         new User("rose", 23).save();
         new User("tom", 24).save();
@@ -27,9 +30,10 @@ public class BaseTest {
         new User("john", 38).save();
         new User("king", 32).save();
         new User("王尼玛", 30).save();
+        log.info("Init data finished.\n");
     }
 
-    private void h2() {
+    private static void h2() {
         Sql2o sql2o = Anima.open("jdbc:h2:file:~/demo;FILE_LOCK=FS;PAGE_SIZE=1024;CACHE_SIZE=8192", "sa", "").getCommonSql2o();
 
         String sql = "DROP TABLE IF EXISTS `users`;\n" +

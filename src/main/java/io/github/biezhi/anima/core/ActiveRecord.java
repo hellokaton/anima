@@ -15,6 +15,7 @@
  */
 package io.github.biezhi.anima.core;
 
+import io.github.biezhi.anima.enhancer.ResultKey;
 import io.github.biezhi.anima.exception.AnimaException;
 
 import java.io.Serializable;
@@ -102,7 +103,7 @@ public abstract class ActiveRecord {
         throw new AnimaException(DOG_GONE);
     }
 
-    public <T extends Serializable> T save() {
+    public ResultKey save() {
         throw new AnimaException(DOG_GONE);
     }
 

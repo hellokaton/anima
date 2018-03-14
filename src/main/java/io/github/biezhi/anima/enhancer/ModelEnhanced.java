@@ -21,7 +21,6 @@ import io.github.biezhi.anima.exception.InstrumentationException;
 import javassist.*;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -105,7 +104,7 @@ public class ModelEnhanced {
         createStaticMethod(context, ctClass, "in", javaRecord, "String column", "Object[] paramValues");
         createStaticMethod(context, ctClass, "findById", ActiveRecord.class.getName(), "java.io.Serializable id");
         createStaticMethod(context, ctClass, "all", "java.util.List");
-        createMethod(context, ctClass, "save", Serializable.class.getName());
+        createMethod(context, ctClass, "save", ResultKey.class.getName());
     }
 
     private void createStaticMethod(Context context, CtClass ctClass, String methodName, String returnType, String... arguments) throws CannotCompileException {
