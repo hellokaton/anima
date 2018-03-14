@@ -21,6 +21,7 @@ import io.github.biezhi.anima.exception.InstrumentationException;
 import javassist.*;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -98,15 +99,16 @@ public class ModelEnhanced {
     }
 
     private void createModelMethods(Context context, CtClass ctClass) throws CannotCompileException {
-        createMethod(context, ctClass, "count", "long");
-        createMethod(context, ctClass, "where", javaRecord, "String statement");
-        createMethod(context, ctClass, "where", javaRecord, "String statement", "Object value");
-        createMethod(context, ctClass, "in", javaRecord, "String column", "Object[] paramValues");
-        createMethod(context, ctClass, "findById", ActiveRecord.class.getName(), "java.io.Serializable id");
-        createMethod(context, ctClass, "all", "java.util.List");
+        createStaticMethod(context, ctClass, "count", "long");
+        createStaticMethod(context, ctClass, "where", javaRecord, "String statement");
+        createStaticMethod(context, ctClass, "where", javaRecord, "String statement", "Object value");
+        createStaticMethod(context, ctClass, "in", javaRecord, "String column", "Object[] paramValues");
+        createStaticMethod(context, ctClass, "findById", ActiveRecord.class.getName(), "java.io.Serializable id");
+        createStaticMethod(context, ctClass, "all", "java.util.List");
+        createMethod(context, ctClass, "save", Serializable.class.getName());
     }
 
-    private void createMethod(Context context, CtClass ctClass, String methodName, String returnType, String... arguments) throws CannotCompileException {
+    private void createStaticMethod(Context context, CtClass ctClass, String methodName, String returnType, String... arguments) throws CannotCompileException {
         CtMethod method;
         try {
             method = getMethod(context, ctClass, methodName, arguments);
@@ -144,6 +146,40 @@ public class ModelEnhanced {
             }
         }
         writer.append(");}");
+
+        method = CtNewMethod.make(writer.toString(), ctClass);
+        ctClass.addMethod(method);
+    }
+
+    private void createMethod(Context context, CtClass ctClass, String methodName, String returnType, String... arguments) throws CannotCompileException {
+        CtMethod method;
+        try {
+            method = getMethod(context, ctClass, methodName, arguments);
+            if (method != null) {
+                ctClass.removeMethod(method);
+            }
+        } catch (NotFoundException e) {
+            log.trace("The method {} doesn't exist, will create...", methodName);
+            // Just ignore if the method doesn't exist already
+        } catch (InstrumentationException e) {
+            //return;
+        }
+
+        StringWriter writer = new StringWriter();
+        writer.append("public ").append(returnType).append(" ").append(methodName).append("(");
+        if (arguments != null && arguments.length > 0) {
+            for (int i = 0; i < arguments.length - 1; i++) {
+                writer.append(arguments[i]).append(", ");
+            }
+            writer.append(arguments[arguments.length - 1]);
+        }
+        writer.append(") {");
+        if (!returnType.equals("void")) {
+            writer.append("return (" + returnType + ")");
+        }
+
+        writer.append(ctClass.getName()).append(".db.").append(methodName).append("(");
+        writer.append("this);}");
 
         method = CtNewMethod.make(writer.toString(), ctClass);
         ctClass.addMethod(method);

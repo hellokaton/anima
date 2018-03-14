@@ -20,14 +20,14 @@ public class SelectTest extends BaseTest {
     @Test
     public void testCountBy1() {
         long count = User.where("age > ?", 15).isNotNull("name").count();
-        Assert.assertEquals(count, 8L);
+        Assert.assertEquals(count, 7L);
     }
 
     @Test
     public void testFindById() {
-        User user = User.findById(9);
+        User user = User.findById(2);
         Assert.assertNotNull(user);
-        Assert.assertEquals(Integer.valueOf(9), user.getId());
+        Assert.assertEquals(Integer.valueOf(2), user.getId());
     }
 
     @Test

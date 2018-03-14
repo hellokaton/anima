@@ -76,7 +76,7 @@ public class Sql2o {
     public Sql2o(DataSource dataSource, Quirks quirks){
         this.connectionSource = new DataSourceConnectionSource(dataSource);
         this.quirks=quirks;
-        this.defaultColumnMappings = new HashMap<String, String>();
+        this.defaultColumnMappings = new HashMap<>();
     }
 
     public Quirks getQuirks() {

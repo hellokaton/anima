@@ -15,7 +15,9 @@
  */
 package io.github.biezhi.anima.core;
 
+import io.github.biezhi.anima.annotation.AnimaIgnore;
 import io.github.biezhi.anima.annotation.Table;
+import io.github.biezhi.anima.enums.SupportedType;
 import io.github.biezhi.anima.exception.AnimaException;
 import io.github.biezhi.anima.utils.SqlUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +25,7 @@ import org.sql2o.Connection;
 import org.sql2o.Sql2o;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -35,16 +38,25 @@ import java.util.List;
 @Slf4j
 public class JavaRecord {
 
+    @AnimaIgnore
     private Class<? extends ActiveRecord> modelClass;
 
+    @AnimaIgnore
     private StringBuilder subSQL         = new StringBuilder();
+    @AnimaIgnore
     private List<String>  orderBy        = new ArrayList<>();
+    @AnimaIgnore
     private List<String>  excludedFields = new ArrayList<>();
+    @AnimaIgnore
     private List<Object>  paramValues    = new ArrayList<>();
 
+    @AnimaIgnore
     private String selectColumns;
 
+    @AnimaIgnore
     private final String tableName;
+
+    @AnimaIgnore
     private final String pkName;
 
     public JavaRecord() {
@@ -168,6 +180,43 @@ public class JavaRecord {
         }
     }
 
+    public <T extends Serializable> T save(Object target) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("INSERT INTO ").append(tableName);
+
+        StringBuffer columnNames     = new StringBuffer();
+        StringBuffer placeholder     = new StringBuffer();
+        List<Object> columnValueList = new ArrayList<>();
+
+        for (Field field : modelClass.getDeclaredFields()) {
+            if (isExcluded((field.getName()))) {
+                continue;
+            }
+            if (!isMapping(field)) {
+                continue;
+            }
+
+            field.setAccessible(true);
+            columnNames.append(",").append(SqlUtils.toColumnName(field.getName()));
+            placeholder.append(",?");
+            try {
+                Object value = field.get(target);
+                columnValueList.add(value);
+            } catch (IllegalArgumentException | IllegalAccessException e) {
+                throw new AnimaException("illegal argument or Access:", e);
+            }
+        }
+
+        sql.append("(").append(columnNames.substring(1)).append(")").append(" VALUES (")
+                .append(placeholder.substring(1)).append(")");
+
+        try (Connection conn = getSql2o().open()) {
+            return (T) conn.createQuery(sql.toString()).withParams(columnValueList).executeUpdate().getKey();
+        } finally {
+            this.cleanParams();
+        }
+    }
+
     private static Sql2o getSql2o() {
         Sql2o sql2o = Anima.me().getCommonSql2o();
         if (null == sql2o) {
@@ -176,12 +225,25 @@ public class JavaRecord {
         return sql2o;
     }
 
-    private void cleanParams(){
+    private void cleanParams() {
         selectColumns = null;
         subSQL = new StringBuilder();
         orderBy.clear();
         paramValues.clear();
         excludedFields.clear();
+    }
+
+    static boolean isMapping(Field field) {
+        // serialVersionUID not processed
+        if ("serialVersionUID".equals(field.getName())) {
+            return false;
+        }
+        // exclude non-basic types (including wrapper classes), strings, etc.
+        String typeName = field.getType().getSimpleName().toLowerCase();
+        if (!SupportedType.contains(typeName)) {
+            return false;
+        }
+        return true;
     }
 
     private boolean isExcluded(String name) {

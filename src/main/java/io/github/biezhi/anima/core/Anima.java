@@ -17,6 +17,8 @@ package io.github.biezhi.anima.core;
 
 import io.github.biezhi.anima.enhancer.Instrumentation;
 import org.sql2o.Sql2o;
+import org.sql2o.quirks.Quirks;
+import org.sql2o.quirks.QuirksDetector;
 
 /**
  * @author biezhi
@@ -38,11 +40,19 @@ public class Anima {
         private static final Anima INSTANCE = new Anima();
     }
 
+    public static Anima open(String url) {
+        return open(url, null, null);
+    }
+
     public static Anima open(String url, String user, String pass) {
+        return open(url, user, pass, QuirksDetector.forURL(url));
+    }
+
+    public static Anima open(String url, String user, String pass, Quirks quirks) {
         String modelPath = Anima.class.getResource("/").getPath();
         new Instrumentation(modelPath).instrument();
 
-        Sql2o sql2o = new Sql2o(url, user, pass);
+        Sql2o sql2o = new Sql2o(url, user, pass, quirks);
         Anima anima = Anima.me();
         anima.sql2o = sql2o;
         return anima;

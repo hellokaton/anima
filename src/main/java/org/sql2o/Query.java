@@ -188,8 +188,7 @@ public class Query implements AutoCloseable {
     }
 
     private PreparedStatement buildPreparedStatement(boolean allowArrayParameters) {
-        // array parameter handling
-//        parsedQuery = ArrayParameters.updateQueryAndParametersIndexes(parsedQuery, paramNameToIdxMap, parameters, allowArrayParameters);
+        log.debug("Parameters  => {}", paramIndexValues.values());
 
         // prepare statement creation
         if (preparedStatement == null) {
@@ -215,7 +214,6 @@ public class Query implements AutoCloseable {
                 throw new RuntimeException(String.format("Error adding parameter '%s' - %s", index, e.getMessage()), e);
             }
         });
-        log.debug("Parameters  => {}", paramIndexValues.values());
         paramIndexValues.clear();
         return preparedStatement;
     }
