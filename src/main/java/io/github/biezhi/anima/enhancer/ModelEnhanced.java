@@ -101,6 +101,7 @@ public class ModelEnhanced {
         createStaticMethod(context, ctClass, "count", "long");
         createStaticMethod(context, ctClass, "where", javaRecord, "String statement");
         createStaticMethod(context, ctClass, "where", javaRecord, "String statement", "Object value");
+        createStaticMethod(context, ctClass, "set", javaRecord, "String column", "Object value");
         createStaticMethod(context, ctClass, "in", javaRecord, "String column", "Object[] paramValues");
         createStaticMethod(context, ctClass, "findById", ActiveRecord.class.getName(), "java.io.Serializable id");
         createStaticMethod(context, ctClass, "all", "java.util.List");

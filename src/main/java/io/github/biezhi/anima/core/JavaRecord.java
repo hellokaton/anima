@@ -27,9 +27,7 @@ import org.sql2o.Sql2o;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * Java ActiveRecord Implements
@@ -43,13 +41,15 @@ public class JavaRecord {
     private Class<? extends ActiveRecord> modelClass;
 
     @AnimaIgnore
-    private StringBuilder subSQL         = new StringBuilder();
+    private StringBuilder       subSQL         = new StringBuilder();
     @AnimaIgnore
-    private List<String>  orderBy        = new ArrayList<>();
+    private List<String>        orderBy        = new ArrayList<>();
     @AnimaIgnore
-    private List<String>  excludedFields = new ArrayList<>();
+    private List<String>        excludedFields = new ArrayList<>();
     @AnimaIgnore
-    private List<Object>  paramValues    = new ArrayList<>();
+    private List<Object>        paramValues    = new ArrayList<>();
+    @AnimaIgnore
+    private Map<String, Object> updateColumns  = new LinkedHashMap<>();
 
     @AnimaIgnore
     private String selectColumns;
@@ -181,6 +181,11 @@ public class JavaRecord {
         }
     }
 
+    public JavaRecord set(String column, Object value) {
+        updateColumns.put(column, value);
+        return this;
+    }
+
     public ResultKey save(Object target) {
         StringBuilder sql = new StringBuilder();
         sql.append("INSERT INTO ").append(tableName);
@@ -213,6 +218,32 @@ public class JavaRecord {
 
         try (Connection conn = getSql2o().open()) {
             return new ResultKey(conn.createQuery(sql.toString()).withParams(columnValueList).executeUpdate().getKey());
+        } finally {
+            this.cleanParams();
+        }
+    }
+
+    public int update(){
+        StringBuilder sql = new StringBuilder();
+        sql.append("UPDATE ").append(tableName).append(" SET ");
+
+        List<Object> columnValueList = new ArrayList<>();
+
+        StringBuilder setSQL = sql;
+        updateColumns.forEach( (key, value) -> {
+            setSQL.append(key).append(" = ?, ");
+            columnValueList.add(value);
+        });
+
+        sql = new StringBuilder(setSQL.substring(0, setSQL.length() - 2));
+
+        if(subSQL.length() > 0){
+            sql.append(" WHERE ").append(subSQL.substring(5));
+            columnValueList.addAll(paramValues);
+        }
+
+        try (Connection conn = getSql2o().open()) {
+            return conn.createQuery(sql.toString()).withParams(columnValueList).executeUpdate().getResult();
         } finally {
             this.cleanParams();
         }

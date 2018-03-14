@@ -107,4 +107,8 @@ public abstract class ActiveRecord {
         throw new AnimaException(DOG_GONE);
     }
 
+    public static JavaRecord set(String column, Object value){
+        throw new AnimaException(DOG_GONE);
+    }
+
 }
