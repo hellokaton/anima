@@ -99,7 +99,9 @@ public class ModelEnhanced {
 
     private void createModelMethods(Context context, CtClass ctClass) throws CannotCompileException {
         createMethod(context, ctClass, "count", "long");
+        createMethod(context, ctClass, "where", javaRecord, "String statement");
         createMethod(context, ctClass, "where", javaRecord, "String statement", "Object value");
+        createMethod(context, ctClass, "in", javaRecord, "String column", "Object[] paramValues");
         createMethod(context, ctClass, "findById", ActiveRecord.class.getName(), "java.io.Serializable id");
         createMethod(context, ctClass, "all", "java.util.List");
     }

@@ -71,18 +71,18 @@ public class JavaRecord {
     }
 
     public JavaRecord where(String statement) {
-        subSQL.append(" and ").append(statement);
+        subSQL.append(" AND ").append(statement);
         return this;
     }
 
     public JavaRecord where(String statement, Object value) {
-        subSQL.append(" and ").append(statement);
+        subSQL.append(" AND ").append(statement);
         paramValues.add(value);
         return this;
     }
 
     public JavaRecord not(String key, Object value) {
-        subSQL.append(" and ").append(key).append(" != ?");
+        subSQL.append(" AND ").append(key).append(" != ?");
         paramValues.add(value);
         return this;
     }
@@ -93,24 +93,24 @@ public class JavaRecord {
     }
 
     public JavaRecord isNotNull(String key) {
-        subSQL.append(" and ").append(key).append(" is not null");
+        subSQL.append(" AND ").append(key).append(" IS NOT NULL");
         return this;
     }
 
     public JavaRecord like(String key, Object value) {
-        subSQL.append(" and ").append(key).append(" like ?");
+        subSQL.append(" AND ").append(key).append(" LIKE ?");
         paramValues.add(value);
         return this;
     }
 
     public JavaRecord in(String key, Object... args) {
-        subSQL.append(" and ").append(key).append(" in ?");
+        subSQL.append(" AND ").append(key).append(" IN ?");
         paramValues.add(args);
         return this;
     }
 
     public <T> JavaRecord in(String key, List<T> args) {
-        subSQL.append(" and ").append(key).append(" in ?");
+        subSQL.append(" AND ").append(key).append(" IN ?");
         paramValues.add(args);
         return this;
     }
@@ -130,6 +130,8 @@ public class JavaRecord {
         sql.append(" WHERE ").append(pkName).append(" = ? LIMIT 1");
         try (Connection conn = getSql2o().open()) {
             return conn.createQuery(sql.toString()).withParams(id).executeAndFetchFirst((Class<T>) modelClass);
+        } finally {
+            this.cleanParams();
         }
     }
 
@@ -138,6 +140,8 @@ public class JavaRecord {
         sql.append("SELECT * FROM ").append(tableName);
         try (Connection conn = getSql2o().open()) {
             return conn.createQuery(sql.toString()).executeAndFetch((Class<T>) modelClass);
+        } finally {
+            this.cleanParams();
         }
     }
 
@@ -159,6 +163,8 @@ public class JavaRecord {
 
         try (Connection conn = getSql2o().open()) {
             return conn.createQuery(sql.toString()).withParams(paramValues).executeAndFetchFirst(Long.class);
+        } finally {
+            this.cleanParams();
         }
     }
 
@@ -170,12 +176,16 @@ public class JavaRecord {
         return sql2o;
     }
 
-    private boolean isExcluded(String name) {
-        return excludedFields.contains(name);
+    private void cleanParams(){
+        selectColumns = null;
+        subSQL = new StringBuilder();
+        orderBy.clear();
+        paramValues.clear();
+        excludedFields.clear();
     }
 
-    private void clearExcludedFields() {
-        excludedFields.clear();
+    private boolean isExcluded(String name) {
+        return excludedFields.contains(name);
     }
 
 }

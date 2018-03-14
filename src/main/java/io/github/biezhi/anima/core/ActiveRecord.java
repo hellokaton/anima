@@ -90,7 +90,15 @@ public abstract class ActiveRecord {
         throw new AnimaException(DOG_GONE);
     }
 
+    public static JavaRecord where(String statement) {
+        throw new AnimaException(DOG_GONE);
+    }
+
     public static JavaRecord where(String statement, Object value) {
+        throw new AnimaException(DOG_GONE);
+    }
+
+    public static JavaRecord in(String column, Object... paramValues) {
         throw new AnimaException(DOG_GONE);
     }
 

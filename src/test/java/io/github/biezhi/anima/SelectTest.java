@@ -20,19 +20,34 @@ public class SelectTest extends BaseTest {
     @Test
     public void testCountBy1() {
         long count = User.where("age > ?", 15).isNotNull("name").count();
-        System.out.println(count);
+        Assert.assertEquals(count, 8L);
     }
 
     @Test
-    public void testFindById(){
+    public void testFindById() {
         User user = User.findById(9);
         Assert.assertNotNull(user);
         Assert.assertEquals(Integer.valueOf(9), user.getId());
     }
 
     @Test
-    public void testAll(){
+    public void testAll() {
         List<User> users = User.all();
+        Assert.assertNotNull(users);
+    }
+
+    @Test
+    public void testWhere() {
+        List<User> users = User.where("age > ?", 15).all();
+        Assert.assertNotNull(users);
+
+        users = User.where("name is not null").all();
+        Assert.assertNotNull(users);
+    }
+
+    @Test
+    public void testIn() {
+        List<User> users = User.in("id", 1, 2, 3).all();
         Assert.assertNotNull(users);
     }
 
