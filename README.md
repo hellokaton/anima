@@ -1,6 +1,7 @@
 # Anima
 
 `Anima` is an Java `ActiveRecord` library implement by modify bytecodes.
+`Anima` allows you to query databases like `Stream`.
 
 [![Travis Build](https://travis-ci.org/biezhi/anima.svg?branch=master)](https://travis-ci.org/biezhi/anima) 
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com) 
@@ -77,6 +78,10 @@ User u = new User(9);
 u.setName("rose");
 u.update();
 ```
+
+## Test Code
+
+See [here](https://github.com/biezhi/anima/tree/master/src/test/java/io/github/biezhi/anima)
 
 ## License
 
