@@ -117,14 +117,34 @@ public class JavaRecord {
     }
 
     public JavaRecord in(String key, Object... args) {
-        subSQL.append(" AND ").append(key).append(" IN ?");
-        paramValues.add(args);
+        if (args.length > 1) {
+            subSQL.append(" AND ").append(key).append(" IN (");
+            for (int i = 0; i < args.length; i++) {
+                if (i == args.length - 1) {
+                    subSQL.append("?");
+                } else {
+                    subSQL.append("?, ");
+                }
+                paramValues.add(args[i]);
+            }
+            subSQL.append(")");
+        }
         return this;
     }
 
     public <T> JavaRecord in(String key, List<T> args) {
-        subSQL.append(" AND ").append(key).append(" IN ?");
-        paramValues.add(args);
+        if (args.size() > 1) {
+            subSQL.append(" AND ").append(key).append(" IN (");
+            for (int i = 0; i < args.size(); i++) {
+                if (i == args.size() - 1) {
+                    subSQL.append("?");
+                } else {
+                    subSQL.append("?, ");
+                }
+                paramValues.add(args.get(i));
+            }
+            subSQL.append(")");
+        }
         return this;
     }
 
@@ -140,15 +160,39 @@ public class JavaRecord {
     public <T extends ActiveRecord> T findById(Serializable... ids) {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT * FROM ").append(tableName);
-        sql.append(" WHERE ").append(pkName);
-        if (ids.length == 1) {
-            sql.append(" = ?");
-        }
-        if (ids.length > 1) {
-            sql.append(" in ?");
-        }
+        sql.append(" WHERE ").append(pkName).append(" = ?");
         try (Connection conn = getSql2o().open()) {
             return conn.createQuery(sql.toString()).withParams(ids).executeAndFetchFirst((Class<T>) modelClass);
+        } finally {
+            this.cleanParams();
+        }
+    }
+
+    public <T extends ActiveRecord> List<T> findByIds(Serializable... ids) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT * FROM ").append(tableName);
+        sql.append(" WHERE ").append(pkName);
+        if (ids.length > 1) {
+            sql.append(" in (");
+            for (int i = 0; i < ids.length; i++) {
+                if (i == ids.length - 1) {
+                    sql.append("?");
+                } else {
+                    sql.append("?, ");
+                }
+            }
+            sql.append(")");
+        }
+        try (Connection conn = getSql2o().open()) {
+            return conn.createQuery(sql.toString()).withParams(ids).executeAndFetch((Class<T>) modelClass);
+        } finally {
+            this.cleanParams();
+        }
+    }
+
+    public <T extends ActiveRecord> List<T> findBySQL(String sql, Object... params) {
+        try (Connection conn = getSql2o().open()) {
+            return conn.createQuery(sql).withParams(params).executeAndFetch((Class<T>) modelClass);
         } finally {
             this.cleanParams();
         }
@@ -157,8 +201,13 @@ public class JavaRecord {
     public <T extends ActiveRecord> List<T> all() {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT * FROM ").append(tableName);
+
+        if (subSQL.length() > 0) {
+            sql.append(" WHERE ").append(subSQL.substring(5));
+        }
+
         try (Connection conn = getSql2o().open()) {
-            return conn.createQuery(sql.toString()).executeAndFetch((Class<T>) modelClass);
+            return conn.createQuery(sql.toString()).withParams(paramValues).executeAndFetch((Class<T>) modelClass);
         } finally {
             this.cleanParams();
         }
@@ -190,6 +239,14 @@ public class JavaRecord {
     public JavaRecord set(String column, Object value) {
         updateColumns.put(column, value);
         return this;
+    }
+
+    public int execute(String sql, Object... params) {
+        try (Connection conn = getSql2o().open()) {
+            return conn.createQuery(sql).withParams(params).executeUpdate().getResult();
+        } finally {
+            this.cleanParams();
+        }
     }
 
     public ResultKey save(Object target) {

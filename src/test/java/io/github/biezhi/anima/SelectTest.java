@@ -28,12 +28,30 @@ public class SelectTest extends BaseTest {
         User user = User.findById(2);
         Assert.assertNotNull(user);
         Assert.assertEquals(Integer.valueOf(2), user.getId());
+
+        List<User> users = User.findByIds(1, 2, 3);
+        Assert.assertNotNull(users);
+        Assert.assertEquals(3, users.size());
+    }
+
+    @Test
+    public void testFindBySQL(){
+        List<User> users = User.findBySQL("select name from users limit ?", 3);
+        Assert.assertNotNull(users);
+        Assert.assertEquals(3, users.size());
     }
 
     @Test
     public void testAll() {
         List<User> users = User.all();
         Assert.assertNotNull(users);
+    }
+
+    @Test
+    public void testLike(){
+        List<User> users = User.like("name", "%o%").all();
+        Assert.assertNotNull(users);
+        Assert.assertEquals(3, users.size());
     }
 
     @Test

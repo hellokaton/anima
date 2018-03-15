@@ -20,4 +20,10 @@ public class UpdateTest extends BaseTest {
         Assert.assertEquals(newName, user.getName());
     }
 
+    @Test
+    public void testExecute() {
+        int count = User.execute("update users set name = ? where id = ?", "jack", 1);
+        Assert.assertEquals(1, count);
+    }
+
 }

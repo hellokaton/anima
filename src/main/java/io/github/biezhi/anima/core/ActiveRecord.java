@@ -33,25 +33,29 @@ public abstract class ActiveRecord {
     }
 
     // SELECT * FROM users WHERE id = ?
-    public static <T extends ActiveRecord> T findById(Serializable id) {
+    public static <T extends ActiveRecord, V extends Serializable> T findById(V id) {
         return javaRecord.findById(id);
     }
 
     // SELECT * FROM users WHERE (users.id IN (1,10))
-    public static <T extends ActiveRecord> T findById(Serializable... ids) {
-        return javaRecord.findById(ids);
+    public static <T extends ActiveRecord, V extends Serializable> List<T> findByIds(V... ids) {
+        return javaRecord.findByIds(ids);
     }
 
     public static <T extends ActiveRecord> List<T> all() {
         return javaRecord.all();
     }
 
-    public static <T> List<T> findBySQL(String sql, Object... params) {
-        throw new AnimaException(DOG_GONE);
+    public static <T extends ActiveRecord> List<T> findBySQL(String sql, Object... params) {
+        return javaRecord.findBySQL(sql, params);
     }
 
-    public static int execute(String sql) {
-        throw new AnimaException(DOG_GONE);
+    public static int execute(String sql, Object... params) {
+        return javaRecord.execute(sql, params);
+    }
+
+    public static JavaRecord like(String column, Object value){
+        return javaRecord.like(column, value);
     }
 
     public static JavaRecord where(String statement) {

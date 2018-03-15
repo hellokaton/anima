@@ -35,6 +35,7 @@ public class Query implements AutoCloseable {
     private       String   parsedQuery;
     private int maxBatchRecords     = 0;
     private int currentBatchRecords = 0;
+    private Map<Integer, Object> paramIndexValues = new HashMap<>();
 
     private ResultSetHandlerFactoryBuilder resultSetHandlerFactoryBuilder;
 
@@ -133,9 +134,10 @@ public class Query implements AutoCloseable {
         return converter.toDatabaseParam(value);
     }
 
-    private Map<Integer, Object> paramIndexValues = new HashMap<>();
-
     public Query withParams(List<Object> paramValues) {
+        if (null == paramValues) {
+            return this;
+        }
         int i = 0;
         for (Object paramValue : paramValues) {
             paramIndexValues.put(++i, paramValue);
@@ -144,6 +146,9 @@ public class Query implements AutoCloseable {
     }
 
     public Query withParams(Object... paramValues) {
+        if (null == paramValues) {
+            return this;
+        }
         int i = 0;
         for (Object paramValue : paramValues) {
             paramIndexValues.put(++i, paramValue);
