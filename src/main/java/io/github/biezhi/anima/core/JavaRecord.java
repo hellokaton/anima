@@ -211,24 +211,54 @@ public class JavaRecord {
         }
     }
 
-    private StringBuilder buildSelectSQL() {
+    public <T extends ActiveRecord> List<T> limit(int limit) {
+        return this.limit(0, limit);
+    }
+
+    public <T extends ActiveRecord> List<T> limit(int offset, int limit) {
+        StringBuilder sql = this.buildSelectSQL();
+        sql.append(" LIMIT ?, ?");
+        paramValues.add(offset);
+        paramValues.add(limit);
+
+        try (Connection conn = getSql2o().open()) {
+            return conn.createQuery(sql.toString()).withParams(paramValues).executeAndFetch((Class<T>) modelClass);
+        } finally {
+            this.cleanParams();
+        }
+    }
+
+    public <T extends ActiveRecord> Page<T> page(int page, int limit) {
+        return this.page(new PageRow(page, limit));
+    }
+
+    public <T extends ActiveRecord> Page<T> page(PageRow pageRow) {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT ").append(null != this.selectColumns ? this.selectColumns : "*").append(" FROM ").append(tableName);
         if (subSQL.length() > 0) {
             sql.append(" WHERE ").append(subSQL.substring(5));
         }
-        if (null != orderBy) {
-            sql.append(" ORDER BY ").append(this.orderBy);
+
+        String countSql = "SELECT COUNT(*) FROM (" + sql + ") tmp";
+
+        try (Connection conn = getSql2o().open()) {
+            long count = conn.createQuery(countSql).withParams(paramValues).executeAndFetchFirst(Long.class);
+
+            if (null != orderBy) {
+                sql.append(" ORDER BY ").append(this.orderBy);
+            }
+            sql.append(" LIMIT ?, ?");
+            paramValues.add(pageRow.getOffset());
+            paramValues.add(pageRow.getLimit());
+
+            List<T> list = conn.createQuery(sql.toString()).withParams(paramValues).executeAndFetch((Class<T>) modelClass);
+
+            Page<T> pageBean = new Page<>(count, pageRow.getPage(), pageRow.getLimit());
+            pageBean.setRows(list);
+            return pageBean;
+        } finally {
+            this.cleanParams();
         }
-        return sql;
-    }
-
-    public <T extends ActiveRecord> Page<T> page(int page, int limit) {
-        return null;
-    }
-
-    public <T extends ActiveRecord> Page<T> page(PageRow pageRow) {
-        return null;
     }
 
     public long count() {
@@ -342,6 +372,18 @@ public class JavaRecord {
         } finally {
             this.cleanParams();
         }
+    }
+
+    private StringBuilder buildSelectSQL() {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT ").append(null != this.selectColumns ? this.selectColumns : "*").append(" FROM ").append(tableName);
+        if (subSQL.length() > 0) {
+            sql.append(" WHERE ").append(subSQL.substring(5));
+        }
+        if (null != orderBy) {
+            sql.append(" ORDER BY ").append(this.orderBy);
+        }
+        return sql;
     }
 
     private static Sql2o getSql2o() {

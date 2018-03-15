@@ -1,6 +1,7 @@
 package io.github.biezhi.anima;
 
 import io.github.biezhi.anima.model.User;
+import io.github.biezhi.anima.page.Page;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -81,6 +82,32 @@ public class SelectTest extends BaseTest {
         Assert.assertNotNull(user);
         Assert.assertNotNull(user.getName());
         Assert.assertNull(user.getId());
+    }
+
+    @Test
+    public void testLimit() {
+        List<User> users = User.select().order("id desc").limit(5);
+        Assert.assertNotNull(users);
+        Assert.assertEquals(5, users.size());
+
+        users = User.select().order("id desc").limit(2, 3);
+        Assert.assertNotNull(users);
+        Assert.assertEquals(3, users.size());
+    }
+
+    @Test
+    public void testPage() {
+        Page<User> userPage = User.select().order("id desc").page(1, 3);
+
+        Assert.assertNotNull(userPage);
+        Assert.assertEquals(8, userPage.getTotalRows());
+        Assert.assertEquals(3, userPage.getTotalPages());
+        Assert.assertEquals(3, userPage.getRows().size());
+        Assert.assertEquals(1, userPage.getPageNum());
+        Assert.assertEquals(1, userPage.getPrevPage());
+        Assert.assertEquals(2, userPage.getNextPage());
+        Assert.assertTrue(userPage.isHasNextPage());
+        Assert.assertFalse(userPage.isHasPrevPage());
     }
 
 }
