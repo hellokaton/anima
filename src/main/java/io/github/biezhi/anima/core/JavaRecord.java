@@ -40,6 +40,8 @@ public class JavaRecord {
 
     private Class<? extends ActiveRecord> modelClass;
 
+    private static ThreadLocal<Connection> connectionThreadLocal = new ThreadLocal<>();
+
     private StringBuilder       subSQL         = new StringBuilder();
     private List<String>        excludedFields = new ArrayList<>();
     private List<Object>        paramValues    = new ArrayList<>();
@@ -157,57 +159,57 @@ public class JavaRecord {
     }
 
     public <T> T find(Class<T> returnType, String sql, Object[] params) {
-        try (Connection conn = getSql2o().open()) {
+        try (Connection conn = getConn()) {
             return conn.createQuery(sql).withParams(params).executeAndFetchFirst(returnType);
         } finally {
-            this.cleanParams();
+            this.cleanParams(null);
         }
     }
 
     public <T extends ActiveRecord> T findById(Serializable id) {
         this.where(pkName, id);
         StringBuilder sql = this.buildSelectSQL();
-        try (Connection conn = getSql2o().open()) {
+        try (Connection conn = getConn()) {
             return conn.createQuery(sql.toString()).withParams(paramValues).executeAndFetchFirst((Class<T>) modelClass);
         } finally {
-            this.cleanParams();
+            this.cleanParams(null);
         }
     }
 
     public <T extends ActiveRecord> List<T> findByIds(Serializable... ids) {
         this.in(pkName, ids);
         StringBuilder sql = this.buildSelectSQL();
-        try (Connection conn = getSql2o().open()) {
+        try (Connection conn = getConn()) {
             return conn.createQuery(sql.toString()).withParams(ids).executeAndFetch((Class<T>) modelClass);
         } finally {
-            this.cleanParams();
+            this.cleanParams(null);
         }
     }
 
     public <T> List<T> findBySQL(Class<T> type, String sql, Object... params) {
-        try (Connection conn = getSql2o().open()) {
+        try (Connection conn = getConn()) {
             return conn.createQuery(sql).withParams(params).executeAndFetch(type);
         } finally {
-            this.cleanParams();
+            this.cleanParams(null);
         }
     }
 
     public <T extends ActiveRecord> List<T> all() {
         StringBuilder sql = this.buildSelectSQL();
-        try (Connection conn = getSql2o().open()) {
+        try (Connection conn = getConn()) {
             return conn.createQuery(sql.toString()).withParams(paramValues).executeAndFetch((Class<T>) modelClass);
         } finally {
-            this.cleanParams();
+            this.cleanParams(null);
         }
     }
 
     public <T extends ActiveRecord> T one() {
         StringBuilder sql = this.buildSelectSQL();
         sql.append(" LIMIT 1");
-        try (Connection conn = getSql2o().open()) {
+        try (Connection conn = getConn()) {
             return conn.createQuery(sql.toString()).withParams(paramValues).executeAndFetchFirst((Class<T>) modelClass);
         } finally {
-            this.cleanParams();
+            this.cleanParams(null);
         }
     }
 
@@ -221,10 +223,10 @@ public class JavaRecord {
         paramValues.add(offset);
         paramValues.add(limit);
 
-        try (Connection conn = getSql2o().open()) {
+        try (Connection conn = getConn()) {
             return conn.createQuery(sql.toString()).withParams(paramValues).executeAndFetch((Class<T>) modelClass);
         } finally {
-            this.cleanParams();
+            this.cleanParams(null);
         }
     }
 
@@ -241,7 +243,7 @@ public class JavaRecord {
 
         String countSql = "SELECT COUNT(*) FROM (" + sql + ") tmp";
 
-        try (Connection conn = getSql2o().open()) {
+        try (Connection conn = getConn()) {
             long count = conn.createQuery(countSql).withParams(paramValues).executeAndFetchFirst(Long.class);
 
             if (null != orderBy) {
@@ -257,7 +259,7 @@ public class JavaRecord {
             pageBean.setRows(list);
             return pageBean;
         } finally {
-            this.cleanParams();
+            this.cleanParams(null);
         }
     }
 
@@ -269,10 +271,10 @@ public class JavaRecord {
             sql.append(" WHERE ").append(subSQL.substring(5));
         }
 
-        try (Connection conn = getSql2o().open()) {
+        try (Connection conn = getConn()) {
             return conn.createQuery(sql.toString()).withParams(paramValues).executeAndFetchFirst(Long.class);
         } finally {
-            this.cleanParams();
+            this.cleanParams(null);
         }
     }
 
@@ -282,10 +284,11 @@ public class JavaRecord {
     }
 
     public int execute(String sql, Object... params) {
-        try (Connection conn = getSql2o().open()) {
+        Connection conn = getConn();
+        try {
             return conn.createQuery(sql).withParams(params).executeUpdate().getResult();
         } finally {
-            this.cleanParams();
+            this.cleanParams(conn);
         }
     }
 
@@ -317,10 +320,11 @@ public class JavaRecord {
         sql.append("(").append(columnNames.substring(1)).append(")").append(" VALUES (")
                 .append(placeholder.substring(1)).append(")");
 
-        try (Connection conn = getSql2o().open()) {
+        Connection conn = getConn();
+        try {
             return new ResultKey(conn.createQuery(sql.toString()).withParams(columnValueList).executeUpdate().getKey());
         } finally {
-            this.cleanParams();
+            this.cleanParams(conn);
         }
     }
 
@@ -340,11 +344,11 @@ public class JavaRecord {
 
         sql.append(" WHERE ").append(pkName).append(" = ?");
         columnValueList.add(id);
-
-        try (Connection conn = getSql2o().open()) {
+        Connection conn = getConn();
+        try {
             return conn.createQuery(sql.toString()).withParams(columnValueList).executeUpdate().getResult();
         } finally {
-            this.cleanParams();
+            this.cleanParams(conn);
         }
     }
 
@@ -366,11 +370,11 @@ public class JavaRecord {
             sql.append(" WHERE ").append(subSQL.substring(5));
             columnValueList.addAll(paramValues);
         }
-
-        try (Connection conn = getSql2o().open()) {
+        Connection conn = getConn();
+        try{
             return conn.createQuery(sql.toString()).withParams(columnValueList).executeUpdate().getResult();
         } finally {
-            this.cleanParams();
+            this.cleanParams(conn);
         }
     }
 
@@ -386,7 +390,32 @@ public class JavaRecord {
         return sql;
     }
 
-    private static Sql2o getSql2o() {
+    private static Connection getConn() {
+        Connection connection = connectionThreadLocal.get();
+        if (null == connection) {
+            return getSql2o().open();
+        }
+        return connection;
+    }
+
+    static void beginTransaction() {
+        Connection connection = JavaRecord.getSql2o().beginTransaction();
+        connectionThreadLocal.set(connection);
+    }
+
+    static void endTransaction() {
+        connectionThreadLocal.remove();
+    }
+
+    static void commit() {
+        connectionThreadLocal.get().commit();
+    }
+
+    static void rollback() {
+        connectionThreadLocal.get().rollback();
+    }
+
+    public static Sql2o getSql2o() {
         Sql2o sql2o = Anima.me().getCommonSql2o();
         if (null == sql2o) {
             throw new AnimaException("SQL2O instance not is null.");
@@ -394,13 +423,16 @@ public class JavaRecord {
         return sql2o;
     }
 
-    private void cleanParams() {
+    private void cleanParams(Connection conn) {
         selectColumns = null;
         orderBy = null;
         subSQL = new StringBuilder();
         paramValues.clear();
         excludedFields.clear();
         updateColumns.clear();
+        if (null == connectionThreadLocal.get() && null != conn) {
+            conn.close();
+        }
     }
 
     private static boolean isMapping(Field field) {

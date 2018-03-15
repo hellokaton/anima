@@ -20,6 +20,9 @@ public class BaseTest {
     public static void before() {
         h2();
         initData();
+        System.out.println();
+        log.info("============== Start Test Code ==============");
+        System.out.println();
     }
 
     private static void initData() {
@@ -31,7 +34,6 @@ public class BaseTest {
         new User("john", 38).save();
         new User("king", 32).save();
         new User("王尼玛", 30).save();
-        log.info("Init data finished.\n");
     }
 
     private static void h2() {

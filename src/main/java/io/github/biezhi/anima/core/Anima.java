@@ -69,6 +69,20 @@ public class Anima {
         return anima;
     }
 
+    public static Atomic atomic(Runnable runnable) {
+        try {
+            JavaRecord.beginTransaction();
+            runnable.run();
+            JavaRecord.commit();
+            return Atomic.ok();
+        } catch (RuntimeException e) {
+            JavaRecord.rollback();
+            return Atomic.error(e);
+        } finally {
+            JavaRecord.endTransaction();
+        }
+    }
+
     public String tablePrefix() {
         return this.tablePrefix;
     }
