@@ -16,7 +16,6 @@
 package io.github.biezhi.anima.core;
 
 import io.github.biezhi.anima.annotation.Table;
-import io.github.biezhi.anima.enhancer.ResultKey;
 import io.github.biezhi.anima.enums.SupportedType;
 import io.github.biezhi.anima.exception.AnimaException;
 import io.github.biezhi.anima.page.Page;
@@ -38,7 +37,7 @@ import java.util.*;
 @Slf4j
 public class JavaRecord {
 
-    private Class<? extends ActiveRecord> modelClass;
+    private Class<? extends Model> modelClass;
 
     private static ThreadLocal<Connection> connectionThreadLocal = new ThreadLocal<>();
 
@@ -50,20 +49,16 @@ public class JavaRecord {
     private String orderBy;
     private String selectColumns;
 
-    private final String pkName;
-    private final String tableName;
+    private String pkName;
+    private String tableName;
 
     public JavaRecord() {
         this.tableName = null;
         this.pkName = "id";
     }
 
-    public JavaRecord(Class<? extends ActiveRecord> modelClass) {
-        this.modelClass = modelClass;
-        Table table = modelClass.getAnnotation(Table.class);
-        this.tableName = null != table && SqlUtils.isNotEmpty(table.name()) ? table.name() :
-                SqlUtils.toTableName(modelClass.getSimpleName(), Anima.me().tablePrefix());
-        this.pkName = null != table ? table.pk() : "id";
+    public JavaRecord(Class<? extends Model> modelClass) {
+        this.from(modelClass);
     }
 
     public JavaRecord execlud(String... fieldNames) {
@@ -166,7 +161,7 @@ public class JavaRecord {
         }
     }
 
-    public <T extends ActiveRecord> T findById(Serializable id) {
+    public <T extends Model> T findById(Serializable id) {
         this.where(pkName, id);
         StringBuilder sql = this.buildSelectSQL();
         try (Connection conn = getConn()) {
@@ -176,7 +171,7 @@ public class JavaRecord {
         }
     }
 
-    public <T extends ActiveRecord> List<T> findByIds(Serializable... ids) {
+    public <T extends Model> List<T> findByIds(Serializable... ids) {
         this.in(pkName, ids);
         StringBuilder sql = this.buildSelectSQL();
         try (Connection conn = getConn()) {
@@ -202,7 +197,7 @@ public class JavaRecord {
         }
     }
 
-    public <T extends ActiveRecord> List<T> all() {
+    public <T extends Model> List<T> all() {
         StringBuilder sql = this.buildSelectSQL();
         try (Connection conn = getConn()) {
             return conn.createQuery(sql.toString()).withParams(paramValues).executeAndFetch((Class<T>) modelClass);
@@ -211,7 +206,7 @@ public class JavaRecord {
         }
     }
 
-    public <T extends ActiveRecord> T one() {
+    public <T extends Model> T one() {
         StringBuilder sql = this.buildSelectSQL();
         sql.append(" LIMIT 1");
         try (Connection conn = getConn()) {
@@ -221,11 +216,11 @@ public class JavaRecord {
         }
     }
 
-    public <T extends ActiveRecord> List<T> limit(int limit) {
+    public <T extends Model> List<T> limit(int limit) {
         return this.limit(0, limit);
     }
 
-    public <T extends ActiveRecord> List<T> limit(int offset, int limit) {
+    public <T extends Model> List<T> limit(int offset, int limit) {
         StringBuilder sql = this.buildSelectSQL();
         sql.append(" LIMIT ?, ?");
         paramValues.add(offset);
@@ -238,11 +233,11 @@ public class JavaRecord {
         }
     }
 
-    public <T extends ActiveRecord> Page<T> page(int page, int limit) {
+    public <T extends Model> Page<T> page(int page, int limit) {
         return this.page(new PageRow(page, limit));
     }
 
-    public <T extends ActiveRecord> Page<T> page(PageRow pageRow) {
+    public <T extends Model> Page<T> page(PageRow pageRow) {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT ").append(null != this.selectColumns ? this.selectColumns : "*").append(" FROM ").append(tableName);
         if (subSQL.length() > 0) {
@@ -291,6 +286,10 @@ public class JavaRecord {
         return this;
     }
 
+    public int execute() {
+        return 1;
+    }
+
     public int execute(String sql, Object... params) {
         Connection conn = getConn();
         try {
@@ -331,6 +330,19 @@ public class JavaRecord {
         Connection conn = getConn();
         try {
             return new ResultKey(conn.createQuery(sql.toString()).withParams(columnValueList).executeUpdate().getKey());
+        } finally {
+            this.cleanParams(conn);
+        }
+    }
+
+    public int delete() {
+        StringBuilder sql = new StringBuilder();
+        sql.append("DELETE FROM ").append(tableName);
+        sql.append(" WHERE ").append(pkName).append(" = ?");
+
+        Connection conn = getConn();
+        try {
+            return conn.createQuery(sql.toString()).withParams(paramValues).executeUpdate().getResult();
         } finally {
             this.cleanParams(conn);
         }
@@ -471,6 +483,15 @@ public class JavaRecord {
 
     private boolean isExcluded(String name) {
         return excludedFields.contains(name) || name.startsWith("_");
+    }
+
+    public JavaRecord from(Class<? extends Model> modelClass) {
+        this.modelClass = modelClass;
+        Table table = modelClass.getAnnotation(Table.class);
+        this.tableName = null != table && SqlUtils.isNotEmpty(table.name()) ? table.name() :
+                SqlUtils.toTableName(modelClass.getSimpleName(), Anima.me().tablePrefix());
+        this.pkName = null != table ? table.pk() : "id";
+        return this;
     }
 
 }

@@ -7,6 +7,8 @@ import org.junit.Test;
 
 import java.util.List;
 
+import static io.github.biezhi.anima.core.Anima.*;
+
 /**
  * @author biezhi
  * @date 2018/3/13
@@ -15,76 +17,77 @@ public class SelectTest extends BaseTest {
 
     @Test
     public void testCount() {
-        System.out.println(User.count());
+        long count = select().from(User.class).count();
+        Assert.assertEquals(9, count);
     }
 
     @Test
     public void testCountBy1() {
-        long count = User.where("age > ?", 15).isNotNull("name").count();
+        long count = select().from(User.class).where("age > ?", 15).isNotNull("name").count();
         Assert.assertEquals(count, 7L);
     }
 
     @Test
     public void testFindById() {
-        User user = User.findById(2);
+        User user = select().from(User.class).findById(2);
         Assert.assertNotNull(user);
         Assert.assertEquals(Integer.valueOf(2), user.getId());
 
-        List<User> users = User.findById(1, 2, 3);
+        List<User> users = select().from(User.class).findByIds(1, 2, 3);
         Assert.assertNotNull(users);
         Assert.assertEquals(3, users.size());
     }
 
     @Test
     public void testFindBySQL() {
-        String name = User.findBySQL(String.class, "select name from users limit 1");
+        String name = select().from(User.class).findBySQL(String.class, "select name from users limit 1");
         Assert.assertNotNull(name);
     }
 
     @Test
     public void testFindAllBySQL() {
-        List<String> names = User.findAllBySQL(String.class, "select name from users limit ?", 3);
+        List<String> names = select().from(User.class).findAllBySQL(String.class, "select name from users limit ?", 3);
         Assert.assertNotNull(names);
         Assert.assertEquals(3, names.size());
     }
 
     @Test
     public void testAll() {
-        List<User> users = User.all();
+        List<User> users = select().from(User.class).all();
         Assert.assertNotNull(users);
     }
 
     @Test
     public void testLike() {
-        List<User> users = User.like("name", "%o%").all();
+        List<User> users = select().from(User.class).like("name", "%o%").all();
         Assert.assertNotNull(users);
         Assert.assertEquals(3, users.size());
     }
 
     @Test
     public void testWhere() {
-        List<User> users = User.where("age > ?", 15).all();
+        List<User> users = select().from(User.class).where("age > ?", 15).all();
         Assert.assertNotNull(users);
 
-        users = User.where("name is not null").all();
+        users = select().from(User.class).where("name is not null").all();
         Assert.assertNotNull(users);
     }
 
     @Test
     public void testIn() {
-        List<User> users = User.select().in("id", 1, 2, 3).all();
+        List<User> users = select().from(User.class).in("id", 1, 2, 3).all();
         Assert.assertNotNull(users);
     }
 
     @Test
     public void testBetween() {
-        long count = User.select().between("age", 10, 25).count();
+        long count = select().from(User.class).between("age", 10, 25).count();
         Assert.assertEquals(4L, count);
     }
 
     @Test
     public void testSelectColumn() {
-        User user = User.select("name").order("id desc").one();
+        User user = select("user_name").from(User.class).order("id desc").one();
         Assert.assertNotNull(user);
         Assert.assertNotNull(user.getName());
         Assert.assertNull(user.getId());
@@ -92,18 +95,18 @@ public class SelectTest extends BaseTest {
 
     @Test
     public void testLimit() {
-        List<User> users = User.select().order("id desc").limit(5);
+        List<User> users = select().from(User.class).order("id desc").limit(5);
         Assert.assertNotNull(users);
         Assert.assertEquals(5, users.size());
 
-        users = User.select().order("id desc").limit(2, 3);
+        users = select().from(User.class).order("id desc").limit(2, 3);
         Assert.assertNotNull(users);
         Assert.assertEquals(3, users.size());
     }
 
     @Test
     public void testPage() {
-        Page<User> userPage = User.select().order("id desc").page(1, 3);
+        Page<User> userPage = select().from(User.class).order("id desc").page(1, 3);
 
         Assert.assertNotNull(userPage);
         Assert.assertEquals(8, userPage.getTotalRows());

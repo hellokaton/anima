@@ -42,7 +42,7 @@ public class BaseTest {
         String sql = "DROP TABLE IF EXISTS `users`;\n" +
                 "CREATE TABLE `users` (" +
                 "`id` IDENTITY PRIMARY KEY, " +
-                "`name` varchar(50) NOT NULL, " +
+                "`user_name` varchar(50) NOT NULL, " +
                 "`age` int(11)," +
                 ");";
 

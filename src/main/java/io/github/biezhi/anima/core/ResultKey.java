@@ -1,8 +1,8 @@
-package io.github.biezhi.anima.enhancer;
+package io.github.biezhi.anima.core;
 
 /**
  * @author biezhi
- * @date 2018/3/15
+ * @date 2018/3/16
  */
 public class ResultKey {
 

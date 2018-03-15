@@ -18,14 +18,14 @@ public class OtherTest extends BaseTest {
             new User("apple", 666).save();
         }).catchException(e -> Assert.assertEquals(ArithmeticException.class, e.getClass()));
 
-        Assert.assertEquals(8, User.count());
+        Assert.assertEquals(8, Anima.select().from(User.class).count());
     }
 
     @Test
     public void testTx2() {
         Anima.atomic(() -> new User("google", 666).save());
 
-        Assert.assertEquals(9, User.count());
+        Assert.assertEquals(9, Anima.select().from(User.class).count());
     }
 
 }

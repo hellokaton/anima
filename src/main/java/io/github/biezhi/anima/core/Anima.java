@@ -15,7 +15,6 @@
  */
 package io.github.biezhi.anima.core;
 
-import io.github.biezhi.anima.enhancer.Instrumentation;
 import org.sql2o.Sql2o;
 import org.sql2o.quirks.Quirks;
 import org.sql2o.quirks.QuirksDetector;
@@ -38,6 +37,18 @@ public class Anima {
         return AnimaHolder.INSTANCE;
     }
 
+    public static JavaRecord select() {
+        return new JavaRecord();
+    }
+
+    public static JavaRecord select(String coulmns) {
+        return new JavaRecord().select(coulmns);
+    }
+
+    public static JavaRecord update() {
+        return new JavaRecord();
+    }
+
     private static final class AnimaHolder {
         private static final Anima INSTANCE = new Anima();
     }
@@ -47,8 +58,6 @@ public class Anima {
     }
 
     public static Anima open(DataSource dataSource) {
-        String modelPath = Anima.class.getResource("/").getPath();
-        new Instrumentation(modelPath).instrument();
         Sql2o sql2o = new Sql2o(dataSource);
         Anima anima = Anima.me();
         anima.sql2o = sql2o;
@@ -60,9 +69,6 @@ public class Anima {
     }
 
     public static Anima open(String url, String user, String pass, Quirks quirks) {
-        String modelPath = Anima.class.getResource("/").getPath();
-        new Instrumentation(modelPath).instrument();
-
         Sql2o sql2o = new Sql2o(url, user, pass, quirks);
         Anima anima = Anima.me();
         anima.sql2o = sql2o;

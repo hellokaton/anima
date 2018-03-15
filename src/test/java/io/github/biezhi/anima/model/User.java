@@ -1,6 +1,6 @@
 package io.github.biezhi.anima.model;
 
-import io.github.biezhi.anima.core.ActiveRecord;
+import io.github.biezhi.anima.core.Model;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -10,14 +10,14 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @NoArgsConstructor
-public class User extends ActiveRecord {
+public class User extends Model {
 
     private Integer id;
-    private String  name;
+    private String  userName;
     private Integer age;
 
-    public User(String name, Integer age) {
-        this.name = name;
+    public User(String userName, Integer age) {
+        this.userName = userName;
         this.age = age;
     }
 
