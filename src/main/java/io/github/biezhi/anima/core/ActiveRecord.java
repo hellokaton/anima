@@ -20,6 +20,7 @@ import io.github.biezhi.anima.exception.AnimaException;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.function.Consumer;
 
 public abstract class ActiveRecord {
 
@@ -38,12 +39,20 @@ public abstract class ActiveRecord {
     }
 
     // SELECT * FROM users WHERE (users.id IN (1,10))
-    public static <T extends ActiveRecord, V extends Serializable> List<T> findByIds(V... ids) {
+    public static <T extends ActiveRecord, V extends Serializable> List<T> findById(V... ids) {
         return javaRecord.findByIds(ids);
+    }
+
+    public static <T extends ActiveRecord, V extends Serializable> void findThen(V id, Consumer<T> consumer) {
+        consumer.accept(findById(id));
     }
 
     public static <T extends ActiveRecord> List<T> all() {
         return javaRecord.all();
+    }
+
+    public static <T extends ActiveRecord> void allEach(Consumer<T> consumer) {
+        javaRecord.all().stream().map(item -> (T) item).forEach(item -> consumer.accept(item));
     }
 
     public static <T extends ActiveRecord> List<T> findBySQL(String sql, Object... params) {
@@ -54,7 +63,7 @@ public abstract class ActiveRecord {
         return javaRecord.execute(sql, params);
     }
 
-    public static JavaRecord like(String column, Object value){
+    public static JavaRecord like(String column, Object value) {
         return javaRecord.like(column, value);
     }
 

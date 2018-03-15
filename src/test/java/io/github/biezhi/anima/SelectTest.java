@@ -29,7 +29,7 @@ public class SelectTest extends BaseTest {
         Assert.assertNotNull(user);
         Assert.assertEquals(Integer.valueOf(2), user.getId());
 
-        List<User> users = User.findByIds(1, 2, 3);
+        List<User> users = User.findById(1, 2, 3);
         Assert.assertNotNull(users);
         Assert.assertEquals(3, users.size());
     }
