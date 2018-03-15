@@ -137,12 +137,18 @@ public class JavaRecord {
         return this;
     }
 
-    public <T extends ActiveRecord> T findById(Serializable id) {
+    public <T extends ActiveRecord> T findById(Serializable... ids) {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT * FROM ").append(tableName);
-        sql.append(" WHERE ").append(pkName).append(" = ? LIMIT 1");
+        sql.append(" WHERE ").append(pkName);
+        if (ids.length == 1) {
+            sql.append(" = ?");
+        }
+        if (ids.length > 1) {
+            sql.append(" in ?");
+        }
         try (Connection conn = getSql2o().open()) {
-            return conn.createQuery(sql.toString()).withParams(id).executeAndFetchFirst((Class<T>) modelClass);
+            return conn.createQuery(sql.toString()).withParams(ids).executeAndFetchFirst((Class<T>) modelClass);
         } finally {
             this.cleanParams();
         }
@@ -201,7 +207,6 @@ public class JavaRecord {
             if (!isMapping(field)) {
                 continue;
             }
-
             field.setAccessible(true);
             columnNames.append(",").append(SqlUtils.toColumnName(field.getName()));
             placeholder.append(",?");
@@ -223,21 +228,21 @@ public class JavaRecord {
         }
     }
 
-    public int update(){
+    public int update() {
         StringBuilder sql = new StringBuilder();
         sql.append("UPDATE ").append(tableName).append(" SET ");
 
         List<Object> columnValueList = new ArrayList<>();
 
         StringBuilder setSQL = sql;
-        updateColumns.forEach( (key, value) -> {
+        updateColumns.forEach((key, value) -> {
             setSQL.append(key).append(" = ?, ");
             columnValueList.add(value);
         });
 
         sql = new StringBuilder(setSQL.substring(0, setSQL.length() - 2));
 
-        if(subSQL.length() > 0){
+        if (subSQL.length() > 0) {
             sql.append(" WHERE ").append(subSQL.substring(5));
             columnValueList.addAll(paramValues);
         }
@@ -279,7 +284,7 @@ public class JavaRecord {
     }
 
     private boolean isExcluded(String name) {
-        return excludedFields.contains(name);
+        return excludedFields.contains(name) || name.startsWith("_");
     }
 
 }

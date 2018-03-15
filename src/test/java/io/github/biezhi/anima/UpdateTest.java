@@ -16,7 +16,7 @@ public class UpdateTest extends BaseTest {
     public void testUpdate() {
         String newName = "biezhi_" + System.currentTimeMillis();
         User.set("name", newName).where("id = ?", 1).update();
-        User user = (User) User.findById(1);
+        User user = User.findById(1);
         Assert.assertEquals(newName, user.getName());
     }
 

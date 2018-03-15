@@ -16,9 +16,11 @@
 package io.github.biezhi.anima.enhancer;
 
 import io.github.biezhi.anima.core.ActiveRecord;
-import io.github.biezhi.anima.core.JavaRecord;
 import io.github.biezhi.anima.exception.InstrumentationException;
 import javassist.*;
+import javassist.bytecode.AnnotationsAttribute;
+import javassist.bytecode.ConstPool;
+import javassist.bytecode.annotation.Annotation;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.StringWriter;
@@ -30,8 +32,8 @@ import java.util.Map;
 @Slf4j
 public class ModelEnhanced {
 
-    private static       Map<ClassLoader, Context> contextMap = new HashMap<>();
-    private static final String                    javaRecord = JavaRecord.class.getName();
+    private static       Map<ClassLoader, Context> contextMap   = new HashMap<>();
+    private static final String                    activeRecord = ActiveRecord.class.getName();
 
     public ModelEnhanced() {
         ClassPool cp = ClassPool.getDefault();
@@ -67,7 +69,7 @@ public class ModelEnhanced {
         String className = target.getSimpleName();
         try {
             try {
-                target.getField("db");
+                target.getField("_modify");
                 return;
             } catch (Exception e) {
             }
@@ -77,9 +79,11 @@ public class ModelEnhanced {
                 log.debug("Transforming the class - " + className);
                 target.defrost();
 
-                createDB(target);
-                createModelMethods(context, target);
+                createModifyField(target);
+                target.makeClassInitializer().insertBefore(
+                        "{ javaRecord = new io.github.biezhi.anima.core.JavaRecord(io.github.biezhi.anima.model.User.class);  }");
 
+                createMethod(context, target, "save", ResultKey.class.getName());
                 context.addClass(className);
             }
         } catch (Exception e) {
@@ -88,67 +92,19 @@ public class ModelEnhanced {
         }
     }
 
-    private void createDB(CtClass ctClass) {
+    private void createModifyField(CtClass ctClass) {
         try {
-            String db = String.format("private static final %s db = new %s(%s.class);", javaRecord, javaRecord, ctClass.getName());
-            ctClass.addField(CtField.make(db, ctClass));
+//            ConstPool cp = ctClass.getClassFile().getConstPool();
+//            AnnotationsAttribute fieldAttr   = new AnnotationsAttribute(cp, AnnotationsAttribute.visibleTag);
+//            Annotation           animaIgnore = new Annotation("io.github.biezhi.anima.annotation.AnimaIgnore", cp);
+//            fieldAttr.addAnnotation(animaIgnore);
+
+            CtField ctField = CtField.make("private byte _modify = 1;", ctClass);
+//            ctField.getFieldInfo().addAttribute(fieldAttr);
+            ctClass.addField(ctField);
         } catch (CannotCompileException e) {
             e.printStackTrace();
         }
-    }
-
-    private void createModelMethods(Context context, CtClass ctClass) throws CannotCompileException {
-        createStaticMethod(context, ctClass, "count", "long");
-        createStaticMethod(context, ctClass, "where", javaRecord, "String statement");
-        createStaticMethod(context, ctClass, "where", javaRecord, "String statement", "Object value");
-        createStaticMethod(context, ctClass, "set", javaRecord, "String column", "Object value");
-        createStaticMethod(context, ctClass, "in", javaRecord, "String column", "Object[] paramValues");
-        createStaticMethod(context, ctClass, "findById", ActiveRecord.class.getName(), "java.io.Serializable id");
-        createStaticMethod(context, ctClass, "all", "java.util.List");
-        createMethod(context, ctClass, "save", ResultKey.class.getName());
-    }
-
-    private void createStaticMethod(Context context, CtClass ctClass, String methodName, String returnType, String... arguments) throws CannotCompileException {
-        CtMethod method;
-        try {
-            method = getMethod(context, ctClass, methodName, arguments);
-            if (method != null) {
-                ctClass.removeMethod(method);
-            }
-        } catch (NotFoundException e) {
-            log.trace("The method {} doesn't exist, will create...", methodName);
-            // Just ignore if the method doesn't exist already
-        } catch (InstrumentationException e) {
-            //return;
-        }
-
-        StringWriter writer = new StringWriter();
-        writer.append("public static ").append(returnType).append(" ").append(methodName).append("(");
-        if (arguments != null && arguments.length > 0) {
-            for (int i = 0; i < arguments.length - 1; i++) {
-                writer.append(arguments[i]).append(", ");
-            }
-            writer.append(arguments[arguments.length - 1]);
-        }
-        writer.append(") {");
-        if (!returnType.equals("void")) {
-            writer.append("return (" + returnType + ")");
-        }
-
-        writer.append(ctClass.getName()).append(".db.").append(methodName).append("(");
-        if (arguments != null && arguments.length > 0) {
-            for (int i = 0; i < arguments.length; i++) {
-                String m = arguments[i].split(" ")[1];
-                if (i != 0) {
-                    writer.append(", ");
-                }
-                writer.append(m);
-            }
-        }
-        writer.append(");}");
-
-        method = CtNewMethod.make(writer.toString(), ctClass);
-        ctClass.addMethod(method);
     }
 
     private void createMethod(Context context, CtClass ctClass, String methodName, String returnType, String... arguments) throws CannotCompileException {
@@ -178,7 +134,7 @@ public class ModelEnhanced {
             writer.append("return (" + returnType + ")");
         }
 
-        writer.append(ctClass.getName()).append(".db.").append(methodName).append("(");
+        writer.append(activeRecord).append(".javaRecord.").append(methodName).append("(");
         writer.append("this);}");
 
         method = CtNewMethod.make(writer.toString(), ctClass);
