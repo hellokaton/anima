@@ -18,9 +18,6 @@ package io.github.biezhi.anima.enhancer;
 import io.github.biezhi.anima.core.ActiveRecord;
 import io.github.biezhi.anima.exception.InstrumentationException;
 import javassist.*;
-import javassist.bytecode.AnnotationsAttribute;
-import javassist.bytecode.ConstPool;
-import javassist.bytecode.annotation.Annotation;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.StringWriter;
@@ -81,7 +78,7 @@ public class ModelEnhanced {
 
                 createModifyField(target);
                 target.makeClassInitializer().insertBefore(
-                        "{ javaRecord = new io.github.biezhi.anima.core.JavaRecord(io.github.biezhi.anima.model.User.class);  }");
+                        "{ javaRecord = new io.github.biezhi.anima.core.JavaRecord(" + target.getName() + ".class);  }");
 
                 createMethod(context, target, "save", ResultKey.class.getName());
                 context.addClass(className);

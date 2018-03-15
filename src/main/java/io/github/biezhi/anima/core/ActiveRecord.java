@@ -55,8 +55,12 @@ public abstract class ActiveRecord {
         javaRecord.all().stream().map(item -> (T) item).forEach(item -> consumer.accept(item));
     }
 
-    public static <T> List<T> findBySQL(Class<T> type, String sql, Object... params) {
+    public static <T> T findBySQL(Class<T> type, String sql, Object... params) {
         return javaRecord.findBySQL(type, sql, params);
+    }
+
+    public static <T> List<T> findAllBySQL(Class<T> type, String sql, Object... params) {
+        return javaRecord.findAllBySQL(type, sql, params);
     }
 
     public static int execute(String sql, Object... params) {
@@ -101,6 +105,10 @@ public abstract class ActiveRecord {
 
     public static JavaRecord in(String column, Object... paramValues) {
         return javaRecord.in(column, paramValues);
+    }
+
+    public static int deleteById(Serializable id) {
+        return javaRecord.deleteById(id);
     }
 
 }

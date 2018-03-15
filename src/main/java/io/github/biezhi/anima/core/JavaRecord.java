@@ -186,7 +186,15 @@ public class JavaRecord {
         }
     }
 
-    public <T> List<T> findBySQL(Class<T> type, String sql, Object... params) {
+    public <T> T findBySQL(Class<T> type, String sql, Object... params) {
+        try (Connection conn = getConn()) {
+            return conn.createQuery(sql).withParams(params).executeAndFetchFirst(type);
+        } finally {
+            this.cleanParams(null);
+        }
+    }
+
+    public <T> List<T> findAllBySQL(Class<T> type, String sql, Object... params) {
         try (Connection conn = getConn()) {
             return conn.createQuery(sql).withParams(params).executeAndFetch(type);
         } finally {
@@ -328,6 +336,19 @@ public class JavaRecord {
         }
     }
 
+    public int deleteById(Serializable id) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("DELETE FROM ").append(tableName);
+        sql.append(" WHERE ").append(pkName).append(" = ?");
+
+        Connection conn = getConn();
+        try {
+            return conn.createQuery(sql.toString()).withParams(id).executeUpdate().getResult();
+        } finally {
+            this.cleanParams(conn);
+        }
+    }
+
     public int updateById(Serializable id) {
         StringBuilder sql = new StringBuilder();
         sql.append("UPDATE ").append(tableName).append(" SET ");
@@ -371,7 +392,7 @@ public class JavaRecord {
             columnValueList.addAll(paramValues);
         }
         Connection conn = getConn();
-        try{
+        try {
             return conn.createQuery(sql.toString()).withParams(columnValueList).executeUpdate().getResult();
         } finally {
             this.cleanParams(conn);

@@ -37,7 +37,13 @@ public class SelectTest extends BaseTest {
 
     @Test
     public void testFindBySQL() {
-        List<String> names = User.findBySQL(String.class, "select name from users limit ?", 3);
+        String name = User.findBySQL(String.class, "select name from users limit 1");
+        Assert.assertNotNull(name);
+    }
+
+    @Test
+    public void testFindAllBySQL() {
+        List<String> names = User.findAllBySQL(String.class, "select name from users limit ?", 3);
         Assert.assertNotNull(names);
         Assert.assertEquals(3, names.size());
     }
