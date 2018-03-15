@@ -35,10 +35,10 @@ public class SelectTest extends BaseTest {
     }
 
     @Test
-    public void testFindBySQL(){
-        List<User> users = User.findBySQL("select name from users limit ?", 3);
-        Assert.assertNotNull(users);
-        Assert.assertEquals(3, users.size());
+    public void testFindBySQL() {
+        List<String> names = User.findBySQL(String.class, "select name from users limit ?", 3);
+        Assert.assertNotNull(names);
+        Assert.assertEquals(3, names.size());
     }
 
     @Test
@@ -48,7 +48,7 @@ public class SelectTest extends BaseTest {
     }
 
     @Test
-    public void testLike(){
+    public void testLike() {
         List<User> users = User.like("name", "%o%").all();
         Assert.assertNotNull(users);
         Assert.assertEquals(3, users.size());
@@ -65,8 +65,22 @@ public class SelectTest extends BaseTest {
 
     @Test
     public void testIn() {
-        List<User> users = User.in("id", 1, 2, 3).all();
+        List<User> users = User.select().in("id", 1, 2, 3).all();
         Assert.assertNotNull(users);
+    }
+
+    @Test
+    public void testBetween() {
+        long count = User.select().between("age", 10, 25).count();
+        Assert.assertEquals(4L, count);
+    }
+
+    @Test
+    public void testSelectColumn() {
+        User user = User.select("name").order("id desc").one();
+        Assert.assertNotNull(user);
+        Assert.assertNotNull(user.getName());
+        Assert.assertNull(user.getId());
     }
 
 }

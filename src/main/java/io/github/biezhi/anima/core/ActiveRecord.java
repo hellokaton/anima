@@ -55,12 +55,36 @@ public abstract class ActiveRecord {
         javaRecord.all().stream().map(item -> (T) item).forEach(item -> consumer.accept(item));
     }
 
-    public static <T extends ActiveRecord> List<T> findBySQL(String sql, Object... params) {
-        return javaRecord.findBySQL(sql, params);
+    public static <T> List<T> findBySQL(Class<T> type, String sql, Object... params) {
+        return javaRecord.findBySQL(type, sql, params);
     }
 
     public static int execute(String sql, Object... params) {
         return javaRecord.execute(sql, params);
+    }
+
+    public static JavaRecord select() {
+        return javaRecord;
+    }
+
+    public static JavaRecord select(String columns) {
+        return javaRecord.select(columns);
+    }
+
+    public ResultKey save() {
+        throw new AnimaException(DOG_GONE);
+    }
+
+    public ResultKey update() {
+        throw new AnimaException(DOG_GONE);
+    }
+
+    public ResultKey update(Serializable id) {
+        throw new AnimaException(DOG_GONE);
+    }
+
+    public static JavaRecord set(String column, Object value) {
+        return javaRecord.set(column, value);
     }
 
     public static JavaRecord like(String column, Object value) {
@@ -77,14 +101,6 @@ public abstract class ActiveRecord {
 
     public static JavaRecord in(String column, Object... paramValues) {
         return javaRecord.in(column, paramValues);
-    }
-
-    public ResultKey save() {
-        throw new AnimaException(DOG_GONE);
-    }
-
-    public static JavaRecord set(String column, Object value) {
-        return javaRecord.set(column, value);
     }
 
 }

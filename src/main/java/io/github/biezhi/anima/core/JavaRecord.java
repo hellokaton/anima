@@ -15,11 +15,12 @@
  */
 package io.github.biezhi.anima.core;
 
-import io.github.biezhi.anima.annotation.AnimaIgnore;
 import io.github.biezhi.anima.annotation.Table;
 import io.github.biezhi.anima.enhancer.ResultKey;
 import io.github.biezhi.anima.enums.SupportedType;
 import io.github.biezhi.anima.exception.AnimaException;
+import io.github.biezhi.anima.page.Page;
+import io.github.biezhi.anima.page.PageRow;
 import io.github.biezhi.anima.utils.SqlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.sql2o.Connection;
@@ -37,28 +38,18 @@ import java.util.*;
 @Slf4j
 public class JavaRecord {
 
-    @AnimaIgnore
     private Class<? extends ActiveRecord> modelClass;
 
-    @AnimaIgnore
     private StringBuilder       subSQL         = new StringBuilder();
-    @AnimaIgnore
-    private List<String>        orderBy        = new ArrayList<>();
-    @AnimaIgnore
     private List<String>        excludedFields = new ArrayList<>();
-    @AnimaIgnore
     private List<Object>        paramValues    = new ArrayList<>();
-    @AnimaIgnore
     private Map<String, Object> updateColumns  = new LinkedHashMap<>();
 
-    @AnimaIgnore
+    private String orderBy;
     private String selectColumns;
 
-    @AnimaIgnore
-    private final String tableName;
-
-    @AnimaIgnore
     private final String pkName;
+    private final String tableName;
 
     public JavaRecord() {
         this.tableName = null;
@@ -79,6 +70,9 @@ public class JavaRecord {
     }
 
     public JavaRecord select(String columns) {
+        if (null != this.selectColumns) {
+            throw new AnimaException("Select method can only be called once.");
+        }
         this.selectColumns = columns;
         return this;
     }
@@ -90,18 +84,20 @@ public class JavaRecord {
 
     public JavaRecord where(String statement, Object value) {
         subSQL.append(" AND ").append(statement);
+        if (!statement.contains("?")) {
+            subSQL.append(" = ?");
+        }
         paramValues.add(value);
         return this;
+    }
+
+    public JavaRecord and(String statement, Object value) {
+        return this.where(statement, value);
     }
 
     public JavaRecord not(String key, Object value) {
         subSQL.append(" AND ").append(key).append(" != ?");
         paramValues.add(value);
-        return this;
-    }
-
-    public JavaRecord distinct(String key) {
-
         return this;
     }
 
@@ -132,6 +128,13 @@ public class JavaRecord {
         return this;
     }
 
+    public JavaRecord between(String coulmn, Object a, Object b) {
+        subSQL.append(" AND ").append(coulmn).append(" BETWEEN ? and ?");
+        paramValues.add(a);
+        paramValues.add(b);
+        return this;
+    }
+
     public <T> JavaRecord in(String key, List<T> args) {
         if (args.size() > 1) {
             subSQL.append(" AND ").append(key).append(" IN (");
@@ -149,40 +152,31 @@ public class JavaRecord {
     }
 
     public JavaRecord order(String order) {
-        orderBy.add(order);
+        this.orderBy = order;
         return this;
     }
 
-    public JavaRecord group(String column) {
-        return this;
-    }
-
-    public <T extends ActiveRecord> T findById(Serializable... ids) {
-        StringBuilder sql = new StringBuilder();
-        sql.append("SELECT * FROM ").append(tableName);
-        sql.append(" WHERE ").append(pkName).append(" = ?");
+    public <T> T find(Class<T> returnType, String sql, Object[] params) {
         try (Connection conn = getSql2o().open()) {
-            return conn.createQuery(sql.toString()).withParams(ids).executeAndFetchFirst((Class<T>) modelClass);
+            return conn.createQuery(sql).withParams(params).executeAndFetchFirst(returnType);
+        } finally {
+            this.cleanParams();
+        }
+    }
+
+    public <T extends ActiveRecord> T findById(Serializable id) {
+        this.where(pkName, id);
+        StringBuilder sql = this.buildSelectSQL();
+        try (Connection conn = getSql2o().open()) {
+            return conn.createQuery(sql.toString()).withParams(paramValues).executeAndFetchFirst((Class<T>) modelClass);
         } finally {
             this.cleanParams();
         }
     }
 
     public <T extends ActiveRecord> List<T> findByIds(Serializable... ids) {
-        StringBuilder sql = new StringBuilder();
-        sql.append("SELECT * FROM ").append(tableName);
-        sql.append(" WHERE ").append(pkName);
-        if (ids.length > 1) {
-            sql.append(" in (");
-            for (int i = 0; i < ids.length; i++) {
-                if (i == ids.length - 1) {
-                    sql.append("?");
-                } else {
-                    sql.append("?, ");
-                }
-            }
-            sql.append(")");
-        }
+        this.in(pkName, ids);
+        StringBuilder sql = this.buildSelectSQL();
         try (Connection conn = getSql2o().open()) {
             return conn.createQuery(sql.toString()).withParams(ids).executeAndFetch((Class<T>) modelClass);
         } finally {
@@ -190,22 +184,16 @@ public class JavaRecord {
         }
     }
 
-    public <T extends ActiveRecord> List<T> findBySQL(String sql, Object... params) {
+    public <T> List<T> findBySQL(Class<T> type, String sql, Object... params) {
         try (Connection conn = getSql2o().open()) {
-            return conn.createQuery(sql).withParams(params).executeAndFetch((Class<T>) modelClass);
+            return conn.createQuery(sql).withParams(params).executeAndFetch(type);
         } finally {
             this.cleanParams();
         }
     }
 
     public <T extends ActiveRecord> List<T> all() {
-        StringBuilder sql = new StringBuilder();
-        sql.append("SELECT * FROM ").append(tableName);
-
-        if (subSQL.length() > 0) {
-            sql.append(" WHERE ").append(subSQL.substring(5));
-        }
-
+        StringBuilder sql = this.buildSelectSQL();
         try (Connection conn = getSql2o().open()) {
             return conn.createQuery(sql.toString()).withParams(paramValues).executeAndFetch((Class<T>) modelClass);
         } finally {
@@ -213,12 +201,34 @@ public class JavaRecord {
         }
     }
 
-    public <T extends ActiveRecord> List<T> limit(int limit) {
+    public <T extends ActiveRecord> T one() {
+        StringBuilder sql = this.buildSelectSQL();
+        sql.append(" LIMIT 1");
+        try (Connection conn = getSql2o().open()) {
+            return conn.createQuery(sql.toString()).withParams(paramValues).executeAndFetchFirst((Class<T>) modelClass);
+        } finally {
+            this.cleanParams();
+        }
+    }
+
+    private StringBuilder buildSelectSQL() {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT ").append(null != this.selectColumns ? this.selectColumns : "*").append(" FROM ").append(tableName);
+        if (subSQL.length() > 0) {
+            sql.append(" WHERE ").append(subSQL.substring(5));
+        }
+        if (null != orderBy) {
+            sql.append(" ORDER BY ").append(this.orderBy);
+        }
+        return sql;
+    }
+
+    public <T extends ActiveRecord> Page<T> page(int page, int limit) {
         return null;
     }
 
-    public void page(int page, int limit) {
-
+    public <T extends ActiveRecord> Page<T> page(PageRow pageRow) {
+        return null;
     }
 
     public long count() {
@@ -274,12 +284,35 @@ public class JavaRecord {
                 throw new AnimaException("illegal argument or Access:", e);
             }
         }
-
         sql.append("(").append(columnNames.substring(1)).append(")").append(" VALUES (")
                 .append(placeholder.substring(1)).append(")");
 
         try (Connection conn = getSql2o().open()) {
             return new ResultKey(conn.createQuery(sql.toString()).withParams(columnValueList).executeUpdate().getKey());
+        } finally {
+            this.cleanParams();
+        }
+    }
+
+    public int updateById(Serializable id) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("UPDATE ").append(tableName).append(" SET ");
+
+        List<Object> columnValueList = new ArrayList<>();
+
+        StringBuilder setSQL = sql;
+        updateColumns.forEach((key, value) -> {
+            setSQL.append(key).append(" = ?, ");
+            columnValueList.add(value);
+        });
+
+        sql = new StringBuilder(setSQL.substring(0, setSQL.length() - 2));
+
+        sql.append(" WHERE ").append(pkName).append(" = ?");
+        columnValueList.add(id);
+
+        try (Connection conn = getSql2o().open()) {
+            return conn.createQuery(sql.toString()).withParams(columnValueList).executeUpdate().getResult();
         } finally {
             this.cleanParams();
         }
@@ -321,13 +354,14 @@ public class JavaRecord {
 
     private void cleanParams() {
         selectColumns = null;
+        orderBy = null;
         subSQL = new StringBuilder();
-        orderBy.clear();
         paramValues.clear();
         excludedFields.clear();
+        updateColumns.clear();
     }
 
-    static boolean isMapping(Field field) {
+    private static boolean isMapping(Field field) {
         // serialVersionUID not processed
         if ("serialVersionUID".equals(field.getName())) {
             return false;

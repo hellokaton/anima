@@ -20,6 +20,8 @@ import org.sql2o.Sql2o;
 import org.sql2o.quirks.Quirks;
 import org.sql2o.quirks.QuirksDetector;
 
+import javax.sql.DataSource;
+
 /**
  * @author biezhi
  * @date 2018/3/13
@@ -42,6 +44,15 @@ public class Anima {
 
     public static Anima open(String url) {
         return open(url, null, null);
+    }
+
+    public static Anima open(DataSource dataSource) {
+        String modelPath = Anima.class.getResource("/").getPath();
+        new Instrumentation(modelPath).instrument();
+        Sql2o sql2o = new Sql2o(dataSource);
+        Anima anima = Anima.me();
+        anima.sql2o = sql2o;
+        return anima;
     }
 
     public static Anima open(String url, String user, String pass) {

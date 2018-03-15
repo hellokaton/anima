@@ -18,6 +18,11 @@ public class UpdateTest extends BaseTest {
         User.set("name", newName).where("id = ?", 1).update();
         User user = User.findById(1);
         Assert.assertEquals(newName, user.getName());
+
+        newName = "biezhi_" + System.currentTimeMillis();
+        User.set("name", newName).updateById(1);
+        user = User.findById(1);
+        Assert.assertEquals(newName, user.getName());
     }
 
     @Test

@@ -19,22 +19,22 @@ package io.github.biezhi.anima.utils;
  * Utility class for composing SQL statements
  */
 public class SqlUtils {
-    
+
     private SqlUtils() {
     }
 
-    public static boolean isNotEmpty(String value){
+    public static boolean isNotEmpty(String value) {
         return null != value && !value.isEmpty();
     }
-    
+
     /**
-     * User -> user | perfix_user
+     * User -> user | prefix_user
      */
-    public static String toTableName(String className, String perfix) {
-        boolean hasPerfix = perfix != null && perfix.trim().length() > 0;
-        return hasPerfix ? perfix +"_"+toColumnName(className) + "s" : toColumnName(className) + "s";
+    public static String toTableName(String className, String prefix) {
+        boolean hasPrefix = prefix != null && prefix.trim().length() > 0;
+        return hasPrefix ? English.plural(prefix + "_" + toColumnName(className), 2) : English.plural(toColumnName(className), 2);
     }
-    
+
     /**
      * eg: userId -> user_id
      */
@@ -47,22 +47,21 @@ public class SqlUtils {
                 if (s.equals(s.toUpperCase())) {
                     result.append("_");
                     result.append(s.toLowerCase());
-                }
-                else {
+                } else {
                     result.append(s);
                 }
             }
         }
         return result.toString();
     }
-    
+
     /**
      * eg: user_id -> userId
      */
     public static String toPropertyName(String columneName) {
-        String[] partOfNames = columneName.split("_");
-        StringBuffer sb = new StringBuffer(partOfNames[0]);
-        for(int i=1; i<partOfNames.length; i++){
+        String[]     partOfNames = columneName.split("_");
+        StringBuffer sb          = new StringBuffer(partOfNames[0]);
+        for (int i = 1; i < partOfNames.length; i++) {
             sb.append(partOfNames[i].substring(0, 1).toUpperCase());
             sb.append(partOfNames[i].substring(1));
         }
