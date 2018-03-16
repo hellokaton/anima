@@ -76,33 +76,33 @@ long count = select().from(User.class).count();
 long count = select().from(User.class).where("age > ?", 15).isNotNull("user_name").count();
 // SELECT COUNT(*) FROM users WHERE age > ? AND user_name IS NOT NULL
 
-User user = select().from(User.class).findById(2);
+User user = select().from(User.class).byId(2);
 // SELECT * FROM users WHERE id = ?
 
-List<User> users = select().from(User.class).findByIds(1, 2, 3);
+List<User> users = select().from(User.class).byIds(1, 2, 3);
 // SELECT * FROM users WHERE id IN (?, ?, ?)
 
-String name = select().findBySQL(String.class, "select user_name from users limit 1");
-// select user_name from users limit 1
+String name = select().bySQL(String.class, "select user_name from users limit 1").one();
+// select user_name from users limit ?
 
-List<String> names = select().findAllBySQL(String.class, "select user_name from users limit ?", 3);
-// select user_name from users limit 3
+List<String> names = select().bySQL(String.class, "select user_name from users limit ?", 3).all();
+// select user_name from users limit ?
 
 List<User> users = select().from(User.class).all();
 // SELECT * FROM users
 
 List<User> users = select().from(User.class).like("user_name", "%o%").all();
-// SELECT * FROM users WHERE user_name LIKE '%o%'
+// SELECT * FROM users WHERE user_name LIKE ?
 ```
 
 **limit**
 
 ```java
 List<User> users = select().from(User.class).order("id desc").limit(5);
-// SELECT * FROM users ORDER BY id desc LIMIT 0, 5   
+// SELECT * FROM users ORDER BY id desc LIMIT ?, ?   
 
 List<User> users = select().from(User.class).order("id desc").limit(2, 3);
-// SELECT * FROM users ORDER BY id desc LIMIT 2, 3
+// SELECT * FROM users ORDER BY id desc LIMIT ?, ?
 ```
 
 **paging**
