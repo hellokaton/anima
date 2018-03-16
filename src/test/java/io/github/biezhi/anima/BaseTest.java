@@ -15,7 +15,7 @@ public class BaseTest {
 
     @BeforeClass
     public static void before() {
-        h2();
+        sqlite();
         initData();
         System.out.println();
         log.info("============== Start Test Code ==============");
@@ -45,6 +45,20 @@ public class BaseTest {
 
         try (Connection con = sql2o.open()) {
             con.createQuery(sql).executeUpdate();
+        }
+    }
+
+    private static void sqlite() {
+        Sql2o sql2o = Anima.open("jdbc:sqlite:./demo.db", null, null).getCommonSql2o();
+        sql2o.setIsolationLevel(java.sql.Connection.TRANSACTION_SERIALIZABLE);
+
+        try (Connection con = sql2o.open()) {
+            con.createQuery("drop table if exists users").executeUpdate();
+            con.createQuery("create table users (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                    "user_name varchar(50) NOT NULL, " +
+                    "age INTEGER" +
+                    ");").executeUpdate();
         }
     }
 

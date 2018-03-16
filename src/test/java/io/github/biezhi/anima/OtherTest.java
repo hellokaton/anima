@@ -15,7 +15,10 @@ public class OtherTest extends BaseTest {
         Anima.atomic(() -> {
             int a = 1 / 0;
             new User("apple", 666).save();
-        }).catchException(e -> Assert.assertEquals(ArithmeticException.class, e.getClass()));
+        }).catchException(e -> {
+            e.printStackTrace();
+            Assert.assertEquals(ArithmeticException.class, e.getClass());
+        });
 
         Assert.assertEquals(8, Anima.select().from(User.class).count());
     }
