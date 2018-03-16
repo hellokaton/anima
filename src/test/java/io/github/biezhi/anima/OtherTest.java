@@ -1,6 +1,5 @@
 package io.github.biezhi.anima;
 
-import io.github.biezhi.anima.core.Anima;
 import io.github.biezhi.anima.model.User;
 import org.junit.Assert;
 import org.junit.Test;

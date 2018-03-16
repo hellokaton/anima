@@ -1,10 +1,7 @@
 package io.github.biezhi.anima;
 
-import io.github.biezhi.anima.core.Anima;
 import io.github.biezhi.anima.model.User;
-import io.github.biezhi.anima.utils.English;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.sql2o.Connection;
 import org.sql2o.Sql2o;

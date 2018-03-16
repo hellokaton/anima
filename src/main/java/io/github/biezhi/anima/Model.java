@@ -1,4 +1,7 @@
-package io.github.biezhi.anima.core;
+package io.github.biezhi.anima;
+
+import io.github.biezhi.anima.core.JavaRecord;
+import io.github.biezhi.anima.core.ResultKey;
 
 /**
  * @author biezhi
@@ -16,6 +19,10 @@ public class Model {
 
     public int delete() {
         return new JavaRecord(this.getClass()).deleteByModel(this);
+    }
+
+    public JavaRecord set(String column, Object value) {
+        return new JavaRecord(this.getClass()).set(column, value);
     }
 
 }

@@ -15,6 +15,8 @@
  */
 package io.github.biezhi.anima.core;
 
+import io.github.biezhi.anima.Anima;
+import io.github.biezhi.anima.Model;
 import io.github.biezhi.anima.annotation.Table;
 import io.github.biezhi.anima.enums.DMLType;
 import io.github.biezhi.anima.enums.SupportedType;
@@ -187,17 +189,9 @@ public class JavaRecord {
         }
     }
 
-    public <T> T findBySQL(Class<T> type, String sql, Object... params) {
+    public <T> ResultList<T> bySQL(Class<T> type, String sql, Object... params) {
         try (Connection conn = getConn()) {
-            return conn.createQuery(sql).withParams(params).setAutoDeriveColumnNames(true).executeAndFetchFirst(type);
-        } finally {
-            this.cleanParams(null);
-        }
-    }
-
-    public <T> List<T> findAllBySQL(Class<T> type, String sql, Object... params) {
-        try (Connection conn = getConn()) {
-            return conn.createQuery(sql).withParams(params).setAutoDeriveColumnNames(true).executeAndFetch(type);
+            return new ResultList<>(conn.createQuery(sql).withParams(params).setAutoDeriveColumnNames(true).executeAndFetch(type));
         } finally {
             this.cleanParams(null);
         }
@@ -425,6 +419,11 @@ public class JavaRecord {
         }
     }
 
+    public int updateById(Serializable id) {
+        this.where(pkName, id);
+        return this.update();
+    }
+
     public <T extends Model> int updateByModel(T model) {
         StringBuilder sql = new StringBuilder();
         sql.append("UPDATE ").append(tableName).append(" SET ");
@@ -492,20 +491,20 @@ public class JavaRecord {
         return connection;
     }
 
-    static void beginTransaction() {
+    public static void beginTransaction() {
         Connection connection = JavaRecord.getSql2o().beginTransaction();
         connectionThreadLocal.set(connection);
     }
 
-    static void endTransaction() {
+    public static void endTransaction() {
         connectionThreadLocal.remove();
     }
 
-    static void commit() {
+    public static void commit() {
         connectionThreadLocal.get().commit();
     }
 
-    static void rollback() {
+    public static void rollback() {
         connectionThreadLocal.get().rollback();
     }
 

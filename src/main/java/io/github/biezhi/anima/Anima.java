@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.biezhi.anima.core;
+package io.github.biezhi.anima;
 
-import com.sun.org.apache.xpath.internal.operations.Mod;
+import io.github.biezhi.anima.core.Atomic;
+import io.github.biezhi.anima.core.JavaRecord;
 import io.github.biezhi.anima.enums.DMLType;
 import org.sql2o.Sql2o;
 import org.sql2o.quirks.Quirks;

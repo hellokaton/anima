@@ -4,7 +4,7 @@ import io.github.biezhi.anima.model.User;
 import org.junit.Assert;
 import org.junit.Test;
 
-import static io.github.biezhi.anima.core.Anima.update;
+import static io.github.biezhi.anima.Anima.update;
 
 /**
  * Save
@@ -30,6 +30,16 @@ public class UpdateTest extends BaseTest {
         user.setId(1);
         user.setUserName("jack");
         user.update();
+    }
+
+    @Test
+    public void testUpdate3() {
+        new User().set("user_name", "jack").where("id", 2).update();
+    }
+
+    @Test
+    public void testUpdate4() {
+        new User().set("user_name", "jack").updateById(3);
     }
 
 }

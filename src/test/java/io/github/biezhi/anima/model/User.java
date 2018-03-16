@@ -1,6 +1,6 @@
 package io.github.biezhi.anima.model;
 
-import io.github.biezhi.anima.core.Model;
+import io.github.biezhi.anima.Model;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

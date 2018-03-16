@@ -7,10 +7,9 @@ import org.junit.Test;
 
 import java.util.List;
 
-import static io.github.biezhi.anima.core.Anima.select;
+import static io.github.biezhi.anima.Anima.select;
 
 /**
- *
  * @author biezhi
  * @date 2018/3/13
  */
@@ -41,13 +40,13 @@ public class SelectTest extends BaseTest {
 
     @Test
     public void testFindBySQL() {
-        String name = select().findBySQL(String.class, "select user_name from users limit 1");
+        String name = select().bySQL(String.class, "select user_name from users limit 1").one();
         Assert.assertNotNull(name);
     }
 
     @Test
     public void testFindAllBySQL() {
-        List<String> names = select().findAllBySQL(String.class, "select user_name from users limit ?", 3);
+        List<String> names = select().bySQL(String.class, "select user_name from users limit ?", 3).all();
         Assert.assertNotNull(names);
         Assert.assertEquals(3, names.size());
     }

@@ -4,7 +4,7 @@ import io.github.biezhi.anima.model.User;
 import org.junit.Assert;
 import org.junit.Test;
 
-import static io.github.biezhi.anima.core.Anima.delete;
+import static io.github.biezhi.anima.Anima.delete;
 
 /**
  * Save
