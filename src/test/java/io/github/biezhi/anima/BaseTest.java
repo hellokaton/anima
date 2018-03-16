@@ -49,7 +49,7 @@ public class BaseTest {
     }
 
     private static void sqlite() {
-        Sql2o sql2o = Anima.open("jdbc:sqlite:./demo.db", null, null).getCommonSql2o();
+        Sql2o sql2o = Anima.open("jdbc:sqlite:./demo.db").getCommonSql2o();
         sql2o.setIsolationLevel(java.sql.Connection.TRANSACTION_SERIALIZABLE);
 
         try (Connection con = sql2o.open()) {

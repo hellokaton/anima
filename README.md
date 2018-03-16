@@ -44,7 +44,14 @@ compile 'io.github.biezhi:anima:0.0.2'
 **Open Connection**
 
 ```java
+// MySQL
 Anima.open("jdbc:mysql://127.0.0.1:3306/demo", "root", "123456");
+
+// SQLite
+Anima.open("jdbc:sqlite:./demo.db", null, null);
+
+// H2
+Anima.open("jdbc:h2:file:~/demo;FILE_LOCK=FS;PAGE_SIZE=1024;CACHE_SIZE=8192", "sa", "");
 ```
 
 > 📕 This operation only needs one time
