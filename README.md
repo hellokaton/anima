@@ -1,6 +1,6 @@
 # Anima
 
-`Anima` allows you to query databases like `SQL` and `Stream`.
+`Anima` allows you to query database like `SQL` and `Stream`.
 
 [![Travis Build](https://travis-ci.org/biezhi/anima.svg?branch=master)](https://travis-ci.org/biezhi/anima)
 [![](https://img.shields.io/maven-central/v/io.github.biezhi/anima.svg)](https://mvnrepository.com/artifact/io.github.biezhi/anima) 
