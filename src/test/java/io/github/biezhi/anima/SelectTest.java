@@ -7,9 +7,10 @@ import org.junit.Test;
 
 import java.util.List;
 
-import static io.github.biezhi.anima.core.Anima.*;
+import static io.github.biezhi.anima.core.Anima.select;
 
 /**
+ *
  * @author biezhi
  * @date 2018/3/13
  */
@@ -18,12 +19,12 @@ public class SelectTest extends BaseTest {
     @Test
     public void testCount() {
         long count = select().from(User.class).count();
-        Assert.assertEquals(9, count);
+        Assert.assertEquals(8, count);
     }
 
     @Test
     public void testCountBy1() {
-        long count = select().from(User.class).where("age > ?", 15).isNotNull("name").count();
+        long count = select().from(User.class).where("age > ?", 15).isNotNull("user_name").count();
         Assert.assertEquals(count, 7L);
     }
 
@@ -40,13 +41,13 @@ public class SelectTest extends BaseTest {
 
     @Test
     public void testFindBySQL() {
-        String name = select().from(User.class).findBySQL(String.class, "select name from users limit 1");
+        String name = select().findBySQL(String.class, "select user_name from users limit 1");
         Assert.assertNotNull(name);
     }
 
     @Test
     public void testFindAllBySQL() {
-        List<String> names = select().from(User.class).findAllBySQL(String.class, "select name from users limit ?", 3);
+        List<String> names = select().findAllBySQL(String.class, "select user_name from users limit ?", 3);
         Assert.assertNotNull(names);
         Assert.assertEquals(3, names.size());
     }
@@ -59,7 +60,7 @@ public class SelectTest extends BaseTest {
 
     @Test
     public void testLike() {
-        List<User> users = select().from(User.class).like("name", "%o%").all();
+        List<User> users = select().from(User.class).like("user_name", "%o%").all();
         Assert.assertNotNull(users);
         Assert.assertEquals(3, users.size());
     }
@@ -69,7 +70,7 @@ public class SelectTest extends BaseTest {
         List<User> users = select().from(User.class).where("age > ?", 15).all();
         Assert.assertNotNull(users);
 
-        users = select().from(User.class).where("name is not null").all();
+        users = select().from(User.class).where("user_name is not null").all();
         Assert.assertNotNull(users);
     }
 
@@ -89,7 +90,7 @@ public class SelectTest extends BaseTest {
     public void testSelectColumn() {
         User user = select("user_name").from(User.class).order("id desc").one();
         Assert.assertNotNull(user);
-        Assert.assertNotNull(user.getName());
+        Assert.assertNotNull(user.getUserName());
         Assert.assertNull(user.getId());
     }
 

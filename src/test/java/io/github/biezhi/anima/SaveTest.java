@@ -15,7 +15,7 @@ public class SaveTest extends BaseTest {
     @Test
     public void testSave() {
         User user = new User();
-        user.setName("save1");
+        user.setUserName("save1");
         user.setAge(99);
         Integer id = user.save().asInt();
         Assert.assertNotNull(id);

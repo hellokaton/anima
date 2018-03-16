@@ -155,7 +155,7 @@ public class JavaRecord {
 
     public <T> T find(Class<T> returnType, String sql, Object[] params) {
         try (Connection conn = getConn()) {
-            return conn.createQuery(sql).withParams(params).executeAndFetchFirst(returnType);
+            return conn.createQuery(sql).withParams(params).setAutoDeriveColumnNames(true).executeAndFetchFirst(returnType);
         } finally {
             this.cleanParams(null);
         }
@@ -165,7 +165,7 @@ public class JavaRecord {
         this.where(pkName, id);
         StringBuilder sql = this.buildSelectSQL();
         try (Connection conn = getConn()) {
-            return conn.createQuery(sql.toString()).withParams(paramValues).executeAndFetchFirst((Class<T>) modelClass);
+            return conn.createQuery(sql.toString()).withParams(paramValues).setAutoDeriveColumnNames(true).executeAndFetchFirst((Class<T>) modelClass);
         } finally {
             this.cleanParams(null);
         }
@@ -175,7 +175,7 @@ public class JavaRecord {
         this.in(pkName, ids);
         StringBuilder sql = this.buildSelectSQL();
         try (Connection conn = getConn()) {
-            return conn.createQuery(sql.toString()).withParams(ids).executeAndFetch((Class<T>) modelClass);
+            return conn.createQuery(sql.toString()).withParams(ids).setAutoDeriveColumnNames(true).executeAndFetch((Class<T>) modelClass);
         } finally {
             this.cleanParams(null);
         }
@@ -183,7 +183,7 @@ public class JavaRecord {
 
     public <T> T findBySQL(Class<T> type, String sql, Object... params) {
         try (Connection conn = getConn()) {
-            return conn.createQuery(sql).withParams(params).executeAndFetchFirst(type);
+            return conn.createQuery(sql).withParams(params).setAutoDeriveColumnNames(true).executeAndFetchFirst(type);
         } finally {
             this.cleanParams(null);
         }
@@ -191,7 +191,7 @@ public class JavaRecord {
 
     public <T> List<T> findAllBySQL(Class<T> type, String sql, Object... params) {
         try (Connection conn = getConn()) {
-            return conn.createQuery(sql).withParams(params).executeAndFetch(type);
+            return conn.createQuery(sql).withParams(params).setAutoDeriveColumnNames(true).executeAndFetch(type);
         } finally {
             this.cleanParams(null);
         }
@@ -200,7 +200,7 @@ public class JavaRecord {
     public <T extends Model> List<T> all() {
         StringBuilder sql = this.buildSelectSQL();
         try (Connection conn = getConn()) {
-            return conn.createQuery(sql.toString()).withParams(paramValues).executeAndFetch((Class<T>) modelClass);
+            return conn.createQuery(sql.toString()).withParams(paramValues).setAutoDeriveColumnNames(true).executeAndFetch((Class<T>) modelClass);
         } finally {
             this.cleanParams(null);
         }
@@ -210,7 +210,7 @@ public class JavaRecord {
         StringBuilder sql = this.buildSelectSQL();
         sql.append(" LIMIT 1");
         try (Connection conn = getConn()) {
-            return conn.createQuery(sql.toString()).withParams(paramValues).executeAndFetchFirst((Class<T>) modelClass);
+            return conn.createQuery(sql.toString()).withParams(paramValues).setAutoDeriveColumnNames(true).executeAndFetchFirst((Class<T>) modelClass);
         } finally {
             this.cleanParams(null);
         }
@@ -227,7 +227,7 @@ public class JavaRecord {
         paramValues.add(limit);
 
         try (Connection conn = getConn()) {
-            return conn.createQuery(sql.toString()).withParams(paramValues).executeAndFetch((Class<T>) modelClass);
+            return conn.createQuery(sql.toString()).withParams(paramValues).setAutoDeriveColumnNames(true).executeAndFetch((Class<T>) modelClass);
         } finally {
             this.cleanParams(null);
         }
@@ -256,7 +256,7 @@ public class JavaRecord {
             paramValues.add(pageRow.getOffset());
             paramValues.add(pageRow.getLimit());
 
-            List<T> list = conn.createQuery(sql.toString()).withParams(paramValues).executeAndFetch((Class<T>) modelClass);
+            List<T> list = conn.createQuery(sql.toString()).withParams(paramValues).setAutoDeriveColumnNames(true).executeAndFetch((Class<T>) modelClass);
 
             Page<T> pageBean = new Page<>(count, pageRow.getPage(), pageRow.getLimit());
             pageBean.setRows(list);

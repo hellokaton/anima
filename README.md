@@ -32,51 +32,52 @@ Anima.open("jdbc:mysql://127.0.0.1:3306/demo", "root", "123456");
 **READ**
 
 ```java
-// query count
-User.count();
+long count = select().from(User.class).count();
+// SELECT COUNT(*) FROM users
 
-// query by id
-User.findById(9);
+long count = select().from(User.class).where("age > ?", 15).isNotNull("user_name").count();
+// SELECT COUNT(*) FROM users WHERE age > ? AND user_name IS NOT NULL
 
-// query all
-User.all()
+User user = select().from(User.class).findById(2);
+// SELECT * FROM users WHERE id = ?
 
-// query one
-User.orderBy("id desc").one();
+List<User> users = select().from(User.class).findByIds(1, 2, 3);
+// SELECT * FROM users WHERE id IN (?, ?, ?)
 
-// query by condition
-User.where("age > ?", 15).notNull("name").all();
+String name = select().findBySQL(String.class, "select user_name from users limit 1");
+// select user_name from users limit 1
 
-```
+List<String> names = select().findAllBySQL(String.class, "select user_name from users limit ?", 3);
+// select user_name from users limit ?
 
-**Delete**
+List<User> users = select().from(User.class).all();
+// SELECT * FROM users
 
-```java
-// delete by id
-User.deleteById(9);
-
-// delete all
-User.deleteAll();
-
-// delete by condition
-User.where("id > ?", 20).delete();
+List<User> users = select().from(User.class).like("user_name", "%o%").all();
+// SELECT * FROM users WHERE user_name LIKE ?
 ```
 
 **Insert**
 
 ```java
-User user = new User("jack", 20);
-user.save();
+Integer id = new User("save2", 100).save().asInt();
+// INSERT INTO users(id,user_name,age) VALUES (?,?,?)
 ```
 
 **Update**
 
 ```java
-User.set("name", "rose").where("id = ?", 9).update();
+int result  = update().from(User.class).set("user_name", newName).where("id", 1).execute();
+// UPDATE users SET username = ? WHERE id = ?
+```
 
-User u = new User(9);
-u.setName("rose");
-u.update();
+**Transaction**
+
+```java
+Anima.atomic(() -> {
+    int a = 1 / 0;
+    new User("apple", 666).save();
+}).catchException(e -> Assert.assertEquals(ArithmeticException.class, e.getClass()));
 ```
 
 ## Test Code
