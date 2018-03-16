@@ -27,4 +27,9 @@ public class SaveTest extends BaseTest {
         Assert.assertNotNull(id);
     }
 
+    @Test
+    public void testSave3(){
+        Anima.save(new User("save3", 100));
+    }
+
 }

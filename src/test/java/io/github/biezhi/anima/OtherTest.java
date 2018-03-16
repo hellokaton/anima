@@ -23,7 +23,6 @@ public class OtherTest extends BaseTest {
     @Test
     public void testTx2() {
         Anima.atomic(() -> new User("google", 666).save());
-
         Assert.assertEquals(9, Anima.select().from(User.class).count());
     }
 

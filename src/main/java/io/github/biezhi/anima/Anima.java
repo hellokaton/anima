@@ -17,6 +17,7 @@ package io.github.biezhi.anima;
 
 import io.github.biezhi.anima.core.Atomic;
 import io.github.biezhi.anima.core.JavaRecord;
+import io.github.biezhi.anima.core.ResultKey;
 import io.github.biezhi.anima.enums.DMLType;
 import org.sql2o.Sql2o;
 import org.sql2o.quirks.Quirks;
@@ -54,6 +55,10 @@ public class Anima {
 
     public static JavaRecord delete() {
         return new JavaRecord(DMLType.DELETE);
+    }
+
+    public static <T extends Model> ResultKey save(T model) {
+        return new JavaRecord(model.getClass()).save(model);
     }
 
     private static final class AnimaHolder {

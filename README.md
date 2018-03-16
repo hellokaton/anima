@@ -19,10 +19,15 @@
 - Connection pool support 
 - SQL performance statistics
 
-
 # Usage
 
-Add maven dependency
+**As Gradle**
+
+```java
+compile 'io.github.biezhi:anima:0.0.1'
+```
+
+**As Maven**
 
 ```xml
 <dependency>
@@ -32,10 +37,11 @@ Add maven dependency
 </dependency>
 ```
 
+> Although `Anima` can also be used by adding a jar package, we do not recommend doing this.
 
-## Example
+## Examples
 
-Open DB
+**Open Connection**
 
 ```java
 Anima.open("jdbc:mysql://127.0.0.1:3306/demo", "root", "123456");
@@ -80,20 +86,43 @@ String name = select().findBySQL(String.class, "select user_name from users limi
 // select user_name from users limit 1
 
 List<String> names = select().findAllBySQL(String.class, "select user_name from users limit ?", 3);
-// select user_name from users limit ?
+// select user_name from users limit 3
 
 List<User> users = select().from(User.class).all();
 // SELECT * FROM users
 
 List<User> users = select().from(User.class).like("user_name", "%o%").all();
-// SELECT * FROM users WHERE user_name LIKE ?
+// SELECT * FROM users WHERE user_name LIKE '%o%'
+```
+
+**limit**
+
+```java
+List<User> users = select().from(User.class).order("id desc").limit(5);
+// SELECT * FROM users ORDER BY id desc LIMIT 0, 5   
+
+List<User> users = select().from(User.class).order("id desc").limit(2, 3);
+// SELECT * FROM users ORDER BY id desc LIMIT 2, 3
+```
+
+**paging**
+
+```java
+Page<User> userPage = select().from(User.class).order("id desc").page(1, 3);
+// SELECT * FROM users ORDER BY id desc LIMIT ?, ?
 ```
 
 ### Insert
 
 ```java
-Integer id = new User("save2", 100).save().asInt();
+Integer id = new User("biezhi", 100).save().asInt();
 // INSERT INTO users(id,user_name,age) VALUES (?,?,?)
+```
+
+or
+
+```java
+Anima.save(new User("jack", 100));
 ```
 
 ### Update
@@ -103,10 +132,14 @@ int result  = update().from(User.class).set("user_name", newName).where("id", 1)
 // UPDATE users SET username = ? WHERE id = ?
 ```
 
+or
+
 ```java
 int result = update().from(User.class).set("user_name", newName).where("id", 1).execute();
 // UPDATE users SET user_name = ? WHERE id = ?
 ```
+
+or
 
 ```java
 User user = new User();
@@ -141,6 +174,9 @@ Anima.atomic(() -> {
     new User("apple", 666).save();
 }).catchException(e -> Assert.assertEquals(ArithmeticException.class, e.getClass()));
 ```
+
+> `Anima` uses the `atomic` method to complete a transaction. normally, the code will not throw an exception. 
+> when a `RuntimeException` is caught, the transaction will be `rollback`.
 
 ## Test Code
 
