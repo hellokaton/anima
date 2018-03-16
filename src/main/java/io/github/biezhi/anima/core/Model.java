@@ -11,11 +11,11 @@ public class Model {
     }
 
     public int update() {
-        return new JavaRecord(this.getClass()).update();
+        return new JavaRecord(this.getClass()).updateByModel(this);
     }
 
     public int delete() {
-        return new JavaRecord(this.getClass()).delete();
+        return new JavaRecord(this.getClass()).deleteByModel(this);
     }
 
 }

@@ -16,6 +16,7 @@
 package io.github.biezhi.anima.core;
 
 import io.github.biezhi.anima.annotation.Table;
+import io.github.biezhi.anima.enums.DMLType;
 import io.github.biezhi.anima.enums.SupportedType;
 import io.github.biezhi.anima.exception.AnimaException;
 import io.github.biezhi.anima.page.Page;
@@ -49,12 +50,17 @@ public class JavaRecord {
     private String orderBy;
     private String selectColumns;
 
-    private String pkName;
-    private String tableName;
+    private String  pkName;
+    private String  tableName;
+    private DMLType dmlType;
 
     public JavaRecord() {
         this.tableName = null;
         this.pkName = "id";
+    }
+
+    public JavaRecord(DMLType dmlType) {
+        this.dmlType = dmlType;
     }
 
     public JavaRecord(Class<? extends Model> modelClass) {
@@ -287,7 +293,14 @@ public class JavaRecord {
     }
 
     public int execute() {
-        return 1;
+        switch (dmlType) {
+            case UPDATE:
+                return this.update();
+            case DELETE:
+                return this.delete();
+            default:
+                throw new AnimaException("Please check if your use is correct.");
+        }
     }
 
     public int execute(String sql, Object... params) {
@@ -348,35 +361,36 @@ public class JavaRecord {
         }
     }
 
-    public int deleteById(Serializable id) {
+    public <T extends Model> int deleteByModel(T model) {
         StringBuilder sql = new StringBuilder();
         sql.append("DELETE FROM ").append(tableName);
-        sql.append(" WHERE ").append(pkName).append(" = ?");
 
-        Connection conn = getConn();
-        try {
-            return conn.createQuery(sql.toString()).withParams(id).executeUpdate().getResult();
-        } finally {
-            this.cleanParams(conn);
+        StringBuilder columnNames     = new StringBuilder();
+        List<Object>  columnValueList = new ArrayList<>();
+
+        for (Field field : modelClass.getDeclaredFields()) {
+            if (isExcluded((field.getName()))) {
+                continue;
+            }
+            if (!isMapping(field)) {
+                continue;
+            }
+
+            try {
+                field.setAccessible(true);
+                Object value = field.get(model);
+                if (null == value) {
+                    continue;
+                }
+                columnNames.append(SqlUtils.toColumnName(field.getName())).append(" = ? and ");
+                columnValueList.add(value);
+            } catch (IllegalArgumentException | IllegalAccessException e) {
+                throw new AnimaException("illegal argument or Access:", e);
+            }
         }
-    }
-
-    public int updateById(Serializable id) {
-        StringBuilder sql = new StringBuilder();
-        sql.append("UPDATE ").append(tableName).append(" SET ");
-
-        List<Object> columnValueList = new ArrayList<>();
-
-        StringBuilder setSQL = sql;
-        updateColumns.forEach((key, value) -> {
-            setSQL.append(key).append(" = ?, ");
-            columnValueList.add(value);
-        });
-
-        sql = new StringBuilder(setSQL.substring(0, setSQL.length() - 2));
-
-        sql.append(" WHERE ").append(pkName).append(" = ?");
-        columnValueList.add(id);
+        if (columnNames.length() > 0) {
+            sql.append(" WHERE ").append(columnNames.substring(0, columnNames.length() - 5));
+        }
         Connection conn = getConn();
         try {
             return conn.createQuery(sql.toString()).withParams(columnValueList).executeUpdate().getResult();
@@ -402,6 +416,53 @@ public class JavaRecord {
         if (subSQL.length() > 0) {
             sql.append(" WHERE ").append(subSQL.substring(5));
             columnValueList.addAll(paramValues);
+        }
+        Connection conn = getConn();
+        try {
+            return conn.createQuery(sql.toString()).withParams(columnValueList).executeUpdate().getResult();
+        } finally {
+            this.cleanParams(conn);
+        }
+    }
+
+    public <T extends Model> int updateByModel(T model) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("UPDATE ").append(tableName).append(" SET ");
+
+        StringBuilder columnNames     = new StringBuilder();
+        List<Object>  columnValueList = new ArrayList<>();
+        Serializable  pk              = null;
+
+        for (Field field : modelClass.getDeclaredFields()) {
+            if (isExcluded((field.getName()))) {
+                continue;
+            }
+            if (!isMapping(field)) {
+                continue;
+            }
+
+            try {
+                field.setAccessible(true);
+                Object value = field.get(model);
+                if (null == value) {
+                    continue;
+                }
+                if (pkName.equals(field.getName())) {
+                    pk = (Serializable) value;
+                    continue;
+                }
+                sql.append(SqlUtils.toColumnName(field.getName())).append(" = ?, ");
+
+                columnNames.append(",").append(SqlUtils.toColumnName(field.getName()));
+                columnValueList.add(value);
+            } catch (IllegalArgumentException | IllegalAccessException e) {
+                throw new AnimaException("illegal argument or Access:", e);
+            }
+        }
+        sql = new StringBuilder(sql.substring(0, sql.length() - 2));
+        if (null != pk) {
+            sql.append(" WHERE ").append(pkName).append(" = ?");
+            columnValueList.add(pk);
         }
         Connection conn = getConn();
         try {

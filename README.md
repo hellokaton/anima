@@ -1,7 +1,6 @@
 # Anima
 
-`Anima` is an Java `ActiveRecord` library implement by modify bytecodes.
-`Anima` allows you to query databases like `Stream`.
+`Anima` allows you to query databases like `SQL` and `Stream`.
 
 [![Travis Build](https://travis-ci.org/biezhi/anima.svg?branch=master)](https://travis-ci.org/biezhi/anima) 
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com) 
@@ -29,7 +28,25 @@ Anima.open("jdbc:mysql://127.0.0.1:3306/demo", "root", "123456");
 
 > ⚠️ This operation only needs one time
 
-**READ**
+```java
+public class User extends Model {
+    
+    private Integer id;
+    private String  userName;
+    private Integer age;
+    
+    public User() {
+    }
+    
+    public User(String userName, Integer age) {
+        this.userName = userName;
+        this.age = age;
+    }
+    
+}
+```
+
+### Query
 
 ```java
 long count = select().from(User.class).count();
@@ -57,21 +74,51 @@ List<User> users = select().from(User.class).like("user_name", "%o%").all();
 // SELECT * FROM users WHERE user_name LIKE ?
 ```
 
-**Insert**
+### Insert
 
 ```java
 Integer id = new User("save2", 100).save().asInt();
 // INSERT INTO users(id,user_name,age) VALUES (?,?,?)
 ```
 
-**Update**
+### Update
 
 ```java
 int result  = update().from(User.class).set("user_name", newName).where("id", 1).execute();
 // UPDATE users SET username = ? WHERE id = ?
 ```
 
-**Transaction**
+```java
+int result = update().from(User.class).set("user_name", newName).where("id", 1).execute();
+// UPDATE users SET user_name = ? WHERE id = ?
+```
+
+```java
+User user = new User();
+user.setId(1);
+user.setUserName("jack");
+user.update();
+// UPDATE users SET user_name = ? WHERE id = ?
+```
+
+### Delete
+
+```java
+int result = delete().from(User.class).where("id", 1).execute();
+// DELETE FROM users WHERE id = ?
+```
+
+or
+
+```java
+User user = new User();
+user.setAge(15);
+user.setUserName("jack");
+user.delete();
+// DELETE FROM users WHERE user_name = ? and age = ?
+```
+
+### Transaction
 
 ```java
 Anima.atomic(() -> {

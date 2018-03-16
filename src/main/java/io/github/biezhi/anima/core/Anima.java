@@ -15,6 +15,8 @@
  */
 package io.github.biezhi.anima.core;
 
+import com.sun.org.apache.xpath.internal.operations.Mod;
+import io.github.biezhi.anima.enums.DMLType;
 import org.sql2o.Sql2o;
 import org.sql2o.quirks.Quirks;
 import org.sql2o.quirks.QuirksDetector;
@@ -46,7 +48,11 @@ public class Anima {
     }
 
     public static JavaRecord update() {
-        return new JavaRecord();
+        return new JavaRecord(DMLType.UPDATE);
+    }
+
+    public static JavaRecord delete() {
+        return new JavaRecord(DMLType.DELETE);
     }
 
     private static final class AnimaHolder {

@@ -1,6 +1,7 @@
 package io.github.biezhi.anima;
 
 import io.github.biezhi.anima.model.User;
+import org.junit.Assert;
 import org.junit.Test;
 
 import static io.github.biezhi.anima.core.Anima.update;
@@ -17,7 +18,18 @@ public class UpdateTest extends BaseTest {
     public void testUpdate() {
         String newName = "biezhi_" + System.currentTimeMillis();
         int    result  = update().from(User.class).set("user_name", newName).execute();
-        System.out.println(result);
+        Assert.assertEquals(8, result);
+
+        result = update().from(User.class).set("user_name", newName).where("id", 1).execute();
+        Assert.assertEquals(1, result);
+    }
+
+    @Test
+    public void testUpdate2() {
+        User user = new User();
+        user.setId(1);
+        user.setUserName("jack");
+        user.update();
     }
 
 }
