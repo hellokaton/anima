@@ -24,7 +24,7 @@
 **As Gradle**
 
 ```java
-compile 'io.github.biezhi:anima:0.0.1'
+compile 'io.github.biezhi:anima:0.0.2'
 ```
 
 **As Maven**
@@ -33,7 +33,7 @@ compile 'io.github.biezhi:anima:0.0.1'
 <dependency>
     <groupId>io.github.biezhi</groupId>
     <artifactId>anima</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
 </dependency>
 ```
 
