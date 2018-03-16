@@ -19,6 +19,7 @@ import io.github.biezhi.anima.Anima;
 import io.github.biezhi.anima.Model;
 import io.github.biezhi.anima.annotation.Table;
 import io.github.biezhi.anima.enums.DMLType;
+import io.github.biezhi.anima.enums.ErrorCode;
 import io.github.biezhi.anima.enums.SupportedType;
 import io.github.biezhi.anima.exception.AnimaException;
 import io.github.biezhi.anima.page.Page;
@@ -169,7 +170,8 @@ public class JavaRecord {
         }
     }
 
-    public <T extends Model> T findById(Serializable id) {
+    public <T extends Model> T byId(Serializable id) {
+        this.beforeCheck();
         this.where(pkName, id);
         StringBuilder sql = this.buildSelectSQL();
         try (Connection conn = getConn()) {
@@ -179,7 +181,8 @@ public class JavaRecord {
         }
     }
 
-    public <T extends Model> List<T> findByIds(Serializable... ids) {
+    public <T extends Model> List<T> byIds(Serializable... ids) {
+        this.beforeCheck();
         this.in(pkName, ids);
         StringBuilder sql = this.buildSelectSQL();
         try (Connection conn = getConn()) {
@@ -198,6 +201,7 @@ public class JavaRecord {
     }
 
     public <T extends Model> List<T> all() {
+        this.beforeCheck();
         StringBuilder sql = this.buildSelectSQL();
         try (Connection conn = getConn()) {
             return conn.createQuery(sql.toString()).withParams(paramValues).setAutoDeriveColumnNames(true).executeAndFetch((Class<T>) modelClass);
@@ -207,6 +211,7 @@ public class JavaRecord {
     }
 
     public <T extends Model> T one() {
+        this.beforeCheck();
         StringBuilder sql = this.buildSelectSQL();
         sql.append(" LIMIT 1");
         try (Connection conn = getConn()) {
@@ -221,6 +226,7 @@ public class JavaRecord {
     }
 
     public <T extends Model> List<T> limit(int offset, int limit) {
+        this.beforeCheck();
         StringBuilder sql = this.buildSelectSQL();
         sql.append(" LIMIT ?, ?");
         paramValues.add(offset);
@@ -238,6 +244,7 @@ public class JavaRecord {
     }
 
     public <T extends Model> Page<T> page(PageRow pageRow) {
+        this.beforeCheck();
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT ").append(null != this.selectColumns ? this.selectColumns : "*").append(" FROM ").append(tableName);
         if (subSQL.length() > 0) {
@@ -267,6 +274,9 @@ public class JavaRecord {
     }
 
     public long count() {
+
+        this.beforeCheck();
+
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT COUNT(*) FROM ").append(tableName);
 
@@ -355,7 +365,13 @@ public class JavaRecord {
         }
     }
 
+    public int deleteById(Serializable id) {
+        this.where(pkName, id);
+        return this.delete();
+    }
+
     public <T extends Model> int deleteByModel(T model) {
+        this.beforeCheck();
         StringBuilder sql = new StringBuilder();
         sql.append("DELETE FROM ").append(tableName);
 
@@ -425,6 +441,9 @@ public class JavaRecord {
     }
 
     public <T extends Model> int updateByModel(T model) {
+
+        this.beforeCheck();
+
         StringBuilder sql = new StringBuilder();
         sql.append("UPDATE ").append(tableName).append(" SET ");
 
@@ -481,6 +500,12 @@ public class JavaRecord {
             sql.append(" ORDER BY ").append(this.orderBy);
         }
         return sql;
+    }
+
+    private void beforeCheck() {
+        if (null == this.modelClass) {
+            throw new AnimaException(ErrorCode.FROM_NOT_NULL);
+        }
     }
 
     private static Connection getConn() {

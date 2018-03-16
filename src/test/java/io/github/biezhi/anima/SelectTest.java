@@ -29,11 +29,11 @@ public class SelectTest extends BaseTest {
 
     @Test
     public void testFindById() {
-        User user = select().from(User.class).findById(2);
+        User user = select().from(User.class).byId(2);
         Assert.assertNotNull(user);
         Assert.assertEquals(Integer.valueOf(2), user.getId());
 
-        List<User> users = select().from(User.class).findByIds(1, 2, 3);
+        List<User> users = select().from(User.class).byIds(1, 2, 3);
         Assert.assertNotNull(users);
         Assert.assertEquals(3, users.size());
     }

@@ -15,16 +15,23 @@
  */
 package io.github.biezhi.anima.exception;
 
+import io.github.biezhi.anima.enums.ErrorCode;
+import lombok.Getter;
+
+@Getter
 public class AnimaException extends RuntimeException {
 
-    private static final long serialVersionUID = 1L;
+    private Integer code;
+    private String  message;
 
     public AnimaException() {
         super();
     }
 
-    public AnimaException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
+    public AnimaException(ErrorCode errorCode) {
+        super(errorCode.getMsg());
+        this.code = errorCode.getCode();
+        this.message = errorCode.getMsg();
     }
 
     public AnimaException(String message, Throwable cause) {
