@@ -2,7 +2,8 @@
 
 `Anima` allows you to query databases like `SQL` and `Stream`.
 
-[![Travis Build](https://travis-ci.org/biezhi/anima.svg?branch=master)](https://travis-ci.org/biezhi/anima) 
+[![Travis Build](https://travis-ci.org/biezhi/anima.svg?branch=master)](https://travis-ci.org/biezhi/anima)
+[![](https://img.shields.io/maven-central/v/io.github.biezhi/anima.svg)](https://mvnrepository.com/artifact/io.github.biezhi/anima) 
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com) 
 [![License](https://img.shields.io/badge/license-Apache2-blue.svg)](https://github.com/biezhi/anima/blob/master/LICENSE)
 [![@biezhi on zhihu](https://img.shields.io/badge/zhihu-%40biezhi-red.svg)](https://www.zhihu.com/people/biezhi)
@@ -17,6 +18,20 @@
 - Flexible configuration 
 - Connection pool support 
 - SQL performance statistics
+
+
+# Usage
+
+Add maven dependency
+
+```xml
+<dependency>
+    <groupId>io.github.biezhi</groupId>
+    <artifactId>anima</artifactId>
+    <version>0.0.1</version>
+</dependency>
+```
+
 
 ## Example
 
