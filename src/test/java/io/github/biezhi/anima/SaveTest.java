@@ -4,6 +4,9 @@ import io.github.biezhi.anima.model.User;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Save
  *
@@ -28,8 +31,17 @@ public class SaveTest extends BaseTest {
     }
 
     @Test
-    public void testSave3(){
+    public void testSave3() {
         Anima.save(new User("save3", 100));
+    }
+
+    @Test
+    public void testSave4() {
+        List<User> users = new ArrayList<>();
+        users.add(new User("user1", 10));
+        users.add(new User("user2", 11));
+        users.add(new User("user3", 12));
+        Anima.saveBatch(users);
     }
 
 }

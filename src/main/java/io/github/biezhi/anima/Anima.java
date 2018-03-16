@@ -19,16 +19,21 @@ import io.github.biezhi.anima.core.Atomic;
 import io.github.biezhi.anima.core.JavaRecord;
 import io.github.biezhi.anima.core.ResultKey;
 import io.github.biezhi.anima.enums.DMLType;
+import lombok.extern.slf4j.Slf4j;
 import org.sql2o.Sql2o;
 import org.sql2o.quirks.Quirks;
 import org.sql2o.quirks.QuirksDetector;
 
 import javax.sql.DataSource;
+import java.util.List;
 
 /**
+ * Anima
+ *
  * @author biezhi
  * @date 2018/3/13
  */
+@Slf4j
 public class Anima {
 
     private Sql2o sql2o;
@@ -59,6 +64,14 @@ public class Anima {
 
     public static <T extends Model> ResultKey save(T model) {
         return new JavaRecord(model.getClass()).save(model);
+    }
+
+    public static <T extends Model> void saveBatch(List<T> models) {
+        atomic(() -> {
+            for (T model : models) {
+                save(model);
+            }
+        }).catchException(e -> log.error("Batch save model error, message: {}", e));
     }
 
     private static final class AnimaHolder {

@@ -37,7 +37,7 @@ compile 'io.github.biezhi:anima:0.0.1'
 </dependency>
 ```
 
-> Although `Anima` can also be used by adding a jar package, we do not recommend doing this.
+> 📒 Although `Anima` can also be used by adding a jar package, we do not recommend doing this.
 
 ## Examples
 
@@ -47,7 +47,7 @@ compile 'io.github.biezhi:anima:0.0.1'
 Anima.open("jdbc:mysql://127.0.0.1:3306/demo", "root", "123456");
 ```
 
-> ⚠️ This operation only needs one time
+> 📕 This operation only needs one time
 
 ```java
 public class User extends Model {
@@ -125,6 +125,18 @@ or
 Anima.save(new User("jack", 100));
 ```
 
+**Batch Save**
+
+```java
+List<User> users = new ArrayList<>();
+users.add(new User("user1", 10));
+users.add(new User("user2", 11));
+users.add(new User("user3", 12));
+Anima.saveBatch(users);
+```
+
+> 📘 This operation will begin a transaction and rollback when there is a transaction that is unsuccessful.
+
 ### Update
 
 ```java
@@ -175,7 +187,7 @@ Anima.atomic(() -> {
 }).catchException(e -> Assert.assertEquals(ArithmeticException.class, e.getClass()));
 ```
 
-> `Anima` uses the `atomic` method to complete a transaction. normally, the code will not throw an exception. 
+> 📗 `Anima` uses the `atomic` method to complete a transaction. normally, the code will not throw an exception. 
 > when a `RuntimeException` is caught, the transaction will be `rollback`.
 
 ## Test Code
