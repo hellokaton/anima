@@ -30,7 +30,7 @@ public class Sql2o {
     final Quirks quirks;
     private Map<String, String> defaultColumnMappings;
     private boolean defaultCaseSensitive;
-
+    private int isolationLevel;
     private ConnectionSource connectionSource;
 
     public Sql2o(String jndiLookup) {
@@ -134,6 +134,10 @@ public class Sql2o {
      */
     public void setDefaultCaseSensitive(boolean defaultCaseSensitive) {
         this.defaultCaseSensitive = defaultCaseSensitive;
+    }
+
+    public void setIsolationLevel(int isolationLevel) {
+        this.isolationLevel = isolationLevel;
     }
 
     /**
@@ -265,6 +269,9 @@ public class Sql2o {
      * @return the {@link Connection} instance to use to run statements in the transaction.
      */
     public Connection beginTransaction(){
+        if(isolationLevel > 0){
+            return this.beginTransaction(this.isolationLevel);
+        }
         return this.beginTransaction(java.sql.Connection.TRANSACTION_READ_COMMITTED);
     }
 

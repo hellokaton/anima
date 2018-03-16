@@ -530,7 +530,9 @@ public class JavaRecord {
     }
 
     public static void rollback() {
-        connectionThreadLocal.get().rollback();
+        if(null != connectionThreadLocal.get()){
+            connectionThreadLocal.get().rollback();
+        }
     }
 
     public static Sql2o getSql2o() {

@@ -25,6 +25,8 @@ import org.sql2o.quirks.Quirks;
 import org.sql2o.quirks.QuirksDetector;
 
 import javax.sql.DataSource;
+import java.io.Serializable;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -72,6 +74,16 @@ public class Anima {
                 save(model);
             }
         }).catchException(e -> log.error("Batch save model error, message: {}", e));
+    }
+
+    public static <T extends Model, S extends Serializable> void deleteBatch(Class<T> modelClass, Serializable... ids) {
+        JavaRecord javaRecord = new JavaRecord(modelClass);
+        atomic(() -> Arrays.stream(ids).forEach(javaRecord::deleteById)).catchException(e -> log.error("Batch save model error, message: {}", e));
+    }
+
+    public static <T extends Model, S extends Serializable> void deleteBatch(Class<T> modelClass, List<S> idList) {
+        JavaRecord javaRecord = new JavaRecord(modelClass);
+        atomic(() -> idList.stream().forEach(javaRecord::deleteById)).catchException(e -> log.error("Batch save model error, message: {}", e));
     }
 
     private static final class AnimaHolder {
