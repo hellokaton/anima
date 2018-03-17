@@ -2,12 +2,14 @@
 
 `Anima` allows you to query database like `SQL` and `Stream`.
 
+More designs and documents are available [here](https://github.com/biezhi/anima/wiki).
+
 [![Travis Build](https://travis-ci.org/biezhi/anima.svg?branch=master)](https://travis-ci.org/biezhi/anima)
 [![](https://img.shields.io/maven-central/v/io.github.biezhi/anima.svg)](https://mvnrepository.com/artifact/io.github.biezhi/anima) 
 [![License](https://img.shields.io/badge/license-Apache-2-blue.svg)](https://github.com/biezhi/anima/blob/master/LICENSE)
 [![@biezhi on zhihu](https://img.shields.io/badge/zhihu-%40biezhi-red.svg)](https://www.zhihu.com/people/biezhi)
 [![Twitter URL](https://img.shields.io/twitter/url/https/twitter.com/biezhii.svg?style=social&label=Follow%20Twitter)](https://twitter.com/biezhii)
-[![](https://img.shields.io/github/followers/biezhi.svg?style=social&label=Follow%20Github)](https://github.com/biezhi)
+[![Gitter](https://badges.gitter.im/biezhi/anima.svg)](https://gitter.im/biezhi/anima)
 
 ## Feature
 
@@ -23,7 +25,7 @@
 **As Gradle**
 
 ```java
-compile 'io.github.biezhi:anima:0.0.2'
+compile 'io.github.biezhi:anima:0.0.3'
 ```
 
 **As Maven**
@@ -32,7 +34,7 @@ compile 'io.github.biezhi:anima:0.0.2'
 <dependency>
     <groupId>io.github.biezhi</groupId>
     <artifactId>anima</artifactId>
-    <version>0.0.2</version>
+    <version>0.0.3</version>
 </dependency>
 ```
 
