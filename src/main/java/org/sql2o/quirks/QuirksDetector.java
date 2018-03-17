@@ -10,10 +10,6 @@
 
 package org.sql2o.quirks;
 
-import org.sql2o.GenericDatasource;
-
-import javax.sql.DataSource;
-import javax.xml.ws.Service;
 import java.util.ServiceLoader;
 
 /**
@@ -29,7 +25,6 @@ public class QuirksDetector{
                 return quirksProvider.provide();
             }
         }
-
         return new NoQuirks();
     }
 

@@ -16,7 +16,8 @@ public class DeleteTest extends BaseTest {
 
     @Test
     public void testDelete() {
-        int result = delete().from(User.class).where("id", 1).execute();
+        new User(9001, "test", 14).save();
+        int result = delete().from(User.class).where("id", 9001).execute();
         Assert.assertEquals(1, result);
     }
 
@@ -26,6 +27,16 @@ public class DeleteTest extends BaseTest {
         user.setAge(15);
         user.setUserName("jack");
         user.delete();
+    }
+
+    @Test
+    public void testDelete3() {
+        Anima.deleteBatch(User.class, 1, 2, 3);
+    }
+
+    @Test
+    public void testDelete4(){
+        Anima.deleteById(User.class, 5);
     }
 
 }

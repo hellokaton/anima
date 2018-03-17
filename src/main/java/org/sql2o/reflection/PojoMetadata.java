@@ -87,13 +87,13 @@ public class PojoMetadata {
         HashMap<String, Setter> propertySetters = new HashMap<String, Setter>();
         HashMap<String, Field> fields = new HashMap<String, Field>();
 
-        boolean isJpaColumnInClasspath = false;
-        try {
-            Class.forName("javax.persistence.Column");
-            isJpaColumnInClasspath = true;
-        } catch (ClassNotFoundException e) {
-            // javax.persistence.Column is not in the classpath
-        }
+        boolean isJpaColumnInClasspath = true;
+//        try {
+//            Class.forName("io.github.biezhi.anima.annotation.Column");
+//            isJpaColumnInClasspath = true;
+//        } catch (ClassNotFoundException e) {
+//            // javax.persistence.Column is not in the classpath
+//        }
         
         Class theClass = clazz;
         ObjectConstructor objectConstructor = factoryFacade.newConstructor(theClass);

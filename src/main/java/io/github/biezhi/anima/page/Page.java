@@ -1,3 +1,18 @@
+/**
+ * Copyright (c) 2018, biezhi 王爵 (biezhi.me@gmail.com)
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package io.github.biezhi.anima.page;
 
 import lombok.Data;
@@ -6,77 +21,71 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-/**
- * 分页对象封装
- *
- * @author biezhi
- * @date 2017/7/24
- */
 @Data
 public class Page<T> {
 
     /**
-     * 当前页
+     * current page number
      */
     private int pageNum = 1;
 
     /**
-     * 每页多少条
+     * How many pages per page
      */
     private int limit = 10;
 
     /**
-     * 上一页
+     * prev page number
      */
     private int prevPage = 1;
 
     /**
-     * 下一页
+     * next page number
      */
     private int  nextPage   = 1;
 
     /**
-     * 总页数
+     * total page count
      */
     private int  totalPages = 1;
 
     /**
-     * 总记录数
+     * total row count
      */
     private long totalRows  = 0L;
 
     /**
-     * 记录行
+     * row list
      */
     private List<T> rows;
 
     /**
-     * 是否为第一页
+     * is first page
      */
     private boolean isFirstPage = false;
 
     /**
-     * 是否为最后一页
+     * is last page
      */
     private boolean isLastPage = false;
 
     /**
-     * 是否有前一页
+     * has prev page
      */
     private boolean hasPrevPage = false;
 
     /**
-     * 是否有下一页
+     * has next page
      */
     private boolean hasNextPage = false;
 
     /**
-     * 导航页码数
+     * navigation page number
      */
     private int navPages = 8;
 
     /**
-     * 所有导航页号
+     * all navigation page number
      */
     private int[] navPageNums;
 
@@ -94,12 +103,12 @@ public class Page<T> {
     }
 
     private void init(long total, int pageNum, int limit) {
-        //设置基本参数
+        // set basic params
         this.totalRows = total;
         this.limit = limit;
         this.totalPages = (int) ((this.totalRows - 1) / this.limit + 1);
 
-        //根据输入可能错误的当前号码进行自动纠正
+        // automatic correction based on the current number of the wrong input
         if (pageNum < 1) {
             this.pageNum = 1;
         } else if (pageNum > this.totalPages) {
@@ -108,39 +117,36 @@ public class Page<T> {
             this.pageNum = pageNum;
         }
 
-        //基本参数设定之后进行导航页面的计算
+        // calculation of navigation page after basic parameter setting
         this.calcNavigatePageNumbers();
 
-        //以及页面边界的判定
+        // and the determination of page boundaries
         judgePageBoudary();
     }
 
     private void calcNavigatePageNumbers() {
-        //当总页数小于或等于导航页码数时
+        // when the total number of pages is less than or equal to the number of navigation pages
         if (this.totalPages <= navPages) {
             navPageNums = new int[totalPages];
             for (int i = 0; i < totalPages; i++) {
                 navPageNums[i] = i + 1;
             }
         } else {
-            //当总页数大于导航页码数时
+            // when the total number of pages is greater than the number of navigation pages
             navPageNums = new int[navPages];
             int startNum = pageNum - navPages / 2;
             int endNum   = pageNum + navPages / 2;
             if (startNum < 1) {
                 startNum = 1;
-                // 最前navPageCount页
                 for (int i = 0; i < navPages; i++) {
                     navPageNums[i] = startNum++;
                 }
             } else if (endNum > totalPages) {
                 endNum = totalPages;
-                //最后navPageCount页
                 for (int i = navPages - 1; i >= 0; i--) {
                     navPageNums[i] = endNum--;
                 }
             } else {
-                //所有中间页
                 for (int i = 0; i < navPages; i++) {
                     navPageNums[i] = startNum++;
                 }

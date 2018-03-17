@@ -2,10 +2,13 @@ package org.sql2o.quirks;
 
 import org.sql2o.converters.Convert;
 import org.sql2o.converters.Converter;
+import org.sql2o.converters.java8.LocalDateConverter;
+import org.sql2o.converters.java8.LocalDateTimeConverter;
 
 import java.io.InputStream;
 import java.sql.*;
-import java.util.Collections;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -15,17 +18,20 @@ import java.util.UUID;
  * @since 4/6/14
  */
 public class NoQuirks implements Quirks {
+
     protected final Map<Class,Converter>  converters;
 
     public NoQuirks(Map<Class, Converter> converters) {
         // protective copy
         // to avoid someone change this collection outside
         // so this makes converters thread-safe
-        this.converters = new HashMap<Class, Converter>(converters);
+        this.converters = new HashMap<>(converters);
     }
 
     public NoQuirks() {
-        this(Collections.<Class,Converter>emptyMap());
+        this.converters = new HashMap<>();
+        this.converters.put(LocalDate.class, new LocalDateConverter());
+        this.converters.put(LocalDateTime.class, new LocalDateTimeConverter());
     }
 
     @SuppressWarnings("unchecked") @Override
@@ -35,7 +41,6 @@ public class NoQuirks implements Quirks {
         Converter c =  converters.get(ofClass);
         // if no "local" converter let's look in global
         return c!=null?c:Convert.getConverterIfExists(ofClass);
-
     }
 
     @Override

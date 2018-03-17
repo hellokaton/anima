@@ -15,10 +15,15 @@
  */
 package io.github.biezhi.anima;
 
-import io.github.biezhi.anima.core.Atomic;
 import io.github.biezhi.anima.core.AnimaDB;
+import io.github.biezhi.anima.core.Atomic;
 import io.github.biezhi.anima.core.ResultKey;
 import io.github.biezhi.anima.enums.DMLType;
+import io.github.biezhi.anima.exception.AnimaException;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.sql2o.Sql2o;
 import org.sql2o.quirks.Quirks;
@@ -29,6 +34,8 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
+import static io.github.biezhi.anima.enums.ErrorCode.SQL2O_IS_NULL;
+
 /**
  * Anima
  *
@@ -36,16 +43,76 @@ import java.util.List;
  * @date 2018/3/13
  */
 @Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Anima {
 
-    private Sql2o sql2o;
-    private String tablePrefix = "";
+    @Getter
+    @Setter
+    private Sql2o  sql2o;
+    @Getter
+    @Setter
+    private String tablePrefix;
 
-    private Anima() {
-    }
+    private static Anima instance;
 
     public static Anima me() {
-        return AnimaHolder.INSTANCE;
+        if (null == instance.sql2o) {
+            throw new AnimaException(SQL2O_IS_NULL);
+        }
+        return instance;
+    }
+
+    public Anima(Sql2o sql2o) {
+        open(sql2o);
+    }
+
+    public Anima(DataSource dataSource){
+        open(dataSource);
+    }
+
+    public Anima(String url, String user, String pass) {
+        open(url, user, pass);
+    }
+
+    public static Anima open(Sql2o sql2o) {
+        Anima anima = new Anima();
+        anima.setSql2o(sql2o);
+        instance = anima;
+        return anima;
+    }
+
+    public static Anima open(String url) {
+        return open(url, null, null);
+    }
+
+    public static Anima open(DataSource dataSource) {
+        Sql2o sql2o = new Sql2o(dataSource);
+        Anima anima = Anima.me();
+        anima.sql2o = sql2o;
+        return anima;
+    }
+
+    public static Anima open(String url, String user, String pass) {
+        return open(url, user, pass, QuirksDetector.forURL(url));
+    }
+
+    public static Anima open(String url, String user, String pass, Quirks quirks) {
+        Sql2o sql2o = new Sql2o(url, user, pass, quirks);
+        return open(sql2o);
+    }
+
+    public static Atomic atomic(Runnable runnable) {
+        try {
+            AnimaDB.beginTransaction();
+            runnable.run();
+            AnimaDB.commit();
+            return Atomic.ok();
+        } catch (RuntimeException e) {
+            AnimaDB.rollback();
+            return Atomic.error(e);
+        } finally {
+            AnimaDB.endTransaction();
+        }
     }
 
     public static AnimaDB select() {
@@ -86,57 +153,8 @@ public class Anima {
         atomic(() -> idList.stream().forEach(animaDB::deleteById)).catchException(e -> log.error("Batch save model error, message: {}", e));
     }
 
-    private static final class AnimaHolder {
-        private static final Anima INSTANCE = new Anima();
-    }
-
-    public static Anima open(String url) {
-        return open(url, null, null);
-    }
-
-    public static Anima open(DataSource dataSource) {
-        Sql2o sql2o = new Sql2o(dataSource);
-        Anima anima = Anima.me();
-        anima.sql2o = sql2o;
-        return anima;
-    }
-
-    public static Anima open(String url, String user, String pass) {
-        return open(url, user, pass, QuirksDetector.forURL(url));
-    }
-
-    public static Anima open(String url, String user, String pass, Quirks quirks) {
-        Sql2o sql2o = new Sql2o(url, user, pass, quirks);
-        Anima anima = Anima.me();
-        anima.sql2o = sql2o;
-        return anima;
-    }
-
-    public static Atomic atomic(Runnable runnable) {
-        try {
-            AnimaDB.beginTransaction();
-            runnable.run();
-            AnimaDB.commit();
-            return Atomic.ok();
-        } catch (RuntimeException e) {
-            AnimaDB.rollback();
-            return Atomic.error(e);
-        } finally {
-            AnimaDB.endTransaction();
-        }
-    }
-
-    public String tablePrefix() {
-        return this.tablePrefix;
-    }
-
-    public Anima tablePrefix(String tablePrefix) {
-        this.tablePrefix = tablePrefix;
-        return this;
-    }
-
-    public Sql2o getCommonSql2o() {
-        return sql2o;
+    public static <T extends Model> int deleteById(Class<T> modelClass, Serializable id) {
+        return new AnimaDB(modelClass).deleteById(id);
     }
 
 }

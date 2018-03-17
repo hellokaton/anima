@@ -560,7 +560,7 @@ public class AnimaDB {
     }
 
     public static Sql2o getSql2o() {
-        Sql2o sql2o = Anima.me().getCommonSql2o();
+        Sql2o sql2o = Anima.me().getSql2o();
         if (null == sql2o) {
             throw new AnimaException("SQL2O instance not is null.");
         }
@@ -600,7 +600,7 @@ public class AnimaDB {
         this.modelClass = modelClass;
         Table table = modelClass.getAnnotation(Table.class);
         this.tableName = null != table && SqlUtils.isNotEmpty(table.name()) ? table.name() :
-                SqlUtils.toTableName(modelClass.getSimpleName(), Anima.me().tablePrefix());
+                SqlUtils.toTableName(modelClass.getSimpleName(), Anima.me().getTablePrefix());
         this.pkName = null != table ? table.pk() : "id";
         return this;
     }

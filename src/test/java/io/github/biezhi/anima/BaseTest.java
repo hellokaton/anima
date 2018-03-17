@@ -15,7 +15,7 @@ public class BaseTest {
 
     @BeforeClass
     public static void before() {
-        sqlite();
+        h2();
         initData();
         System.out.println();
         log.info("============== Start Test Code ==============");
@@ -34,7 +34,7 @@ public class BaseTest {
     }
 
     private static void h2() {
-        Sql2o sql2o = Anima.open("jdbc:h2:file:~/demo;FILE_LOCK=FS;PAGE_SIZE=1024;CACHE_SIZE=8192", "sa", "").getCommonSql2o();
+        Sql2o sql2o = Anima.open("jdbc:h2:file:~/demo;FILE_LOCK=FS;PAGE_SIZE=1024;CACHE_SIZE=8192", "sa", "").getSql2o();
 
         String sql = "DROP TABLE IF EXISTS `users`;\n" +
                 "CREATE TABLE `users` (" +
@@ -49,7 +49,7 @@ public class BaseTest {
     }
 
     private static void sqlite() {
-        Sql2o sql2o = Anima.open("jdbc:sqlite:./demo.db").getCommonSql2o();
+        Sql2o sql2o = Anima.open("jdbc:sqlite:./demo.db").getSql2o();
         sql2o.setIsolationLevel(java.sql.Connection.TRANSACTION_SERIALIZABLE);
 
         try (Connection con = sql2o.open()) {
