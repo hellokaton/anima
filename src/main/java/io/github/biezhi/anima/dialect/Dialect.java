@@ -2,11 +2,11 @@ package io.github.biezhi.anima.dialect;
 
 import io.github.biezhi.anima.core.SQLParams;
 import io.github.biezhi.anima.exception.AnimaException;
-import io.github.biezhi.anima.utils.SqlUtils;
+import io.github.biezhi.anima.utils.AnimaUtils;
 
 import java.lang.reflect.Field;
 
-import static io.github.biezhi.anima.utils.SqlUtils.isIgnore;
+import static io.github.biezhi.anima.utils.AnimaUtils.isIgnore;
 
 /**
  * Database Dialect
@@ -19,8 +19,10 @@ public interface Dialect {
     default String select(SQLParams sqlParams) {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT");
-        if (SqlUtils.isNotEmpty(sqlParams.getSelectColumns())) {
+        if (AnimaUtils.isNotEmpty(sqlParams.getSelectColumns())) {
             sql.append(' ').append(sqlParams.getSelectColumns()).append(' ');
+        } else if (AnimaUtils.isNotEmpty(sqlParams.getExcludedColumns())) {
+            sql.append(' ').append(AnimaUtils.buildColumns(sqlParams.getExcludedColumns(), sqlParams.getModelClass())).append(' ');
         } else {
             sql.append(" * ");
         }
@@ -28,7 +30,7 @@ public interface Dialect {
         if (sqlParams.getConditionSQL().length() > 0) {
             sql.append(" WHERE ").append(sqlParams.getConditionSQL().substring(5));
         }
-        if (SqlUtils.isNotEmpty(sqlParams.getOrderBy())) {
+        if (AnimaUtils.isNotEmpty(sqlParams.getOrderBy())) {
             sql.append(" ORDER BY ").append(sqlParams.getOrderBy());
         }
         return sql.toString();
@@ -54,7 +56,7 @@ public interface Dialect {
             if (isIgnore(field)) {
                 continue;
             }
-            columnNames.append(",").append(SqlUtils.toColumnName(field));
+            columnNames.append(",").append(AnimaUtils.toColumnName(field));
             placeholder.append(",?");
         }
         sql.append("(").append(columnNames.substring(1)).append(")").append(" VALUES (")
@@ -81,7 +83,7 @@ public interface Dialect {
                     if (null == value) {
                         continue;
                     }
-                    setSQL.append(SqlUtils.toColumnName(field.getName())).append(" = ?, ");
+                    setSQL.append(AnimaUtils.toColumnName(field.getName())).append(" = ?, ");
                 } catch (IllegalArgumentException | IllegalAccessException e) {
                     throw new AnimaException("illegal argument or Access:", e);
                 }
@@ -112,7 +114,7 @@ public interface Dialect {
                     if (null == value) {
                         continue;
                     }
-                    columnNames.append(SqlUtils.toColumnName(field.getName())).append(" = ? and ");
+                    columnNames.append(AnimaUtils.toColumnName(field.getName())).append(" = ? and ");
                 } catch (IllegalArgumentException | IllegalAccessException e) {
                     throw new AnimaException("illegal argument or Access:", e);
                 }

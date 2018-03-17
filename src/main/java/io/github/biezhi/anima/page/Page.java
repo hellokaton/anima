@@ -25,27 +25,27 @@ import java.util.stream.Collectors;
 public class Page<T> {
 
     /**
-     * current page number
+     * current pageNum number
      */
     private int pageNum = 1;
 
     /**
-     * How many pages per page
+     * How many pages per pageNum
      */
     private int limit = 10;
 
     /**
-     * prev page number
+     * prev pageNum number
      */
     private int prevPage = 1;
 
     /**
-     * next page number
+     * next pageNum number
      */
     private int  nextPage   = 1;
 
     /**
-     * total page count
+     * total pageNum count
      */
     private int  totalPages = 1;
 
@@ -60,32 +60,32 @@ public class Page<T> {
     private List<T> rows;
 
     /**
-     * is first page
+     * is first pageNum
      */
     private boolean isFirstPage = false;
 
     /**
-     * is last page
+     * is last pageNum
      */
     private boolean isLastPage = false;
 
     /**
-     * has prev page
+     * has prev pageNum
      */
     private boolean hasPrevPage = false;
 
     /**
-     * has next page
+     * has next pageNum
      */
     private boolean hasNextPage = false;
 
     /**
-     * navigation page number
+     * navigation pageNum number
      */
     private int navPages = 8;
 
     /**
-     * all navigation page number
+     * all navigation pageNum number
      */
     private int[] navPageNums;
 
@@ -117,10 +117,10 @@ public class Page<T> {
             this.pageNum = pageNum;
         }
 
-        // calculation of navigation page after basic parameter setting
+        // calculation of navigation pageNum after basic parameter setting
         this.calcNavigatePageNumbers();
 
-        // and the determination of page boundaries
+        // and the determination of pageNum boundaries
         judgePageBoudary();
     }
 

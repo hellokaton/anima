@@ -18,22 +18,28 @@ package io.github.biezhi.anima.utils;
 import io.github.biezhi.anima.Model;
 import io.github.biezhi.anima.annotation.Column;
 import io.github.biezhi.anima.annotation.Ignore;
+import io.github.biezhi.anima.enums.SupportedType;
 import io.github.biezhi.anima.exception.AnimaException;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
  * Utility class for composing SQL statements
  */
-public class SqlUtils {
+public class AnimaUtils {
 
-    private SqlUtils() {
+    private AnimaUtils() {
     }
 
     public static boolean isNotEmpty(String value) {
         return null != value && !value.isEmpty();
+    }
+
+    public static boolean isNotEmpty(Collection collection) {
+        return null != collection && !collection.isEmpty();
     }
 
     /**
@@ -104,8 +110,33 @@ public class SqlUtils {
         return columnValueList;
     }
 
+    public static <T extends Model> String buildColumns(List<String> excludedColumns, Class<T> modelClass) {
+        StringBuilder sql            = new StringBuilder();
+        Field[]       declaredFields = modelClass.getDeclaredFields();
+        for (Field field : declaredFields) {
+            String columnName = toColumnName(field.getName());
+            if (!excludedColumns.contains(columnName)) {
+                sql.append(columnName).append(',');
+            }
+        }
+        if (sql.length() > 0) {
+            return sql.substring(0, sql.length() - 1);
+        }
+        return "*";
+    }
+
     public static boolean isIgnore(Field field) {
-        return null != field.getAnnotation(Ignore.class);
+        if ("serialVersionUID".equals(field.getName())) {
+            return true;
+        }
+        if (null != field.getAnnotation(Ignore.class)) {
+            return true;
+        }
+        String typeName = field.getType().getSimpleName().toLowerCase();
+        if (!SupportedType.contains(typeName)) {
+            return true;
+        }
+        return false;
     }
 
 }

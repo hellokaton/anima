@@ -112,6 +112,13 @@ public class SelectTest extends BaseTest {
     }
 
     @Test
+    public void testExclude(){
+        User user = select().from(User.class).exclude("age").one();
+        Assert.assertNotNull(user);
+        Assert.assertNull(user.getAge());
+    }
+
+    @Test
     public void testPage() {
         Page<User> userPage = select().from(User.class).order("id desc").page(1, 3);
 

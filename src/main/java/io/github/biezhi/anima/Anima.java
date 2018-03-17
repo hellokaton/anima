@@ -146,7 +146,7 @@ public class Anima {
         }).catchException(e -> log.error("Batch save model error, message: {}", e));
     }
 
-    public static <T extends Model, S extends Serializable> void deleteBatch(Class<T> modelClass, Serializable... ids) {
+    public static <T extends Model, S extends Serializable> void deleteBatch(Class<T> modelClass, S... ids) {
         AnimaDB animaDB = new AnimaDB(modelClass);
         atomic(() -> Arrays.stream(ids).forEach(animaDB::deleteById)).catchException(e -> log.error("Batch save model error, message: {}", e));
     }
@@ -158,6 +158,10 @@ public class Anima {
 
     public static <T extends Model> int deleteById(Class<T> modelClass, Serializable id) {
         return new AnimaDB(modelClass).deleteById(id);
+    }
+
+    public static int execute(String sql, Object...params) {
+        return new AnimaDB().execute(sql, params);
     }
 
 }

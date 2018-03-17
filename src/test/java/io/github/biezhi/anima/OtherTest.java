@@ -29,4 +29,9 @@ public class OtherTest extends BaseTest {
         Assert.assertEquals(9, Anima.select().from(User.class).count());
     }
 
+    @Test
+    public void testExecute(){
+        Anima.execute("drop table if exists hello_world");
+        Anima.execute("create table hello_world(int integer not null)");
+    }
 }
