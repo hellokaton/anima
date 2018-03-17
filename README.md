@@ -1,5 +1,7 @@
 # Anima
 
+[![Join the chat at https://gitter.im/anima-chat/Lobby](https://badges.gitter.im/anima-chat/Lobby.svg)](https://gitter.im/anima-chat/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 `Anima` allows you to query database like `SQL` and `Stream`.
 
 More designs and documents are available [here](https://github.com/biezhi/anima/wiki).
