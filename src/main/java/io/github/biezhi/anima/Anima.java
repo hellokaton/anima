@@ -16,7 +16,7 @@
 package io.github.biezhi.anima;
 
 import io.github.biezhi.anima.core.Atomic;
-import io.github.biezhi.anima.core.JavaRecord;
+import io.github.biezhi.anima.core.AnimaDB;
 import io.github.biezhi.anima.core.ResultKey;
 import io.github.biezhi.anima.enums.DMLType;
 import lombok.extern.slf4j.Slf4j;
@@ -48,24 +48,24 @@ public class Anima {
         return AnimaHolder.INSTANCE;
     }
 
-    public static JavaRecord select() {
-        return new JavaRecord();
+    public static AnimaDB select() {
+        return new AnimaDB();
     }
 
-    public static JavaRecord select(String coulmns) {
-        return new JavaRecord().select(coulmns);
+    public static AnimaDB select(String coulmns) {
+        return new AnimaDB().select(coulmns);
     }
 
-    public static JavaRecord update() {
-        return new JavaRecord(DMLType.UPDATE);
+    public static AnimaDB update() {
+        return new AnimaDB(DMLType.UPDATE);
     }
 
-    public static JavaRecord delete() {
-        return new JavaRecord(DMLType.DELETE);
+    public static AnimaDB delete() {
+        return new AnimaDB(DMLType.DELETE);
     }
 
     public static <T extends Model> ResultKey save(T model) {
-        return new JavaRecord(model.getClass()).save(model);
+        return new AnimaDB(model.getClass()).save(model);
     }
 
     public static <T extends Model> void saveBatch(List<T> models) {
@@ -77,13 +77,13 @@ public class Anima {
     }
 
     public static <T extends Model, S extends Serializable> void deleteBatch(Class<T> modelClass, Serializable... ids) {
-        JavaRecord javaRecord = new JavaRecord(modelClass);
-        atomic(() -> Arrays.stream(ids).forEach(javaRecord::deleteById)).catchException(e -> log.error("Batch save model error, message: {}", e));
+        AnimaDB animaDB = new AnimaDB(modelClass);
+        atomic(() -> Arrays.stream(ids).forEach(animaDB::deleteById)).catchException(e -> log.error("Batch save model error, message: {}", e));
     }
 
     public static <T extends Model, S extends Serializable> void deleteBatch(Class<T> modelClass, List<S> idList) {
-        JavaRecord javaRecord = new JavaRecord(modelClass);
-        atomic(() -> idList.stream().forEach(javaRecord::deleteById)).catchException(e -> log.error("Batch save model error, message: {}", e));
+        AnimaDB animaDB = new AnimaDB(modelClass);
+        atomic(() -> idList.stream().forEach(animaDB::deleteById)).catchException(e -> log.error("Batch save model error, message: {}", e));
     }
 
     private static final class AnimaHolder {
@@ -114,15 +114,15 @@ public class Anima {
 
     public static Atomic atomic(Runnable runnable) {
         try {
-            JavaRecord.beginTransaction();
+            AnimaDB.beginTransaction();
             runnable.run();
-            JavaRecord.commit();
+            AnimaDB.commit();
             return Atomic.ok();
         } catch (RuntimeException e) {
-            JavaRecord.rollback();
+            AnimaDB.rollback();
             return Atomic.error(e);
         } finally {
-            JavaRecord.endTransaction();
+            AnimaDB.endTransaction();
         }
     }
 

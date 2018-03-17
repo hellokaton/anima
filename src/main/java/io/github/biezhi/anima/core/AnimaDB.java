@@ -39,7 +39,7 @@ import java.util.*;
  * @author biezhi
  */
 @Slf4j
-public class JavaRecord {
+public class AnimaDB {
 
     private Class<? extends Model> modelClass;
 
@@ -57,25 +57,25 @@ public class JavaRecord {
     private String  tableName;
     private DMLType dmlType;
 
-    public JavaRecord() {
+    public AnimaDB() {
         this.tableName = null;
         this.pkName = "id";
     }
 
-    public JavaRecord(DMLType dmlType) {
+    public AnimaDB(DMLType dmlType) {
         this.dmlType = dmlType;
     }
 
-    public JavaRecord(Class<? extends Model> modelClass) {
+    public AnimaDB(Class<? extends Model> modelClass) {
         this.from(modelClass);
     }
 
-    public JavaRecord execlud(String... fieldNames) {
+    public AnimaDB execlud(String... fieldNames) {
         Collections.addAll(excludedFields, fieldNames);
         return this;
     }
 
-    public JavaRecord select(String columns) {
+    public AnimaDB select(String columns) {
         if (null != this.selectColumns) {
             throw new AnimaException("Select method can only be called once.");
         }
@@ -83,12 +83,12 @@ public class JavaRecord {
         return this;
     }
 
-    public JavaRecord where(String statement) {
+    public AnimaDB where(String statement) {
         subSQL.append(" AND ").append(statement);
         return this;
     }
 
-    public JavaRecord where(String statement, Object value) {
+    public AnimaDB where(String statement, Object value) {
         subSQL.append(" AND ").append(statement);
         if (!statement.contains("?")) {
             subSQL.append(" = ?");
@@ -97,28 +97,28 @@ public class JavaRecord {
         return this;
     }
 
-    public JavaRecord and(String statement, Object value) {
+    public AnimaDB and(String statement, Object value) {
         return this.where(statement, value);
     }
 
-    public JavaRecord not(String key, Object value) {
+    public AnimaDB not(String key, Object value) {
         subSQL.append(" AND ").append(key).append(" != ?");
         paramValues.add(value);
         return this;
     }
 
-    public JavaRecord isNotNull(String key) {
+    public AnimaDB isNotNull(String key) {
         subSQL.append(" AND ").append(key).append(" IS NOT NULL");
         return this;
     }
 
-    public JavaRecord like(String key, Object value) {
+    public AnimaDB like(String key, Object value) {
         subSQL.append(" AND ").append(key).append(" LIKE ?");
         paramValues.add(value);
         return this;
     }
 
-    public JavaRecord in(String key, Object... args) {
+    public AnimaDB in(String key, Object... args) {
         if (args.length > 1) {
             subSQL.append(" AND ").append(key).append(" IN (");
             for (int i = 0; i < args.length; i++) {
@@ -134,14 +134,38 @@ public class JavaRecord {
         return this;
     }
 
-    public JavaRecord between(String coulmn, Object a, Object b) {
+    public AnimaDB between(String coulmn, Object a, Object b) {
         subSQL.append(" AND ").append(coulmn).append(" BETWEEN ? and ?");
         paramValues.add(a);
         paramValues.add(b);
         return this;
     }
 
-    public <T> JavaRecord in(String key, List<T> args) {
+    public AnimaDB gt(String column, Object value) {
+        subSQL.append(" AND ").append(column).append(" > ?");
+        paramValues.add(value);
+        return this;
+    }
+
+    public AnimaDB gte(String column, Object value) {
+        subSQL.append(" AND ").append(column).append(" >= ?");
+        paramValues.add(value);
+        return this;
+    }
+
+    public AnimaDB lt(String column, Object value) {
+        subSQL.append(" AND ").append(column).append(" < ?");
+        paramValues.add(value);
+        return this;
+    }
+
+    public AnimaDB lte(String column, Object value) {
+        subSQL.append(" AND ").append(column).append(" <= ?");
+        paramValues.add(value);
+        return this;
+    }
+
+    public <T> AnimaDB in(String key, List<T> args) {
         if (args.size() > 1) {
             subSQL.append(" AND ").append(key).append(" IN (");
             for (int i = 0; i < args.size(); i++) {
@@ -157,7 +181,7 @@ public class JavaRecord {
         return this;
     }
 
-    public JavaRecord order(String order) {
+    public AnimaDB order(String order) {
         this.orderBy = order;
         return this;
     }
@@ -291,7 +315,7 @@ public class JavaRecord {
         }
     }
 
-    public JavaRecord set(String column, Object value) {
+    public AnimaDB set(String column, Object value) {
         updateColumns.put(column, value);
         return this;
     }
@@ -517,7 +541,7 @@ public class JavaRecord {
     }
 
     public static void beginTransaction() {
-        Connection connection = JavaRecord.getSql2o().beginTransaction();
+        Connection connection = AnimaDB.getSql2o().beginTransaction();
         connectionThreadLocal.set(connection);
     }
 
@@ -530,7 +554,7 @@ public class JavaRecord {
     }
 
     public static void rollback() {
-        if(null != connectionThreadLocal.get()){
+        if (null != connectionThreadLocal.get()) {
             connectionThreadLocal.get().rollback();
         }
     }
@@ -572,7 +596,7 @@ public class JavaRecord {
         return excludedFields.contains(name) || name.startsWith("_");
     }
 
-    public JavaRecord from(Class<? extends Model> modelClass) {
+    public AnimaDB from(Class<? extends Model> modelClass) {
         this.modelClass = modelClass;
         Table table = modelClass.getAnnotation(Table.class);
         this.tableName = null != table && SqlUtils.isNotEmpty(table.name()) ? table.name() :
