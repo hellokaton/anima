@@ -9,7 +9,7 @@ More designs and documents are available [here](https://github.com/biezhi/anima/
 [![License](https://img.shields.io/badge/license-Apache2-blue.svg)](https://github.com/biezhi/anima/blob/master/LICENSE)
 [![@biezhi on zhihu](https://img.shields.io/badge/zhihu-%40biezhi-red.svg)](https://www.zhihu.com/people/biezhi)
 [![Twitter URL](https://img.shields.io/twitter/url/https/twitter.com/biezhii.svg?style=social&label=Follow%20Twitter)](https://twitter.com/biezhii)
-[![Gitter](https://badges.gitter.im/biezhi/anima.svg)](https://gitter.im/biezhi/anima)
+[![Gitter](https://badges.gitter.im/biezhi/anima.svg)](https://gitter.im/anima-chat)
 
 ## Feature
 
