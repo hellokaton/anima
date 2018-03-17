@@ -14,11 +14,12 @@ More designs and documents are available [here](https://github.com/biezhi/anima/
 ## Feature
 
 - Simple DSL 
-- Multiple database support 
+- H2、MySQL、SQLite、PostgreSQL、Oracle、SqlServer 
 - Paging support 
 - Flexible configuration 
 - Connection pool support 
 - SQL performance statistics
+- Based Java8
 
 # Usage
 
