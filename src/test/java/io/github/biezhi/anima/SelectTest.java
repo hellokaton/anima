@@ -105,6 +105,13 @@ public class SelectTest extends BaseTest {
     }
 
     @Test
+    public void testCondition(){
+        select().from(User.class).gt("age", 15).like("user_name", "ja%").count();
+
+        select().from(User.class).where("id > ?", 1).not("age", 10).lte("age", 90).count();
+    }
+
+    @Test
     public void testPage() {
         Page<User> userPage = select().from(User.class).order("id desc").page(1, 3);
 

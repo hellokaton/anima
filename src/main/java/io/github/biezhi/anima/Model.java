@@ -21,16 +21,12 @@ public class Model {
         return new AnimaDB(this.getClass()).updateByModel(this);
     }
 
-    public int update(Serializable id) {
-        return new AnimaDB(this.getClass()).updateById(id);
+    public int updateById(Serializable id) {
+        return new AnimaDB(this.getClass()).updateById(this, id);
     }
 
     public int delete() {
         return new AnimaDB(this.getClass()).deleteByModel(this);
-    }
-
-    public int deleteById(Serializable id) {
-        return new AnimaDB(this.getClass()).deleteById(id);
     }
 
     public AnimaDB set(String column, Object value) {

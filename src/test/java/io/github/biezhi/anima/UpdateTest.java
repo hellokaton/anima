@@ -27,9 +27,12 @@ public class UpdateTest extends BaseTest {
     @Test
     public void testUpdate2() {
         User user = new User();
-        user.setId(1);
         user.setUserName("jack");
         user.update();
+
+        user = new User();
+        user.setUserName("jack");
+        user.updateById(1);
     }
 
     @Test

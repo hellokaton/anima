@@ -15,6 +15,15 @@
  */
 package io.github.biezhi.anima.utils;
 
+import io.github.biezhi.anima.Model;
+import io.github.biezhi.anima.annotation.Column;
+import io.github.biezhi.anima.annotation.Ignore;
+import io.github.biezhi.anima.exception.AnimaException;
+
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Utility class for composing SQL statements
  */
@@ -38,6 +47,14 @@ public class SqlUtils {
     /**
      * eg: userId -> user_id
      */
+    public static String toColumnName(Field field) {
+        Column column = field.getAnnotation(Column.class);
+        if (null != column) {
+            return column.name();
+        }
+        return toColumnName(field.getName());
+    }
+
     public static String toColumnName(String propertyName) {
         StringBuilder result = new StringBuilder();
         if (propertyName != null && propertyName.length() > 0) {
@@ -68,5 +85,27 @@ public class SqlUtils {
         return sb.toString();
     }
 
+    public static <T extends Model> List<Object> columnValues(T model, boolean allowNull) {
+        List<Object> columnValueList = new ArrayList<>();
+        for (Field field : model.getClass().getDeclaredFields()) {
+            field.setAccessible(true);
+            try {
+                Object value = field.get(model);
+                if (null != value) {
+                    columnValueList.add(value);
+                } else if (allowNull) {
+                    columnValueList.add(value);
+                }
+
+            } catch (IllegalArgumentException | IllegalAccessException e) {
+                throw new AnimaException("illegal argument or Access:", e);
+            }
+        }
+        return columnValueList;
+    }
+
+    public static boolean isIgnore(Field field) {
+        return null != field.getAnnotation(Ignore.class);
+    }
 
 }

@@ -18,6 +18,8 @@ package io.github.biezhi.anima;
 import io.github.biezhi.anima.core.AnimaDB;
 import io.github.biezhi.anima.core.Atomic;
 import io.github.biezhi.anima.core.ResultKey;
+import io.github.biezhi.anima.dialect.Dialect;
+import io.github.biezhi.anima.dialect.MySQLDialect;
 import io.github.biezhi.anima.enums.DMLType;
 import io.github.biezhi.anima.exception.AnimaException;
 import lombok.AccessLevel;
@@ -48,10 +50,15 @@ public class Anima {
 
     @Getter
     @Setter
-    private Sql2o  sql2o;
+    private Sql2o sql2o;
+
     @Getter
     @Setter
     private String tablePrefix;
+
+    @Getter
+    @Setter
+    private Dialect dialect = new MySQLDialect();
 
     private static Anima instance;
 
@@ -66,7 +73,7 @@ public class Anima {
         open(sql2o);
     }
 
-    public Anima(DataSource dataSource){
+    public Anima(DataSource dataSource) {
         open(dataSource);
     }
 
@@ -86,10 +93,7 @@ public class Anima {
     }
 
     public static Anima open(DataSource dataSource) {
-        Sql2o sql2o = new Sql2o(dataSource);
-        Anima anima = Anima.me();
-        anima.sql2o = sql2o;
-        return anima;
+        return open(new Sql2o(dataSource));
     }
 
     public static Anima open(String url, String user, String pass) {
@@ -97,8 +101,7 @@ public class Anima {
     }
 
     public static Anima open(String url, String user, String pass, Quirks quirks) {
-        Sql2o sql2o = new Sql2o(url, user, pass, quirks);
-        return open(sql2o);
+        return open(new Sql2o(url, user, pass, quirks));
     }
 
     public static Atomic atomic(Runnable runnable) {

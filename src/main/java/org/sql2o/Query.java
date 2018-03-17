@@ -134,7 +134,7 @@ public class Query implements AutoCloseable {
         return converter.toDatabaseParam(value);
     }
 
-    public Query withParams(List<Object> paramValues) {
+    public Query withParams(Collection<Object> paramValues) {
         if (null == paramValues) {
             return this;
         }
