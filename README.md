@@ -92,9 +92,9 @@ User user = select().from(User.class).byId(2);
 List<User> users = select().from(User.class).byIds(1, 2, 3);
 // SELECT * FROM users WHERE id IN (?, ?, ?)
 
-String name = select().bySQL(String.class, "select user_name from users pageSize 1").one(pageSizeSize ?
+String name = select().bySQL(String.class, "select user_name from users limit 1").one();
 
-List<String> names = select().bySQL(String.class, "select user_name from users pageSize ?", 3pageSizes pageSize ?
+List<String> names = select().bySQL(String.class, "select user_name from users limit ?", 3);
 
 List<User> users = select().from(User.class).all();
 // SELECT * FROM users
@@ -103,20 +103,20 @@ List<User> users = select().from(User.class).like("user_name", "%o%").all();
 // SELECT * FROM users WHERE user_name LIKE ?
 ```
 
-**pageSize**
+**limit**
 
 ```java
-List<User> users = select().from(User.class).order("id desc").pageSize(5);
+List<User> users = select().from(User.class).order("id desc").limit(5);
 // SELECT * FROM users ORDER BY id desc LIMIT ?, ?   
 
-List<User> users = select().from(User.class).order("id desc").pageSize(2, 3);
+List<User> users = select().from(User.class).order("id desc").limit(2, 3);
 // SELECT * FROM users ORDER BY id desc LIMIT ?, ?
 ```
 
 **paging**
 
 ```java
-Page<User> userPage = select().from(User.class).order("id desc").pageNum(1, 3);
+Page<User> userPage = select().from(User.class).order("id desc").page(1, 3);
 // SELECT * FROM users ORDER BY id desc LIMIT ?, ?
 ```
 
