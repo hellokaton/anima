@@ -78,19 +78,6 @@ public class AnimaUtils {
         return result.toString();
     }
 
-    /**
-     * eg: user_id -> userId
-     */
-    public static String toPropertyName(String columneName) {
-        String[]     partOfNames = columneName.split("_");
-        StringBuffer sb          = new StringBuffer(partOfNames[0]);
-        for (int i = 1; i < partOfNames.length; i++) {
-            sb.append(partOfNames[i].substring(0, 1).toUpperCase());
-            sb.append(partOfNames[i].substring(1));
-        }
-        return sb.toString();
-    }
-
     public static <T extends Model> List<Object> columnValues(T model, boolean allowNull) {
         List<Object> columnValueList = new ArrayList<>();
         for (Field field : model.getClass().getDeclaredFields()) {

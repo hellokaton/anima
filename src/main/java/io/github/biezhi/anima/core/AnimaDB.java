@@ -32,7 +32,7 @@ import java.io.Serializable;
 import java.util.*;
 
 /**
- * Java ActiveRecord Implements
+ * Operational database core class
  *
  * @author biezhi
  */

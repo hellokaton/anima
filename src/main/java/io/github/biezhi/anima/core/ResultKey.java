@@ -17,6 +17,8 @@ package io.github.biezhi.anima.core;
 
 /**
  * Result Key
+ * <p>
+ * Stores the return value of the primary key when the data is saved
  *
  * @author biezhi
  * @date 2018/3/16
