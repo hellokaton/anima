@@ -15,12 +15,12 @@
  */
 package io.github.biezhi.anima;
 
-import io.github.biezhi.anima.core.AnimaDB;
-import io.github.biezhi.anima.core.Atomic;
-import io.github.biezhi.anima.core.ResultKey;
+import io.github.biezhi.anima.core.*;
+import io.github.biezhi.anima.core.dml.Delete;
+import io.github.biezhi.anima.core.dml.Select;
+import io.github.biezhi.anima.core.dml.Update;
 import io.github.biezhi.anima.dialect.Dialect;
 import io.github.biezhi.anima.dialect.MySQLDialect;
-import io.github.biezhi.anima.enums.DMLType;
 import io.github.biezhi.anima.exception.AnimaException;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -47,6 +47,8 @@ import static io.github.biezhi.anima.enums.ErrorCode.SQL2O_IS_NULL;
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Anima {
+
+    private static final Anima ME = new Anima();
 
     @Getter
     @Setter
@@ -118,20 +120,20 @@ public class Anima {
         }
     }
 
-    public static AnimaDB select() {
-        return new AnimaDB();
+    public static Select select() {
+        return new Select();
     }
 
-    public static AnimaDB select(String coulmns) {
-        return new AnimaDB().select(coulmns);
+    public static Select select(String columns) {
+        return new Select(columns);
     }
 
-    public static AnimaDB update() {
-        return new AnimaDB(DMLType.UPDATE);
+    public static Update update() {
+        return new Update();
     }
 
-    public static AnimaDB delete() {
-        return new AnimaDB(DMLType.DELETE);
+    public static Delete delete() {
+        return new Delete();
     }
 
     public static <T extends Model> ResultKey save(T model) {
@@ -163,5 +165,6 @@ public class Anima {
     public static int execute(String sql, Object...params) {
         return new AnimaDB().execute(sql, params);
     }
+
 
 }

@@ -30,6 +30,10 @@ import org.sql2o.Sql2o;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Operational database core class
@@ -37,16 +41,18 @@ import java.util.*;
  * @author biezhi
  */
 @Slf4j
-public class AnimaDB {
+public class AnimaDB<T extends Model> {
 
-    private Class<? extends Model> modelClass;
+    private Class<T> modelClass;
 
     private static ThreadLocal<Connection> connectionThreadLocal = new ThreadLocal<>();
 
+    private static final AnimaDB DEFAULT_DB = new AnimaDB();
+
     private StringBuilder       conditionSQL    = new StringBuilder();
-    private List<String>        excludedColumns = new ArrayList<>();
-    private List<Object>        paramValues     = new ArrayList<>();
-    private Map<String, Object> updateColumns   = new LinkedHashMap<>();
+    private List<String>        excludedColumns = new ArrayList<>(8);
+    private List<Object>        paramValues     = new ArrayList<>(8);
+    private Map<String, Object> updateColumns   = new LinkedHashMap<>(8);
 
     private String orderBy;
     private String selectColumns;
@@ -54,6 +60,10 @@ public class AnimaDB {
     private String  pkName;
     private String  tableName;
     private DMLType dmlType;
+
+    public static AnimaDB defaultDB() {
+        return DEFAULT_DB;
+    }
 
     public AnimaDB() {
         this.tableName = null;
@@ -64,11 +74,11 @@ public class AnimaDB {
         this.dmlType = dmlType;
     }
 
-    public AnimaDB(Class<? extends Model> modelClass) {
-        this.from(modelClass);
+    public AnimaDB(Class<T> modelClass) {
+        this.parse(modelClass);
     }
 
-    public AnimaDB from(Class<? extends Model> modelClass) {
+    public AnimaDB<T> parse(Class<T> modelClass) {
         this.modelClass = modelClass;
         Table table = modelClass.getAnnotation(Table.class);
         this.tableName = null != table && AnimaUtils.isNotEmpty(table.name()) ? table.name() :
@@ -77,12 +87,12 @@ public class AnimaDB {
         return this;
     }
 
-    public AnimaDB exclude(String... columnNames) {
+    public AnimaDB<T> exclude(String... columnNames) {
         Collections.addAll(excludedColumns, columnNames);
         return this;
     }
 
-    public AnimaDB select(String columns) {
+    public AnimaDB<T> select(String columns) {
         if (null != this.selectColumns) {
             throw new AnimaException("Select method can only be called once.");
         }
@@ -90,12 +100,12 @@ public class AnimaDB {
         return this;
     }
 
-    public AnimaDB where(String statement) {
+    public AnimaDB<T> where(String statement) {
         conditionSQL.append(" AND ").append(statement);
         return this;
     }
 
-    public AnimaDB where(String statement, Object value) {
+    public AnimaDB<T> where(String statement, Object value) {
         conditionSQL.append(" AND ").append(statement);
         if (!statement.contains("?")) {
             conditionSQL.append(" = ?");
@@ -104,59 +114,59 @@ public class AnimaDB {
         return this;
     }
 
-    public AnimaDB and(String statement, Object value) {
+    public AnimaDB<T> and(String statement, Object value) {
         return this.where(statement, value);
     }
 
-    public AnimaDB not(String key, Object value) {
+    public AnimaDB<T> not(String key, Object value) {
         conditionSQL.append(" AND ").append(key).append(" != ?");
         paramValues.add(value);
         return this;
     }
 
-    public AnimaDB isNotNull(String key) {
+    public AnimaDB<T> isNotNull(String key) {
         conditionSQL.append(" AND ").append(key).append(" IS NOT NULL");
         return this;
     }
 
-    public AnimaDB like(String key, Object value) {
+    public AnimaDB<T> like(String key, Object value) {
         conditionSQL.append(" AND ").append(key).append(" LIKE ?");
         paramValues.add(value);
         return this;
     }
 
-    public AnimaDB between(String coulmn, Object a, Object b) {
+    public AnimaDB<T> between(String coulmn, Object a, Object b) {
         conditionSQL.append(" AND ").append(coulmn).append(" BETWEEN ? and ?");
         paramValues.add(a);
         paramValues.add(b);
         return this;
     }
 
-    public AnimaDB gt(String column, Object value) {
+    public AnimaDB<T> gt(String column, Object value) {
         conditionSQL.append(" AND ").append(column).append(" > ?");
         paramValues.add(value);
         return this;
     }
 
-    public AnimaDB gte(String column, Object value) {
+    public AnimaDB<T> gte(String column, Object value) {
         conditionSQL.append(" AND ").append(column).append(" >= ?");
         paramValues.add(value);
         return this;
     }
 
-    public AnimaDB lt(String column, Object value) {
+    public AnimaDB<T> lt(String column, Object value) {
         conditionSQL.append(" AND ").append(column).append(" < ?");
         paramValues.add(value);
         return this;
     }
 
-    public AnimaDB lte(String column, Object value) {
+    public AnimaDB<T> lte(String column, Object value) {
         conditionSQL.append(" AND ").append(column).append(" <= ?");
         paramValues.add(value);
         return this;
     }
 
-    public AnimaDB in(String column, Object... args) {
+    public AnimaDB<T> in(String column, Object... args) {
         if (null == args || args.length == 0) {
             log.warn("Column: {}, query params is empty.");
             return this;
@@ -174,7 +184,7 @@ public class AnimaDB {
         return this;
     }
 
-    public <T> AnimaDB in(String key, List<T> args) {
+    public AnimaDB<T> in(String key, List<T> args) {
         if (null == args || args.isEmpty()) {
             log.warn("Column: {}, query params is empty.");
             return this;
@@ -192,60 +202,69 @@ public class AnimaDB {
         return this;
     }
 
-    public AnimaDB order(String order) {
+    public AnimaDB<T> order(String order) {
         this.orderBy = order;
         return this;
     }
 
-    public <T> T find(Class<T> returnType, String sql, Object[] params) {
+    public T find(Class<T> returnType, String sql, Object[] params) {
         return this.queryOne(returnType, sql, params);
     }
 
-    public <T extends Model> T byId(Serializable id) {
+    public T byId(Serializable id) {
         this.beforeCheck();
         this.where(pkName, id);
         String sql = this.buildSelectSQL(false);
-        return this.queryOne((Class<T>) modelClass, sql, paramValues);
+        return this.queryOne(modelClass, sql, paramValues);
     }
 
-    public <T extends Model> List<T> byIds(Serializable... ids) {
+    public List<T> byIds(Serializable... ids) {
         this.in(pkName, ids);
         return this.all();
     }
 
-    public <T> ResultList<T> bySQL(Class<T> type, String sql, Object... params) {
-        return new ResultList<>(this.queryList(type, sql, params));
+    public <S> ResultList<S> bySQL(Class<S> type, String sql, Object... params) {
+        List<S> list = this.queryList(type, sql, params);
+        return new ResultList<>(list);
     }
 
-    public <T extends Model> List<T> all() {
+    public List<T> all() {
         this.beforeCheck();
         String sql = this.buildSelectSQL(true);
-        return this.queryList((Class<T>) modelClass, sql, paramValues);
+        return this.queryList(modelClass, sql, paramValues);
     }
 
-    public <T extends Model> T one() {
+    public Stream<T> stream() {
+        return all().stream();
+    }
+
+    public Stream<T> parallel() {
+        return all().parallelStream();
+    }
+
+    public <R> Stream<R> map(Function<T, R> function) {
+        return stream().map(function);
+    }
+
+    public Stream<T> filter(Predicate<T> predicate) {
+        return stream().filter(predicate);
+    }
+
+    public T one() {
         this.beforeCheck();
         String sql = this.buildSelectSQL(true) + " LIMIT 1";
-        return this.queryOne((Class<T>) modelClass, sql, paramValues);
+        return this.queryOne(modelClass, sql, paramValues);
     }
 
-    public <T extends Model> List<T> limit(int limit) {
-        return this.limit(0, limit);
+    public List<T> limit(int limit) {
+        return stream().limit(limit).collect(Collectors.toList());
     }
 
-    public <T extends Model> List<T> limit(int offset, int limit) {
-        this.beforeCheck();
-        String sql = this.buildSelectSQL(true) + " LIMIT ?, ?";
-        paramValues.add(offset);
-        paramValues.add(limit);
-        return this.queryList((Class<T>) modelClass, sql, paramValues);
-    }
-
-    public <T extends Model> Page<T> page(int page, int limit) {
+    public Page<T> page(int page, int limit) {
         return this.page(new PageRow(page, limit));
     }
 
-    public <T extends Model> Page<T> page(PageRow pageRow) {
+    public Page<T> page(PageRow pageRow) {
         this.beforeCheck();
         String sql      = this.buildSelectSQL(false);
         String countSql = "SELECT COUNT(*) FROM (" + sql + ") tmp";
@@ -273,7 +292,7 @@ public class AnimaDB {
         return this;
     }
 
-    private <T> T queryOne(Class<T> type, String sql, Object[] params) {
+    private <S> S queryOne(Class<S> type, String sql, Object[] params) {
         try (Connection conn = getConn()) {
             return conn.createQuery(sql).withParams(params).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeAndFetchFirst(type);
         } finally {
@@ -281,7 +300,7 @@ public class AnimaDB {
         }
     }
 
-    private <T> T queryOne(Class<T> type, String sql, List<Object> params) {
+    private <S> S queryOne(Class<S> type, String sql, List<Object> params) {
         try (Connection conn = getConn()) {
             return conn.createQuery(sql).withParams(params).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeAndFetchFirst(type);
         } finally {
@@ -289,7 +308,7 @@ public class AnimaDB {
         }
     }
 
-    private <T> List<T> queryList(Class<T> type, String sql, Object[] params) {
+    private <S> List<S> queryList(Class<S> type, String sql, Object[] params) {
         try (Connection conn = getConn()) {
             return conn.createQuery(sql).withParams(params).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeAndFetch(type);
         } finally {
@@ -297,7 +316,7 @@ public class AnimaDB {
         }
     }
 
-    private <T> List<T> queryList(Class<T> type, String sql, List<Object> params) {
+    private <S> List<S> queryList(Class<S> type, String sql, List<Object> params) {
         try (Connection conn = getConn()) {
             return conn.createQuery(sql).withParams(params).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeAndFetch(type);
         } finally {
@@ -334,7 +353,7 @@ public class AnimaDB {
         }
     }
 
-    public <T extends Model> ResultKey save(T model) {
+    public ResultKey save(T model) {
         String       sql             = this.buildInsertSQL(model);
         List<Object> columnValueList = AnimaUtils.columnValues(model, true);
         Connection   conn            = getConn();
@@ -355,7 +374,7 @@ public class AnimaDB {
         return this.delete();
     }
 
-    public <T extends Model> int deleteByModel(T model) {
+    public int deleteByModel(T model) {
         this.beforeCheck();
         String       sql             = this.buildDeleteSQL(model);
         List<Object> columnValueList = AnimaUtils.columnValues(model, false);
@@ -376,7 +395,7 @@ public class AnimaDB {
         return this.update();
     }
 
-    public <T extends Model> int updateById(T model, Serializable id) {
+    public int updateById(T model, Serializable id) {
         this.where(pkName, id);
         String       sql             = this.buildUpdateSQL(model, null);
         List<Object> columnValueList = AnimaUtils.columnValues(model, false);
@@ -385,7 +404,7 @@ public class AnimaDB {
     }
 
 
-    public <T extends Model> int updateByModel(T model) {
+    public int updateByModel(T model) {
         this.beforeCheck();
         String       sql             = this.buildUpdateSQL(model, null);
         List<Object> columnValueList = AnimaUtils.columnValues(model, false);
@@ -410,6 +429,7 @@ public class AnimaDB {
 
     private String buildCountSQL(Object model) {
         SQLParams sqlParams = SQLParams.builder()
+                .model(model)
                 .modelClass(this.modelClass)
                 .tableName(this.tableName)
                 .pkName(this.pkName)
@@ -432,7 +452,7 @@ public class AnimaDB {
         return Anima.me().getDialect().paginate(sqlParams);
     }
 
-    private <T extends Model> String buildInsertSQL(T model) {
+    private String buildInsertSQL(T model) {
         SQLParams sqlParams = SQLParams.builder()
                 .model(model)
                 .modelClass(this.modelClass)
@@ -443,7 +463,7 @@ public class AnimaDB {
         return Anima.me().getDialect().insert(sqlParams);
     }
 
-    private <T extends Model> String buildUpdateSQL(T model, Map<String, Object> updateColumns) {
+    private String buildUpdateSQL(T model, Map<String, Object> updateColumns) {
         SQLParams sqlParams = SQLParams.builder()
                 .model(model)
                 .modelClass(this.modelClass)
@@ -456,7 +476,7 @@ public class AnimaDB {
         return Anima.me().getDialect().update(sqlParams);
     }
 
-    private <T extends Model> String buildDeleteSQL(T model) {
+    private String buildDeleteSQL(T model) {
         SQLParams sqlParams = SQLParams.builder()
                 .model(model)
                 .modelClass(this.modelClass)

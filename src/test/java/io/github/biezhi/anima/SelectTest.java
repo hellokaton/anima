@@ -1,11 +1,13 @@
 package io.github.biezhi.anima;
 
+import io.github.biezhi.anima.core.ResultList;
 import io.github.biezhi.anima.model.User;
 import io.github.biezhi.anima.page.Page;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static io.github.biezhi.anima.Anima.select;
 
@@ -98,21 +100,17 @@ public class SelectTest extends BaseTest {
         List<User> users = select().from(User.class).order("id desc").limit(5);
         Assert.assertNotNull(users);
         Assert.assertEquals(5, users.size());
-
-        users = select().from(User.class).order("id desc").limit(2, 3);
-        Assert.assertNotNull(users);
-        Assert.assertEquals(3, users.size());
     }
 
     @Test
-    public void testCondition(){
+    public void testCondition() {
         select().from(User.class).gt("age", 15).like("user_name", "ja%").count();
 
         select().from(User.class).where("id > ?", 1).not("age", 10).lte("age", 90).count();
     }
 
     @Test
-    public void testExclude(){
+    public void testExclude() {
         User user = select().from(User.class).exclude("age").one();
         Assert.assertNotNull(user);
         Assert.assertNull(user.getAge());
@@ -131,6 +129,16 @@ public class SelectTest extends BaseTest {
         Assert.assertEquals(2, userPage.getNextPage());
         Assert.assertTrue(userPage.isHasNextPage());
         Assert.assertFalse(userPage.isHasPrevPage());
+    }
+
+    @Test
+    public void testStream() {
+        List<String> names = select().from(User.class).parallel()
+                .filter(u -> u.getAge() > 10)
+                .map(User::getUserName)
+                .collect(Collectors.toList());
+
+        Assert.assertNotNull(names);
     }
 
 }

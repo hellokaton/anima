@@ -13,36 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.biezhi.anima.core;
+package io.github.biezhi.anima.core.dml;
 
-import java.util.List;
+import io.github.biezhi.anima.Model;
+import io.github.biezhi.anima.core.AnimaDB;
+import io.github.biezhi.anima.enums.DMLType;
 
 /**
- * ResultList
- * <p>
- * Get a list of collections or single data
+ * Update
  *
  * @author biezhi
- * @date 2018/3/16
+ * @date 2018/3/18
  */
-public class ResultList<T> {
+public class Update {
 
-    private List<T> list;
-
-    public ResultList(List<T> list) {
-        this.list = list;
+    public <T extends Model> AnimaDB<T> from(Class<T> modelClass) {
+        return new AnimaDB<T>(DMLType.UPDATE).parse(modelClass);
     }
-
-    public T one() {
-        if (null == list || list.isEmpty()) {
-            return null;
-        }
-        return (T) list.get(0);
-    }
-
-    public List<T> all() {
-        return list;
-    }
-
 
 }

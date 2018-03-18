@@ -115,10 +115,7 @@ List<User> users = select().from(User.class).like("user_name", "%o%").all();
 
 ```java
 List<User> users = select().from(User.class).order("id desc").limit(5);
-// SELECT * FROM users ORDER BY id desc LIMIT ?, ?   
-
-List<User> users = select().from(User.class).order("id desc").limit(2, 3);
-// SELECT * FROM users ORDER BY id desc LIMIT ?, ?
+// SELECT * FROM users ORDER BY id desc
 ```
 
 **paging**

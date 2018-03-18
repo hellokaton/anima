@@ -13,35 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.biezhi.anima.core;
+package io.github.biezhi.anima.core.dml;
 
-import java.util.List;
+import io.github.biezhi.anima.Model;
+import io.github.biezhi.anima.core.AnimaDB;
+import io.github.biezhi.anima.core.ResultList;
 
 /**
- * ResultList
- * <p>
- * Get a list of collections or single data
+ * Select From
  *
  * @author biezhi
- * @date 2018/3/16
+ * @date 2018/3/18
  */
-public class ResultList<T> {
+public class Select {
 
-    private List<T> list;
+    private String columns;
 
-    public ResultList(List<T> list) {
-        this.list = list;
+    public Select() {
     }
 
-    public T one() {
-        if (null == list || list.isEmpty()) {
-            return null;
-        }
-        return (T) list.get(0);
+    public Select(String columns) {
+        this.columns = columns;
     }
 
-    public List<T> all() {
-        return list;
+    public <T extends Model> AnimaDB<T> from(Class<T> modelClass) {
+        return new AnimaDB<>(modelClass).select(this.columns);
+    }
+
+    public <T> ResultList<T> bySQL(Class<T> type, String sql, Object... params) {
+        return new AnimaDB<>().bySQL(type, sql, params);
     }
 
 
