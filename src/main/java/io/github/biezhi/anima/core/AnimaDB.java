@@ -47,8 +47,6 @@ public class AnimaDB<T extends Model> {
 
     private static ThreadLocal<Connection> connectionThreadLocal = new ThreadLocal<>();
 
-    private static final AnimaDB DEFAULT_DB = new AnimaDB();
-
     private StringBuilder       conditionSQL    = new StringBuilder();
     private List<String>        excludedColumns = new ArrayList<>(8);
     private List<Object>        paramValues     = new ArrayList<>(8);
@@ -60,15 +58,6 @@ public class AnimaDB<T extends Model> {
     private String  pkName;
     private String  tableName;
     private DMLType dmlType;
-
-    public static AnimaDB defaultDB() {
-        return DEFAULT_DB;
-    }
-
-    public AnimaDB() {
-        this.tableName = null;
-        this.pkName = "id";
-    }
 
     public AnimaDB(DMLType dmlType) {
         this.dmlType = dmlType;
