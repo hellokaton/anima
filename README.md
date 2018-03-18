@@ -125,6 +125,18 @@ Page<User> userPage = select().from(User.class).order("id desc").page(1, 3);
 // SELECT * FROM users ORDER BY id desc LIMIT ?, ?
 ```
 
+**map**
+
+```java
+select().from(User.class).map(User::getUserName).limit(3).collect(Collectors.toList());
+```
+
+**filter**
+
+```java
+select().from(User.class).filter(u -> u.getAge() > 10).collect(Collectors.toList());
+```
+
 ### Insert
 
 ```java
