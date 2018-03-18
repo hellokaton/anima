@@ -2,7 +2,7 @@
 
 `Anima` allows you to query database like `SQL` and `Stream`.
 
-More designs and documents are available [here](https://github.com/biezhi/anima/wiki).
+**[Document](https://github.com/biezhi/anima/wiki)**
 
 [![Travis Build](https://travis-ci.org/biezhi/anima.svg?branch=master)](https://travis-ci.org/biezhi/anima)
 [![](https://img.shields.io/maven-central/v/io.github.biezhi/anima.svg)](https://mvnrepository.com/artifact/io.github.biezhi/anima) 
