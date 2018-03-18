@@ -51,10 +51,18 @@ compile 'io.github.biezhi:anima:0.0.4'
 Anima.open("jdbc:mysql://127.0.0.1:3306/demo", "root", "123456");
 
 // SQLite
-Anima.open("jdbc:sqlite:./demo.db", null, null);
+Anima.open("jdbc:sqlite:./demo.db");
 
 // H2
 Anima.open("jdbc:h2:file:~/demo;FILE_LOCK=FS;PAGE_SIZE=1024;CACHE_SIZE=8192", "sa", "");
+
+// DataSource
+DruidDataSource dataSource = new DruidDataSource();
+dataSource.setDriverClassName("com.mysql.jdbc.Driver");
+dataSource.setUrl(blade.environment().getOrNull("jdbc.url"));
+dataSource.setUsername(blade.environment().getOrNull("jdbc.username"));
+dataSource.setPassword(blade.environment().getOrNull("jdbc.password"));
+Anima.open(dataSource);
 ```
 
 > 📕 This operation only needs one time
