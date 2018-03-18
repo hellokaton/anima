@@ -18,6 +18,7 @@ package io.github.biezhi.anima.core.dml;
 import io.github.biezhi.anima.Model;
 import io.github.biezhi.anima.core.AnimaDB;
 import io.github.biezhi.anima.core.ResultList;
+import lombok.NoArgsConstructor;
 
 /**
  * Select From
@@ -25,12 +26,10 @@ import io.github.biezhi.anima.core.ResultList;
  * @author biezhi
  * @date 2018/3/18
  */
+@NoArgsConstructor
 public class Select {
 
     private String columns;
-
-    public Select() {
-    }
 
     public Select(String columns) {
         this.columns = columns;
@@ -43,6 +42,5 @@ public class Select {
     public <T> ResultList<T> bySQL(Class<T> type, String sql, Object... params) {
         return new AnimaDB<>().bySQL(type, sql, params);
     }
-
 
 }

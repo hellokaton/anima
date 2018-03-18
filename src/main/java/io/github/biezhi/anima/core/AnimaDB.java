@@ -24,6 +24,7 @@ import io.github.biezhi.anima.exception.AnimaException;
 import io.github.biezhi.anima.page.Page;
 import io.github.biezhi.anima.page.PageRow;
 import io.github.biezhi.anima.utils.AnimaUtils;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.sql2o.Connection;
 import org.sql2o.Sql2o;
@@ -41,6 +42,7 @@ import java.util.stream.Stream;
  * @author biezhi
  */
 @Slf4j
+@NoArgsConstructor
 public class AnimaDB<T extends Model> {
 
     private Class<T> modelClass;
@@ -105,6 +107,16 @@ public class AnimaDB<T extends Model> {
 
     public AnimaDB<T> and(String statement, Object value) {
         return this.where(statement, value);
+    }
+
+    public AnimaDB<T> or(String statement, Object value) {
+        conditionSQL.append(" OR (").append(statement);
+        if (!statement.contains("?")) {
+            conditionSQL.append(" = ?");
+        }
+        conditionSQL.append(')');
+        paramValues.add(value);
+        return this;
     }
 
     public AnimaDB<T> not(String key, Object value) {

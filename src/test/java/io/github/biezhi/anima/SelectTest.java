@@ -1,6 +1,5 @@
 package io.github.biezhi.anima;
 
-import io.github.biezhi.anima.core.ResultList;
 import io.github.biezhi.anima.model.User;
 import io.github.biezhi.anima.page.Page;
 import org.junit.Assert;
