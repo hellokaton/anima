@@ -116,6 +116,11 @@ public class SelectTest extends BaseTest {
     }
 
     @Test
+    public void testOrderBy(){
+        select().from(User.class).order("id desc").order("age asc").all();
+    }
+
+    @Test
     public void testPage() {
         Page<User> userPage = select().from(User.class).order("id desc").page(1, 3);
 

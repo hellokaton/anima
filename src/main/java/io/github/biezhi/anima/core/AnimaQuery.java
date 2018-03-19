@@ -52,11 +52,11 @@ public class AnimaQuery<T extends Model> {
     private static ThreadLocal<Connection> connectionThreadLocal = new ThreadLocal<>();
 
     private StringBuilder       conditionSQL    = new StringBuilder();
+    private StringBuilder       orderBySQL      = new StringBuilder();
     private List<String>        excludedColumns = new ArrayList<>(8);
     private List<Object>        paramValues     = new ArrayList<>(8);
     private Map<String, Object> updateColumns   = new LinkedHashMap<>(8);
 
-    private String orderBy;
     private String selectColumns;
 
     private String  pkName;
@@ -104,6 +104,13 @@ public class AnimaQuery<T extends Model> {
         return this;
     }
 
+    public <R> AnimaQuery<T> where(TypeFunction<T, R> function, Object value) {
+        String columnName = AnimaUtils.getLambdaColumnName(function);
+        conditionSQL.append(" AND ").append(columnName).append(" = ?");
+        paramValues.add(value);
+        return this;
+    }
+
     public AnimaQuery<T> eq(Object value) {
         conditionSQL.append(" = ?");
         paramValues.add(value);
@@ -129,9 +136,11 @@ public class AnimaQuery<T extends Model> {
     }
 
     public <R> AnimaQuery<T> and(TypeFunction<T, R> function) {
-        String columnName = AnimaUtils.getLambdaColumnName(function);
-        conditionSQL.append(" AND ").append(columnName);
-        return this;
+        return this.where(function);
+    }
+
+    public <R> AnimaQuery<T> and(TypeFunction<T, R> function, Object value) {
+        return this.where(function, value);
     }
 
     public AnimaQuery<T> or(String statement, Object value) {
@@ -154,6 +163,10 @@ public class AnimaQuery<T extends Model> {
         conditionSQL.append(" != ?");
         paramValues.add(value);
         return this;
+    }
+
+    public AnimaQuery<T> notEmpty() {
+        return this.not("");
     }
 
     public AnimaQuery<T> notNull(String key) {
@@ -272,12 +285,18 @@ public class AnimaQuery<T extends Model> {
     }
 
     public AnimaQuery<T> order(String order) {
-        this.orderBy = order;
+        if(this.orderBySQL.length() > 0){
+            this.orderBySQL.append(',');
+        }
+        this.orderBySQL.append(' ').append(order);
         return this;
     }
 
-    public <R> AnimaQuery<T> order(String columnName, OrderBy orderBy) {
-        this.orderBy = columnName + " " + orderBy.toString();
+    public AnimaQuery<T> order(String columnName, OrderBy orderBy) {
+        if(this.orderBySQL.length() > 0){
+            this.orderBySQL.append(',');
+        }
+        this.orderBySQL.append(' ').append(columnName).append(' ').append(orderBy.toString());
         return this;
     }
 
@@ -502,7 +521,7 @@ public class AnimaQuery<T extends Model> {
                 .build();
 
         if (addOrderBy) {
-            sqlParams.setOrderBy(this.orderBy);
+            sqlParams.setOrderBy(this.orderBySQL.toString());
         }
         return Anima.me().getDialect().select(sqlParams);
     }
@@ -526,7 +545,7 @@ public class AnimaQuery<T extends Model> {
                 .pkName(this.pkName)
                 .conditionSQL(this.conditionSQL)
                 .excludedColumns(this.excludedColumns)
-                .orderBy(this.orderBy)
+                .orderBy(this.orderBySQL.toString())
                 .pageRow(pageRow)
                 .build();
         return Anima.me().getDialect().paginate(sqlParams);
@@ -616,12 +635,12 @@ public class AnimaQuery<T extends Model> {
     }
 
     private void clean(Connection conn) {
-        selectColumns = null;
-        orderBy = null;
-        conditionSQL = new StringBuilder();
-        paramValues.clear();
-        excludedColumns.clear();
-        updateColumns.clear();
+        this.selectColumns = null;
+        this.orderBySQL = new StringBuilder();
+        this.conditionSQL = new StringBuilder();
+        this.paramValues.clear();
+        this.excludedColumns.clear();
+        this.updateColumns.clear();
         if (null == connectionThreadLocal.get() && null != conn) {
             conn.close();
         }

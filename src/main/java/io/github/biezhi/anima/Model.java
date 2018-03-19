@@ -2,6 +2,7 @@ package io.github.biezhi.anima;
 
 import io.github.biezhi.anima.core.AnimaQuery;
 import io.github.biezhi.anima.core.ResultKey;
+import io.github.biezhi.anima.core.functions.TypeFunction;
 
 import java.io.Serializable;
 
@@ -33,8 +34,16 @@ public class Model {
         return new AnimaQuery(this.getClass()).set(column, value);
     }
 
+    public <T extends Model, R> AnimaQuery<T> set(TypeFunction<T, R> function, Object value) {
+        return new AnimaQuery(this.getClass()).set(function, value);
+    }
+
     public AnimaQuery where(String statement, Object value) {
         return new AnimaQuery(this.getClass()).where(statement, value);
+    }
+
+    public <T extends Model, R> AnimaQuery where(TypeFunction<T, R> function, Object value) {
+        return new AnimaQuery(this.getClass()).where(function, value);
     }
 
 }
