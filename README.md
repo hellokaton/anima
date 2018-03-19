@@ -87,6 +87,16 @@ public class User extends Model {
 }
 ```
 
+Table Structure
+
+```sql
+CREATE TABLE `users` (
+  `id` IDENTITY PRIMARY KEY,
+  `user_name` varchar(50) NOT NULL,
+  `age` int(11)
+)
+```
+
 ### Query
 
 ```java
@@ -113,33 +123,33 @@ List<User> users = select().from(User.class).like("user_name", "%o%").all();
 // SELECT * FROM users WHERE user_name LIKE ?
 ```
 
-**limit**
+**Limit**
 
 ```java
 List<User> users = select().from(User.class).order("id desc").limit(5);
 // SELECT * FROM users ORDER BY id desc
 ```
 
-**paging**
+**Paging**
 
 ```java
 Page<User> userPage = select().from(User.class).order("id desc").page(1, 3);
 // SELECT * FROM users ORDER BY id desc LIMIT ?, ?
 ```
 
-**map**
+**Map**
 
 ```java
 select().from(User.class).map(User::getUserName).limit(3).collect(Collectors.toList());
 ```
 
-**filter**
+**Filter**
 
 ```java
 select().from(User.class).filter(u -> u.getAge() > 10).collect(Collectors.toList());
 ```
 
-**lambda**
+**Lambda**
 
 ```java
 User user = select().from(User.class).where(User::getUserName).eq("jack").one();
@@ -154,7 +164,12 @@ List<User> user = select().from(User.class)
 // SELECT * FROM users WHERE user_name IS NOT NULL AND age > ?
 ```
 
-**relationship**
+```java
+select().from(User.class).order(User::getId, OrderBy.DESC).order(User::getAge, OrderBy.ASC).all();
+// SELECT * FROM users ORDER BY  id DESC, age ASC
+```
+
+**RelationShip**
 
 ```java
 @Table(name = "order_info")
@@ -239,6 +254,14 @@ user.update();
 // UPDATE users SET user_name = ? WHERE id = ?
 ```
 
+```java
+update().from(User.class).set(User::getUserName, "base64").updateById(2);
+```
+
+```java
+update().from(User.class).set(User::getUserName, "base64").where(User::getId).eq(2).execute();
+```
+
 ### Delete
 
 ```java
@@ -254,6 +277,12 @@ user.setAge(15);
 user.setUserName("jack");
 user.delete();
 // DELETE FROM users WHERE user_name = ? and age = ?
+```
+
+```java
+delete().from(User.class).where(User::getId).deleteById(3);
+delete().from(User.class).where(User::getId).eq(1).execute();
+delete().from(User.class).where(User::getAge).lte(20).execute();
 ```
 
 ### Transaction
