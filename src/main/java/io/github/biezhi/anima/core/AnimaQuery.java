@@ -277,10 +277,14 @@ public class AnimaQuery<T extends Model> {
         return this;
     }
 
-    public <R> AnimaQuery<T> order(TypeFunction<T, R> function, OrderBy orderBy) {
-        String columnName = this.getColumnName(function);
+    public <R> AnimaQuery<T> order(String columnName, OrderBy orderBy) {
         this.orderBy = columnName + " " + orderBy.toString();
         return this;
+    }
+
+    public <R> AnimaQuery<T> order(TypeFunction<T, R> function, OrderBy orderBy) {
+        String columnName = this.getColumnName(function);
+        return order(columnName, orderBy);
     }
 
     public T find(Class<T> returnType, String sql, Object[] params) {
