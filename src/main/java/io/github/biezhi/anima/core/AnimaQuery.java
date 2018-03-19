@@ -21,6 +21,7 @@ import io.github.biezhi.anima.annotation.Table;
 import io.github.biezhi.anima.core.functions.TypeFunction;
 import io.github.biezhi.anima.enums.DMLType;
 import io.github.biezhi.anima.enums.ErrorCode;
+import io.github.biezhi.anima.enums.OrderBy;
 import io.github.biezhi.anima.exception.AnimaException;
 import io.github.biezhi.anima.page.Page;
 import io.github.biezhi.anima.page.PageRow;
@@ -273,6 +274,12 @@ public class AnimaQuery<T extends Model> {
 
     public AnimaQuery<T> order(String order) {
         this.orderBy = order;
+        return this;
+    }
+
+    public <R> AnimaQuery<T> order(TypeFunction<T, R> function, OrderBy orderBy) {
+        String columnName = this.getColumnName(function);
+        this.orderBy = columnName + " " + orderBy.toString();
         return this;
     }
 

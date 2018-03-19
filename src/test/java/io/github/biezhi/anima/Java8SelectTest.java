@@ -1,5 +1,6 @@
 package io.github.biezhi.anima;
 
+import io.github.biezhi.anima.enums.OrderBy;
 import io.github.biezhi.anima.model.User;
 import org.junit.Assert;
 import org.junit.Test;
@@ -25,6 +26,7 @@ public class Java8SelectTest extends BaseTest {
         List<User> user = select().from(User.class)
                 .where(User::getUserName).notNull()
                 .and(User::getAge).gt(10)
+                .order(User::getId, OrderBy.DESC)
                 .all();
 
         Assert.assertNotNull(user);
