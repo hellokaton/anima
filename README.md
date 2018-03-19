@@ -19,6 +19,7 @@
 - Flexible configuration 
 - Connection pool support
 - Support `LocalDate`、`LocalDateTime`
+- Support lambda expression
 - SQL performance statistics
 - Based Java8
 
@@ -27,7 +28,7 @@
 **As Gradle**
 
 ```java
-compile 'io.github.biezhi:anima:0.0.4'
+compile 'io.github.biezhi:anima:0.0.5'
 ```
 
 **As Maven**
@@ -36,7 +37,7 @@ compile 'io.github.biezhi:anima:0.0.4'
 <dependency>
     <groupId>io.github.biezhi</groupId>
     <artifactId>anima</artifactId>
-    <version>0.0.4</version>
+    <version>0.0.5</version>
 </dependency>
 ```
 
@@ -135,6 +136,21 @@ select().from(User.class).map(User::getUserName).limit(3).collect(Collectors.toL
 
 ```java
 select().from(User.class).filter(u -> u.getAge() > 10).collect(Collectors.toList());
+```
+
+**lambda**
+
+```java
+User user = select().from(User.class).where(User::getUserName).eq("jack").one();
+// SELECT * FROM users WHERE user_name = ?
+```
+
+```java
+List<User> user = select().from(User.class)
+                .where(User::getUserName).notNull()
+                .and(User::getAge).gt(10)
+                .all();
+// SELECT * FROM users WHERE user_name IS NOT NULL AND age > ?
 ```
 
 ### Insert

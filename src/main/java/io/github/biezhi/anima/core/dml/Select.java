@@ -16,7 +16,7 @@
 package io.github.biezhi.anima.core.dml;
 
 import io.github.biezhi.anima.Model;
-import io.github.biezhi.anima.core.AnimaDB;
+import io.github.biezhi.anima.core.AnimaQuery;
 import io.github.biezhi.anima.core.ResultList;
 import lombok.NoArgsConstructor;
 
@@ -35,12 +35,12 @@ public class Select {
         this.columns = columns;
     }
 
-    public <T extends Model> AnimaDB<T> from(Class<T> modelClass) {
-        return new AnimaDB<>(modelClass).select(this.columns);
+    public <T extends Model> AnimaQuery<T> from(Class<T> modelClass) {
+        return new AnimaQuery<>(modelClass).select(this.columns);
     }
 
     public <T> ResultList<T> bySQL(Class<T> type, String sql, Object... params) {
-        return new AnimaDB<>().bySQL(type, sql, params);
+        return new AnimaQuery<>().bySQL(type, sql, params);
     }
 
 }

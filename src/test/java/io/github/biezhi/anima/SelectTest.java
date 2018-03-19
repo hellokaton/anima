@@ -24,7 +24,7 @@ public class SelectTest extends BaseTest {
 
     @Test
     public void testCountBy1() {
-        long count = select().from(User.class).where("age > ?", 15).isNotNull("user_name").count();
+        long count = select().from(User.class).where("age > ?", 15).notNull("user_name").count();
         Assert.assertEquals(count, 7L);
     }
 

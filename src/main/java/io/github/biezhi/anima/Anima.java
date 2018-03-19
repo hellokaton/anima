@@ -108,15 +108,15 @@ public class Anima {
 
     public static Atomic atomic(Runnable runnable) {
         try {
-            AnimaDB.beginTransaction();
+            AnimaQuery.beginTransaction();
             runnable.run();
-            AnimaDB.commit();
+            AnimaQuery.commit();
             return Atomic.ok();
         } catch (RuntimeException e) {
-            AnimaDB.rollback();
+            AnimaQuery.rollback();
             return Atomic.error(e);
         } finally {
-            AnimaDB.endTransaction();
+            AnimaQuery.endTransaction();
         }
     }
 
@@ -137,7 +137,7 @@ public class Anima {
     }
 
     public static <T extends Model> ResultKey save(T model) {
-        return new AnimaDB(model.getClass()).save(model);
+        return new AnimaQuery(model.getClass()).save(model);
     }
 
     public static <T extends Model> void saveBatch(List<T> models) {
@@ -149,21 +149,21 @@ public class Anima {
     }
 
     public static <T extends Model, S extends Serializable> void deleteBatch(Class<T> modelClass, S... ids) {
-        AnimaDB animaDB = new AnimaDB(modelClass);
-        atomic(() -> Arrays.stream(ids).forEach(animaDB::deleteById)).catchException(e -> log.error("Batch save model error, message: {}", e));
+        AnimaQuery animaQuery = new AnimaQuery(modelClass);
+        atomic(() -> Arrays.stream(ids).forEach(animaQuery::deleteById)).catchException(e -> log.error("Batch save model error, message: {}", e));
     }
 
     public static <T extends Model, S extends Serializable> void deleteBatch(Class<T> modelClass, List<S> idList) {
-        AnimaDB animaDB = new AnimaDB(modelClass);
-        atomic(() -> idList.stream().forEach(animaDB::deleteById)).catchException(e -> log.error("Batch save model error, message: {}", e));
+        AnimaQuery animaQuery = new AnimaQuery(modelClass);
+        atomic(() -> idList.stream().forEach(animaQuery::deleteById)).catchException(e -> log.error("Batch save model error, message: {}", e));
     }
 
     public static <T extends Model> int deleteById(Class<T> modelClass, Serializable id) {
-        return new AnimaDB(modelClass).deleteById(id);
+        return new AnimaQuery(modelClass).deleteById(id);
     }
 
     public static int execute(String sql, Object...params) {
-        return new AnimaDB().execute(sql, params);
+        return new AnimaQuery().execute(sql, params);
     }
 
 

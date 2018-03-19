@@ -18,6 +18,7 @@ package io.github.biezhi.anima.core;
 import io.github.biezhi.anima.Anima;
 import io.github.biezhi.anima.Model;
 import io.github.biezhi.anima.annotation.Table;
+import io.github.biezhi.anima.core.functions.TypeFunction;
 import io.github.biezhi.anima.enums.DMLType;
 import io.github.biezhi.anima.enums.ErrorCode;
 import io.github.biezhi.anima.exception.AnimaException;
@@ -30,6 +31,7 @@ import org.sql2o.Connection;
 import org.sql2o.Sql2o;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -43,7 +45,7 @@ import java.util.stream.Stream;
  */
 @Slf4j
 @NoArgsConstructor
-public class AnimaDB<T extends Model> {
+public class AnimaQuery<T extends Model> {
 
     private Class<T> modelClass;
 
@@ -61,15 +63,15 @@ public class AnimaDB<T extends Model> {
     private String  tableName;
     private DMLType dmlType;
 
-    public AnimaDB(DMLType dmlType) {
+    public AnimaQuery(DMLType dmlType) {
         this.dmlType = dmlType;
     }
 
-    public AnimaDB(Class<T> modelClass) {
+    public AnimaQuery(Class<T> modelClass) {
         this.parse(modelClass);
     }
 
-    public AnimaDB<T> parse(Class<T> modelClass) {
+    public AnimaQuery<T> parse(Class<T> modelClass) {
         this.modelClass = modelClass;
         Table table = modelClass.getAnnotation(Table.class);
         this.tableName = null != table && AnimaUtils.isNotEmpty(table.name()) ? table.name() :
@@ -78,12 +80,12 @@ public class AnimaDB<T extends Model> {
         return this;
     }
 
-    public AnimaDB<T> exclude(String... columnNames) {
+    public AnimaQuery<T> exclude(String... columnNames) {
         Collections.addAll(excludedColumns, columnNames);
         return this;
     }
 
-    public AnimaDB<T> select(String columns) {
+    public AnimaQuery<T> select(String columns) {
         if (null != this.selectColumns) {
             throw new AnimaException("Select method can only be called once.");
         }
@@ -91,12 +93,24 @@ public class AnimaDB<T extends Model> {
         return this;
     }
 
-    public AnimaDB<T> where(String statement) {
+    public AnimaQuery<T> where(String statement) {
         conditionSQL.append(" AND ").append(statement);
         return this;
     }
 
-    public AnimaDB<T> where(String statement, Object value) {
+    public <R> AnimaQuery<T> where(TypeFunction<T, R> function) {
+        String columnName = getColumnName(function);
+        conditionSQL.append(" AND ").append(columnName);
+        return this;
+    }
+
+    public AnimaQuery<T> eq(Object value) {
+        conditionSQL.append(" = ?");
+        paramValues.add(value);
+        return this;
+    }
+
+    public AnimaQuery<T> where(String statement, Object value) {
         conditionSQL.append(" AND ").append(statement);
         if (!statement.contains("?")) {
             conditionSQL.append(" = ?");
@@ -105,11 +119,22 @@ public class AnimaDB<T extends Model> {
         return this;
     }
 
-    public AnimaDB<T> and(String statement, Object value) {
+    public AnimaQuery<T> notNull() {
+        conditionSQL.append(" IS NOT NULL");
+        return this;
+    }
+
+    public AnimaQuery<T> and(String statement, Object value) {
         return this.where(statement, value);
     }
 
-    public AnimaDB<T> or(String statement, Object value) {
+    public <R> AnimaQuery<T> and(TypeFunction<T, R> function) {
+        String columnName = getColumnName(function);
+        conditionSQL.append(" AND ").append(columnName);
+        return this;
+    }
+
+    public AnimaQuery<T> or(String statement, Object value) {
         conditionSQL.append(" OR (").append(statement);
         if (!statement.contains("?")) {
             conditionSQL.append(" = ?");
@@ -119,55 +144,98 @@ public class AnimaDB<T extends Model> {
         return this;
     }
 
-    public AnimaDB<T> not(String key, Object value) {
+    public AnimaQuery<T> not(String key, Object value) {
         conditionSQL.append(" AND ").append(key).append(" != ?");
         paramValues.add(value);
         return this;
     }
 
-    public AnimaDB<T> isNotNull(String key) {
+    public AnimaQuery<T> not(Object value) {
+        conditionSQL.append(" != ?");
+        paramValues.add(value);
+        return this;
+    }
+
+    public AnimaQuery<T> notNull(String key) {
         conditionSQL.append(" AND ").append(key).append(" IS NOT NULL");
         return this;
     }
 
-    public AnimaDB<T> like(String key, Object value) {
+    public AnimaQuery<T> like(String key, Object value) {
         conditionSQL.append(" AND ").append(key).append(" LIKE ?");
         paramValues.add(value);
         return this;
     }
 
-    public AnimaDB<T> between(String coulmn, Object a, Object b) {
+    public AnimaQuery<T> like(Object value) {
+        conditionSQL.append(" LIKE ?");
+        paramValues.add(value);
+        return this;
+    }
+
+    public AnimaQuery<T> between(String coulmn, Object a, Object b) {
         conditionSQL.append(" AND ").append(coulmn).append(" BETWEEN ? and ?");
         paramValues.add(a);
         paramValues.add(b);
         return this;
     }
 
-    public AnimaDB<T> gt(String column, Object value) {
+    public AnimaQuery<T> between(Object a, Object b) {
+        conditionSQL.append(" BETWEEN ? and ?");
+        paramValues.add(a);
+        paramValues.add(b);
+        return this;
+    }
+
+    public AnimaQuery<T> gt(String column, Object value) {
         conditionSQL.append(" AND ").append(column).append(" > ?");
         paramValues.add(value);
         return this;
     }
 
-    public AnimaDB<T> gte(String column, Object value) {
+    public AnimaQuery<T> gt(Object value) {
+        conditionSQL.append(" > ?");
+        paramValues.add(value);
+        return this;
+    }
+
+    public AnimaQuery<T> gte(Object value) {
+        conditionSQL.append(" >= ?");
+        paramValues.add(value);
+        return this;
+    }
+
+    public AnimaQuery<T> lt(Object value) {
+        conditionSQL.append(" < ?");
+        paramValues.add(value);
+        return this;
+    }
+
+    public AnimaQuery<T> lte(Object value) {
+        conditionSQL.append(" <= ?");
+        paramValues.add(value);
+        return this;
+    }
+
+    public AnimaQuery<T> gte(String column, Object value) {
         conditionSQL.append(" AND ").append(column).append(" >= ?");
         paramValues.add(value);
         return this;
     }
 
-    public AnimaDB<T> lt(String column, Object value) {
+    public AnimaQuery<T> lt(String column, Object value) {
         conditionSQL.append(" AND ").append(column).append(" < ?");
         paramValues.add(value);
         return this;
     }
 
-    public AnimaDB<T> lte(String column, Object value) {
+    public AnimaQuery<T> lte(String column, Object value) {
         conditionSQL.append(" AND ").append(column).append(" <= ?");
         paramValues.add(value);
         return this;
     }
 
-    public AnimaDB<T> in(String column, Object... args) {
+    public AnimaQuery<T> in(String column, Object... args) {
         if (null == args || args.length == 0) {
             log.warn("Column: {}, query params is empty.");
             return this;
@@ -185,7 +253,7 @@ public class AnimaDB<T extends Model> {
         return this;
     }
 
-    public AnimaDB<T> in(String key, List<T> args) {
+    public AnimaQuery<T> in(String key, List<T> args) {
         if (null == args || args.isEmpty()) {
             log.warn("Column: {}, query params is empty.");
             return this;
@@ -203,7 +271,7 @@ public class AnimaDB<T extends Model> {
         return this;
     }
 
-    public AnimaDB<T> order(String order) {
+    public AnimaQuery<T> order(String order) {
         this.orderBy = order;
         return this;
     }
@@ -253,7 +321,7 @@ public class AnimaDB<T extends Model> {
 
     public T one() {
         this.beforeCheck();
-        String sql = this.buildSelectSQL(true) + " LIMIT 1";
+        String sql = this.buildSelectSQL(true);
         return this.queryOne(modelClass, sql, paramValues);
     }
 
@@ -288,7 +356,7 @@ public class AnimaDB<T extends Model> {
         return this.queryOne(Long.class, sql, paramValues);
     }
 
-    public AnimaDB set(String column, Object value) {
+    public AnimaQuery set(String column, Object value) {
         updateColumns.put(column, value);
         return this;
     }
@@ -302,11 +370,8 @@ public class AnimaDB<T extends Model> {
     }
 
     private <S> S queryOne(Class<S> type, String sql, List<Object> params) {
-        try (Connection conn = getConn()) {
-            return conn.createQuery(sql).withParams(params).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeAndFetchFirst(type);
-        } finally {
-            this.clean(null);
-        }
+        List<S> list = queryList(type, sql, params);
+        return AnimaUtils.isNotEmpty(list) ? list.get(0) : null;
     }
 
     private <S> List<S> queryList(Class<S> type, String sql, Object[] params) {
@@ -503,7 +568,7 @@ public class AnimaDB<T extends Model> {
     }
 
     public static void beginTransaction() {
-        Connection connection = AnimaDB.getSql2o().beginTransaction();
+        Connection connection = AnimaQuery.getSql2o().beginTransaction();
         connectionThreadLocal.set(connection);
     }
 
@@ -527,6 +592,17 @@ public class AnimaDB<T extends Model> {
             throw new AnimaException("SQL2O instance not is null.");
         }
         return sql2o;
+    }
+
+    private <R> String getColumnName(TypeFunction<T, R> function) {
+        String methodName = AnimaUtils.getLambdaMethodName(function);
+        String fieldName  = AnimaUtils.methodToFieldName(methodName);
+        try {
+            Field field = modelClass.getDeclaredField(fieldName);
+            return AnimaUtils.toColumnName(field);
+        } catch (NoSuchFieldException e) {
+            throw new AnimaException(e);
+        }
     }
 
     private void clean(Connection conn) {

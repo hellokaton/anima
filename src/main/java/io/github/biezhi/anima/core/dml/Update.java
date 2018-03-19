@@ -16,7 +16,7 @@
 package io.github.biezhi.anima.core.dml;
 
 import io.github.biezhi.anima.Model;
-import io.github.biezhi.anima.core.AnimaDB;
+import io.github.biezhi.anima.core.AnimaQuery;
 import io.github.biezhi.anima.enums.DMLType;
 
 /**
@@ -27,8 +27,8 @@ import io.github.biezhi.anima.enums.DMLType;
  */
 public class Update {
 
-    public <T extends Model> AnimaDB<T> from(Class<T> modelClass) {
-        return new AnimaDB<T>(DMLType.UPDATE).parse(modelClass);
+    public <T extends Model> AnimaQuery<T> from(Class<T> modelClass) {
+        return new AnimaQuery<T>(DMLType.UPDATE).parse(modelClass);
     }
 
 }

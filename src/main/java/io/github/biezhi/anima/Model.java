@@ -1,6 +1,6 @@
 package io.github.biezhi.anima;
 
-import io.github.biezhi.anima.core.AnimaDB;
+import io.github.biezhi.anima.core.AnimaQuery;
 import io.github.biezhi.anima.core.ResultKey;
 
 import java.io.Serializable;
@@ -14,27 +14,27 @@ import java.io.Serializable;
 public class Model {
 
     public ResultKey save() {
-        return new AnimaDB(this.getClass()).save(this);
+        return new AnimaQuery(this.getClass()).save(this);
     }
 
     public int update() {
-        return new AnimaDB(this.getClass()).updateByModel(this);
+        return new AnimaQuery(this.getClass()).updateByModel(this);
     }
 
     public int updateById(Serializable id) {
-        return new AnimaDB(this.getClass()).updateById(this, id);
+        return new AnimaQuery(this.getClass()).updateById(this, id);
     }
 
     public int delete() {
-        return new AnimaDB(this.getClass()).deleteByModel(this);
+        return new AnimaQuery(this.getClass()).deleteByModel(this);
     }
 
-    public AnimaDB set(String column, Object value) {
-        return new AnimaDB(this.getClass()).set(column, value);
+    public AnimaQuery set(String column, Object value) {
+        return new AnimaQuery(this.getClass()).set(column, value);
     }
 
-    public AnimaDB where(String statement, Object value) {
-        return new AnimaDB(this.getClass()).where(statement, value);
+    public AnimaQuery where(String statement, Object value) {
+        return new AnimaQuery(this.getClass()).where(statement, value);
     }
 
 }

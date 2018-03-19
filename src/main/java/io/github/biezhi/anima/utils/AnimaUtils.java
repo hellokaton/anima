@@ -18,10 +18,15 @@ package io.github.biezhi.anima.utils;
 import io.github.biezhi.anima.Model;
 import io.github.biezhi.anima.annotation.Column;
 import io.github.biezhi.anima.annotation.Ignore;
+import io.github.biezhi.anima.core.functions.TypeFunction;
 import io.github.biezhi.anima.enums.SupportedType;
 import io.github.biezhi.anima.exception.AnimaException;
 
+import java.io.Serializable;
+import java.lang.invoke.SerializedLambda;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -124,6 +129,38 @@ public class AnimaUtils {
             return true;
         }
         return false;
+    }
+
+    public static <T, R> String getLambdaMethodName(TypeFunction<T, R> methodReference) {
+        return getLambda(methodReference);
+    }
+
+    private static String getLambda(Serializable lambda) {
+        for (Class<?> cl = lambda.getClass(); cl != null; cl = cl.getSuperclass()) {
+            try {
+                Method m = cl.getDeclaredMethod("writeReplace");
+                m.setAccessible(true);
+                Object replacement = m.invoke(lambda);
+                if (!(replacement instanceof SerializedLambda)) {
+                    break; // custom interface implementation
+                }
+                SerializedLambda serializedLambda = (SerializedLambda) replacement;
+                return serializedLambda.getImplMethodName();
+            } catch (NoSuchMethodException e) {
+                // do nothing
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                break;
+            }
+        }
+        return null;
+    }
+
+    public static String methodToFieldName(String methodName) {
+        return capitalize(methodName.replace("get", ""));
+    }
+
+    public static String capitalize(String input) {
+        return input.substring(0, 1).toLowerCase() + input.substring(1, input.length());
     }
 
 }
