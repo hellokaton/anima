@@ -18,14 +18,11 @@ import org.sql2o.Sql2oException;
 @Slf4j
 public class ExceptionTest extends BaseTest {
 
-
     @BeforeClass
     public static void before() {
         h2();
         initData();
-        System.out.println();
         log.info("============== Start Test Code ==============");
-        System.out.println();
     }
 
     protected static void h2() {
@@ -36,6 +33,19 @@ public class ExceptionTest extends BaseTest {
                 "`id` IDENTITY PRIMARY KEY, " +
                 "`user_name` varchar(50) NOT NULL, " +
                 "`age` int(11)," +
+                ");" +
+                "DROP TABLE IF EXISTS `order_info`;\n" +
+                "CREATE TABLE `order_info` (" +
+                "`id` IDENTITY PRIMARY KEY," +
+                "`uid` int(11) NOT NULL," +
+                "`productname` varchar(100) NOT NULL," +
+                "`create_time` datetime NOT NULL" +
+                ");" +
+                "DROP TABLE IF EXISTS `addresses`;\n" +
+                "CREATE TABLE `addresses` (" +
+                "`order_id` bigint(20) PRIMARY KEY," +
+                "`city` varchar(100) NOT NULL," +
+                "`street` varchar(200) NOT NULL" +
                 ");";
 
         try (Connection con = sql2o.open()) {

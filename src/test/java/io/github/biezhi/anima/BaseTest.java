@@ -1,5 +1,7 @@
 package io.github.biezhi.anima;
 
+import io.github.biezhi.anima.model.Address;
+import io.github.biezhi.anima.model.OrderInfo;
 import io.github.biezhi.anima.model.User;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.BeforeClass;
@@ -31,6 +33,14 @@ public class BaseTest {
         new User("john", 38).save();
         new User("king", 32).save();
         new User("王尼玛", 30).save();
+
+        new OrderInfo(1, "橘子").save();
+        new OrderInfo(2, "果汁").save();
+        new OrderInfo(1, "芒果").save();
+        new OrderInfo(1, "葡萄干").save();
+
+        new Address(3L, "上海", "浦东新区").save();
+        new Address(2L, "北京", "朝阳区").save();
     }
 
     protected static void h2() {
@@ -41,6 +51,19 @@ public class BaseTest {
                 "`id` IDENTITY PRIMARY KEY, " +
                 "`user_name` varchar(50) NOT NULL, " +
                 "`age` int(11)," +
+                ");" +
+                "DROP TABLE IF EXISTS `order_info`;\n" +
+                "CREATE TABLE `order_info` (" +
+                "`id` IDENTITY PRIMARY KEY," +
+                "`uid` int(11) NOT NULL," +
+                "`productname` varchar(100) NOT NULL," +
+                "`create_time` datetime NOT NULL" +
+                ");" +
+                "DROP TABLE IF EXISTS `addresses`;\n" +
+                "CREATE TABLE `addresses` (" +
+                "`order_id` bigint(20) PRIMARY KEY," +
+                "`city` varchar(100) NOT NULL," +
+                "`street` varchar(200) NOT NULL" +
                 ");";
 
         try (Connection con = sql2o.open()) {

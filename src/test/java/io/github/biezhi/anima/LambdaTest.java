@@ -45,8 +45,16 @@ public class LambdaTest extends BaseTest {
     }
 
     @Test
-    public void testOrderBy(){
+    public void testOrderBy() {
         select().from(User.class).order(User::getId, OrderBy.DESC).order(User::getAge, OrderBy.ASC).all();
+    }
+
+    @Test
+    public void testUpdate() {
+        int result = update().from(User.class).set(User::getUserName, "base64").updateById(2);
+        Assert.assertEquals(1, result);
+        result = update().from(User.class).set(User::getUserName, "base64").where(User::getId).eq(2).execute();
+        Assert.assertEquals(1, result);
     }
 
     @Test
@@ -54,12 +62,6 @@ public class LambdaTest extends BaseTest {
         delete().from(User.class).where(User::getId).deleteById(3);
         delete().from(User.class).where(User::getId).eq(1).execute();
         delete().from(User.class).where(User::getAge).lte(20).execute();
-    }
-
-    @Test
-    public void testUpdate() {
-        update().from(User.class).set(User::getUserName, "base64").updateById(3);
-        update().from(User.class).set(User::getUserName, "base64").where(User::getId).eq(2).execute();
     }
 
 }

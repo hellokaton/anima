@@ -17,8 +17,11 @@ package io.github.biezhi.anima.core;
 
 import io.github.biezhi.anima.Anima;
 import io.github.biezhi.anima.Model;
-import io.github.biezhi.anima.annotation.Table;
+import io.github.biezhi.anima.annotation.BelongsTo;
+import io.github.biezhi.anima.annotation.HasMany;
+import io.github.biezhi.anima.annotation.HasOne;
 import io.github.biezhi.anima.core.functions.TypeFunction;
+import io.github.biezhi.anima.core.relation.RelationParamBuilder;
 import io.github.biezhi.anima.enums.DMLType;
 import io.github.biezhi.anima.enums.ErrorCode;
 import io.github.biezhi.anima.enums.OrderBy;
@@ -32,6 +35,7 @@ import org.sql2o.Connection;
 import org.sql2o.Sql2o;
 
 import java.io.Serializable;
+import java.lang.annotation.Annotation;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -51,15 +55,16 @@ public class AnimaQuery<T extends Model> {
 
     private static ThreadLocal<Connection> connectionThreadLocal = new ThreadLocal<>();
 
-    private StringBuilder       conditionSQL    = new StringBuilder();
-    private StringBuilder       orderBySQL      = new StringBuilder();
-    private List<String>        excludedColumns = new ArrayList<>(8);
-    private List<Object>        paramValues     = new ArrayList<>(8);
-    private Map<String, Object> updateColumns   = new LinkedHashMap<>(8);
+    private StringBuilder                    conditionSQL    = new StringBuilder();
+    private StringBuilder                    orderBySQL      = new StringBuilder();
+    private List<String>                     excludedColumns = new ArrayList<>(8);
+    private List<Object>                     paramValues     = new ArrayList<>(8);
+    private Map<String, Object>              updateColumns   = new LinkedHashMap<>(8);
+    private Set<Class<? extends Annotation>> relations       = new HashSet<>();
 
     private String selectColumns;
 
-    private String  pkName;
+    private String  primaryKeyColumn;
     private String  tableName;
     private DMLType dmlType;
 
@@ -73,15 +78,18 @@ public class AnimaQuery<T extends Model> {
 
     public AnimaQuery<T> parse(Class<T> modelClass) {
         this.modelClass = modelClass;
-        Table table = modelClass.getAnnotation(Table.class);
-        this.tableName = null != table && AnimaUtils.isNotEmpty(table.name()) ? table.name() :
-                AnimaUtils.toTableName(modelClass.getSimpleName(), Anima.me().getTablePrefix());
-        this.pkName = null != table ? table.pk() : "id";
+        this.tableName = AnimaCache.getTableName(modelClass);
+        this.primaryKeyColumn = AnimaCache.getPKColumn(modelClass);
         return this;
     }
 
     public AnimaQuery<T> exclude(String... columnNames) {
         Collections.addAll(excludedColumns, columnNames);
+        return this;
+    }
+
+    public AnimaQuery<T> exclude(Class<? extends Annotation>... relations) {
+        this.relations.addAll(Arrays.asList(relations));
         return this;
     }
 
@@ -285,7 +293,7 @@ public class AnimaQuery<T extends Model> {
     }
 
     public AnimaQuery<T> order(String order) {
-        if(this.orderBySQL.length() > 0){
+        if (this.orderBySQL.length() > 0) {
             this.orderBySQL.append(',');
         }
         this.orderBySQL.append(' ').append(order);
@@ -293,7 +301,7 @@ public class AnimaQuery<T extends Model> {
     }
 
     public AnimaQuery<T> order(String columnName, OrderBy orderBy) {
-        if(this.orderBySQL.length() > 0){
+        if (this.orderBySQL.length() > 0) {
             this.orderBySQL.append(',');
         }
         this.orderBySQL.append(' ').append(columnName).append(' ').append(orderBy.toString());
@@ -311,13 +319,15 @@ public class AnimaQuery<T extends Model> {
 
     public T byId(Serializable id) {
         this.beforeCheck();
-        this.where(pkName, id);
-        String sql = this.buildSelectSQL(false);
-        return this.queryOne(modelClass, sql, paramValues);
+        this.where(primaryKeyColumn, id);
+        String sql   = this.buildSelectSQL(false);
+        T      model = this.queryOne(modelClass, sql, paramValues);
+        this.setRelate(Collections.singletonList(model));
+        return model;
     }
 
     public List<T> byIds(Serializable... ids) {
-        this.in(pkName, ids);
+        this.in(primaryKeyColumn, ids);
         return this.all();
     }
 
@@ -326,18 +336,32 @@ public class AnimaQuery<T extends Model> {
         return new ResultList<>(list);
     }
 
+    public T one() {
+        this.beforeCheck();
+        String sql   = this.buildSelectSQL(true);
+        T      model = this.queryOne(modelClass, sql, paramValues);
+        this.setRelate(Collections.singletonList(model));
+        return model;
+    }
+
     public List<T> all() {
         this.beforeCheck();
-        String sql = this.buildSelectSQL(true);
-        return this.queryList(modelClass, sql, paramValues);
+        String  sql    = this.buildSelectSQL(true);
+        List<T> models = this.queryList(modelClass, sql, paramValues);
+        this.setRelate(models);
+        return models;
     }
 
     public Stream<T> stream() {
-        return all().stream();
+        List<T> all = all();
+        if (AnimaUtils.isNotEmpty(all)) {
+            return all.stream();
+        }
+        return Stream.empty();
     }
 
     public Stream<T> parallel() {
-        return all().parallelStream();
+        return stream().parallel();
     }
 
     public <R> Stream<R> map(Function<T, R> function) {
@@ -346,12 +370,6 @@ public class AnimaQuery<T extends Model> {
 
     public Stream<T> filter(Predicate<T> predicate) {
         return stream().filter(predicate);
-    }
-
-    public T one() {
-        this.beforeCheck();
-        String sql = this.buildSelectSQL(true);
-        return this.queryOne(modelClass, sql, paramValues);
     }
 
     public List<T> limit(int limit) {
@@ -370,7 +388,7 @@ public class AnimaQuery<T extends Model> {
         try (Connection conn = getConn()) {
             long    count    = conn.createQuery(countSql).withParams(paramValues).executeAndFetchFirst(Long.class);
             String  pageSQL  = this.buildPageSQL(pageRow);
-            List<T> list     = conn.createQuery(pageSQL).withParams(paramValues).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeAndFetch((Class<T>) modelClass);
+            List<T> list     = conn.createQuery(pageSQL).withParams(paramValues).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeAndFetch(modelClass);
             Page<T> pageBean = new Page<>(count, pageRow.getPageNum(), pageRow.getPageSize());
             pageBean.setRows(list);
             return pageBean;
@@ -381,7 +399,7 @@ public class AnimaQuery<T extends Model> {
 
     public long count() {
         this.beforeCheck();
-        String sql = this.buildCountSQL(null);
+        String sql = this.buildCountSQL();
         return this.queryOne(Long.class, sql, paramValues);
     }
 
@@ -454,7 +472,7 @@ public class AnimaQuery<T extends Model> {
 
     public ResultKey save(T model) {
         String       sql             = this.buildInsertSQL(model);
-        List<Object> columnValueList = AnimaUtils.columnValues(model, true);
+        List<Object> columnValueList = AnimaUtils.toColumnValues(model, true);
         Connection   conn            = getConn();
         try {
             return new ResultKey(conn.createQuery(sql).withParams(columnValueList).executeUpdate().getKey());
@@ -469,14 +487,14 @@ public class AnimaQuery<T extends Model> {
     }
 
     public int deleteById(Serializable id) {
-        this.where(pkName, id);
+        this.where(primaryKeyColumn, id);
         return this.delete();
     }
 
     public int deleteByModel(T model) {
         this.beforeCheck();
         String       sql             = this.buildDeleteSQL(model);
-        List<Object> columnValueList = AnimaUtils.columnValues(model, false);
+        List<Object> columnValueList = AnimaUtils.toColumnValues(model, false);
         return this.execute(sql, columnValueList);
     }
 
@@ -490,23 +508,22 @@ public class AnimaQuery<T extends Model> {
     }
 
     public int updateById(Serializable id) {
-        this.where(pkName, id);
+        this.where(primaryKeyColumn, id);
         return this.update();
     }
 
     public int updateById(T model, Serializable id) {
-        this.where(pkName, id);
+        this.where(primaryKeyColumn, id);
         String       sql             = this.buildUpdateSQL(model, null);
-        List<Object> columnValueList = AnimaUtils.columnValues(model, false);
+        List<Object> columnValueList = AnimaUtils.toColumnValues(model, false);
         columnValueList.add(id);
         return this.execute(sql, columnValueList);
     }
 
-
     public int updateByModel(T model) {
         this.beforeCheck();
         String       sql             = this.buildUpdateSQL(model, null);
-        List<Object> columnValueList = AnimaUtils.columnValues(model, false);
+        List<Object> columnValueList = AnimaUtils.toColumnValues(model, false);
         return this.execute(sql, columnValueList);
     }
 
@@ -515,7 +532,7 @@ public class AnimaQuery<T extends Model> {
                 .modelClass(this.modelClass)
                 .selectColumns(this.selectColumns)
                 .tableName(this.tableName)
-                .pkName(this.pkName)
+                .pkName(this.primaryKeyColumn)
                 .conditionSQL(this.conditionSQL)
                 .excludedColumns(this.excludedColumns)
                 .build();
@@ -526,12 +543,11 @@ public class AnimaQuery<T extends Model> {
         return Anima.me().getDialect().select(sqlParams);
     }
 
-    private String buildCountSQL(Object model) {
+    private String buildCountSQL() {
         SQLParams sqlParams = SQLParams.builder()
-                .model(model)
                 .modelClass(this.modelClass)
                 .tableName(this.tableName)
-                .pkName(this.pkName)
+                .pkName(this.primaryKeyColumn)
                 .conditionSQL(this.conditionSQL)
                 .build();
         return Anima.me().getDialect().count(sqlParams);
@@ -542,7 +558,7 @@ public class AnimaQuery<T extends Model> {
                 .modelClass(this.modelClass)
                 .selectColumns(this.selectColumns)
                 .tableName(this.tableName)
-                .pkName(this.pkName)
+                .pkName(this.primaryKeyColumn)
                 .conditionSQL(this.conditionSQL)
                 .excludedColumns(this.excludedColumns)
                 .orderBy(this.orderBySQL.toString())
@@ -556,7 +572,7 @@ public class AnimaQuery<T extends Model> {
                 .model(model)
                 .modelClass(this.modelClass)
                 .tableName(this.tableName)
-                .pkName(this.pkName)
+                .pkName(this.primaryKeyColumn)
                 .build();
 
         return Anima.me().getDialect().insert(sqlParams);
@@ -567,7 +583,7 @@ public class AnimaQuery<T extends Model> {
                 .model(model)
                 .modelClass(this.modelClass)
                 .tableName(this.tableName)
-                .pkName(this.pkName)
+                .pkName(this.primaryKeyColumn)
                 .updateColumns(updateColumns)
                 .conditionSQL(this.conditionSQL)
                 .build();
@@ -580,7 +596,7 @@ public class AnimaQuery<T extends Model> {
                 .model(model)
                 .modelClass(this.modelClass)
                 .tableName(this.tableName)
-                .pkName(this.pkName)
+                .pkName(this.primaryKeyColumn)
                 .conditionSQL(this.conditionSQL)
                 .build();
         return Anima.me().getDialect().delete(sqlParams);
@@ -634,6 +650,96 @@ public class AnimaQuery<T extends Model> {
         return sql2o;
     }
 
+    private void setRelate(List<T> models) {
+        if (null == models || models.isEmpty()) {
+            return;
+        }
+        if (!relations.contains(BelongsTo.class) && AnimaCache.hasBelongsTo(modelClass)) {
+            this.setBelongs(models);
+        }
+        if (!relations.contains(HasMany.class) && AnimaCache.hasMany(modelClass)) {
+            this.setHasMany(models);
+        }
+        if (!relations.contains(HasOne.class) && AnimaCache.hasOne(modelClass)) {
+            this.setHasOne(models);
+        }
+    }
+
+    private void setBelongs(List<T> models) {
+        Arrays.stream(modelClass.getDeclaredFields())
+                .filter(field -> null != field.getAnnotation(BelongsTo.class))
+                .map(RelationParamBuilder::buildBelongsTo)
+                .forEach(relationParams -> {
+                    if (models.size() == 1) {
+                        Object fkValue = AnimaUtils.getFieldValue(relationParams.getFk(), models.get(0));
+                        Object fkVal   = this.queryOne(relationParams.getType(), relationParams.getRelateSQL(), new Object[]{fkValue});
+                        AnimaUtils.setFieldValue(relationParams.getFieldName(), models.get(0), fkVal);
+                    } else {
+                        Object[]      pkIds       = new Object[models.size()];
+                        int           pos         = 0;
+                        StringBuilder placeholder = new StringBuilder();
+                        for (T model : models) {
+                            Object fkValue = AnimaUtils.getFieldValue(relationParams.getFk(), model);
+                            pkIds[pos++] = fkValue;
+                            placeholder.append(",?");
+                        }
+
+                        String belongSQL = "SELECT * FROM " + relationParams.getTableName() + " WHERE " + relationParams.getPk() + " in (" + placeholder.substring(1) + ")";
+                        List<?> list = this.queryList(relationParams.getType(),
+                                belongSQL, pkIds);
+                        for (int i = 0; i < models.size(); i++) {
+                            if (list.size() > i) {
+                                AnimaUtils.setFieldValue(relationParams.getFieldName(), models.get(i), list.get(i));
+                            }
+                        }
+                    }
+                });
+    }
+
+    private void setHasMany(List<T> models) {
+        Arrays.stream(modelClass.getDeclaredFields())
+                .filter(field -> null != field.getAnnotation(HasMany.class))
+                .map(RelationParamBuilder::buildHasMany)
+                .forEach(relationParams -> {
+                    for (T model : models) {
+                        Object fkValue = AnimaUtils.getPKFieldValue(model);
+                        Object fkVal = this.queryList(relationParams.getType(), relationParams.getRelateSQL(),
+                                new Object[]{fkValue});
+                        AnimaUtils.setFieldValue(relationParams.getFieldName(), model, fkVal);
+                    }
+                });
+    }
+
+    private void setHasOne(List<T> models) {
+        Arrays.stream(modelClass.getDeclaredFields())
+                .filter(field -> null != field.getAnnotation(HasOne.class))
+                .map(RelationParamBuilder::buildHasOne)
+                .forEach(relationParams -> {
+                    if (models.size() == 1) {
+                        Object fkValue = AnimaUtils.getPKFieldValue(models.get(0));
+                        Object fkVal   = this.queryOne(relationParams.getType(), relationParams.getRelateSQL(), new Object[]{fkValue});
+                        AnimaUtils.setFieldValue(relationParams.getFieldName(), models.get(0), fkVal);
+                    } else {
+                        Object[]      pkIds       = new Object[models.size()];
+                        int           pos         = 0;
+                        StringBuilder placeholder = new StringBuilder();
+                        for (T model : models) {
+                            Object fkValue = AnimaUtils.getFieldValue(AnimaUtils.methodToFieldName(primaryKeyColumn), model);
+                            pkIds[pos++] = fkValue;
+                            placeholder.append(",?");
+                        }
+
+                        String  hasOneSQL = "SELECT * FROM " + relationParams.getTableName() + " WHERE " + relationParams.getFk() + " in (" + placeholder.substring(1) + ")";
+                        List<?> list      = this.queryList(relationParams.getType(), hasOneSQL, pkIds);
+                        for (int i = 0; i < models.size(); i++) {
+                            if (list.size() > i) {
+                                AnimaUtils.setFieldValue(relationParams.getFieldName(), models.get(i), list.get(i));
+                            }
+                        }
+                    }
+                });
+    }
+
     private void clean(Connection conn) {
         this.selectColumns = null;
         this.orderBySQL = new StringBuilder();
@@ -641,6 +747,7 @@ public class AnimaQuery<T extends Model> {
         this.paramValues.clear();
         this.excludedColumns.clear();
         this.updateColumns.clear();
+        this.relations.clear();
         if (null == connectionThreadLocal.get() && null != conn) {
             conn.close();
         }

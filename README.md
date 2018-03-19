@@ -20,6 +20,7 @@
 - Connection pool support
 - Support `LocalDate`、`LocalDateTime`
 - Support lambda expression
+- Relationship (`hasOne`、`hasMany`、`belongsTo`)
 - SQL performance statistics
 - Based Java8
 
@@ -28,7 +29,7 @@
 **As Gradle**
 
 ```java
-compile 'io.github.biezhi:anima:0.0.5'
+compile 'io.github.biezhi:anima:0.0.6'
 ```
 
 **As Maven**
@@ -37,7 +38,7 @@ compile 'io.github.biezhi:anima:0.0.5'
 <dependency>
     <groupId>io.github.biezhi</groupId>
     <artifactId>anima</artifactId>
-    <version>0.0.5</version>
+    <version>0.0.6</version>
 </dependency>
 ```
 

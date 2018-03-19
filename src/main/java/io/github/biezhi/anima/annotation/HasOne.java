@@ -21,15 +21,15 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * identify custom column name
+ * one to one
  *
  * @author biezhi
  * @date 2018/3/19
  */
-@Target({ElementType.METHOD, ElementType.FIELD})
+@Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Column {
+public @interface HasOne {
 
-    String name() default "";
+    String fk();
 
 }

@@ -32,7 +32,8 @@ public class UpdateTest extends BaseTest {
 
         user = new User();
         user.setUserName("jack");
-        user.updateById(1);
+        int result = user.updateById(1);
+        Assert.assertEquals(1, result);
     }
 
     @Test

@@ -16,9 +16,8 @@
 package io.github.biezhi.anima.utils;
 
 import io.github.biezhi.anima.Model;
-import io.github.biezhi.anima.annotation.Column;
-import io.github.biezhi.anima.annotation.Ignore;
-import io.github.biezhi.anima.enums.SupportedType;
+import io.github.biezhi.anima.annotation.*;
+import io.github.biezhi.anima.core.AnimaCache;
 import io.github.biezhi.anima.exception.AnimaException;
 
 import java.io.Serializable;
@@ -82,18 +81,20 @@ public class AnimaUtils {
         return result.toString();
     }
 
-    public static <T extends Model> List<Object> columnValues(T model, boolean allowNull) {
+    public static <T extends Model> List<Object> toColumnValues(T model, boolean allowNull) {
         List<Object> columnValueList = new ArrayList<>();
         for (Field field : model.getClass().getDeclaredFields()) {
+            if (isIgnore(field)) {
+                continue;
+            }
             field.setAccessible(true);
             try {
                 Object value = field.get(model);
                 if (null != value) {
                     columnValueList.add(value);
                 } else if (allowNull) {
-                    columnValueList.add(value);
+                    columnValueList.add(null);
                 }
-
             } catch (IllegalArgumentException | IllegalAccessException e) {
                 throw new AnimaException("illegal argument or Access:", e);
             }
@@ -117,17 +118,56 @@ public class AnimaUtils {
     }
 
     public static boolean isIgnore(Field field) {
-        if ("serialVersionUID".equals(field.getName())) {
-            return true;
-        }
-        if (null != field.getAnnotation(Ignore.class)) {
-            return true;
-        }
-        String typeName = field.getType().getSimpleName().toLowerCase();
-        if (!SupportedType.contains(typeName)) {
-            return true;
-        }
+        if ("serialVersionUID".equals(field.getName())) return true;
+        if (null != field.getAnnotation(Ignore.class)) return true;
+        if (null != field.getAnnotation(BelongsTo.class)) return true;
+        if (null != field.getAnnotation(HasMany.class)) return true;
+        if (null != field.getAnnotation(HasOne.class)) return true;
         return false;
+    }
+
+    public static Object getPKFieldValue(Object target) {
+        try {
+            String  pkName = AnimaCache.getPKColumn(target.getClass());
+            Field[] fields = target.getClass().getDeclaredFields();
+            for (Field field : fields) {
+                if (field.getName().equals(pkName)) {
+                    field.setAccessible(true);
+                    return field.get(target);
+                }
+                Column column = field.getAnnotation(Column.class);
+                if (null != column && pkName.equals(column.name())) {
+                    field.setAccessible(true);
+                    return field.get(target);
+                }
+                if (pkName.equals(toColumnName(field.getName()))) {
+                    field.setAccessible(true);
+                    return field.get(target);
+                }
+            }
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static Object getFieldValue(String fieldName, Object target) {
+        try {
+            Field field = AnimaCache.getField(target.getClass(), fieldName);
+            return field.get(target);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static void setFieldValue(String fieldName, Object target, Object value) {
+        try {
+            Field field = AnimaCache.getField(target.getClass(), fieldName);
+            field.set(target, value);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
     }
 
     public static String getLambdaColumnName(Serializable lambda) {
@@ -140,15 +180,7 @@ public class AnimaUtils {
                     break; // custom interface implementation
                 }
                 SerializedLambda serializedLambda = (SerializedLambda) replacement;
-                String           className        = serializedLambda.getImplClass().replace("/", ".");
-                String           methodName       = serializedLambda.getImplMethodName();
-                String           fieldName        = methodToFieldName(methodName);
-                try {
-                    Field field = Class.forName(className).getDeclaredField(fieldName);
-                    return AnimaUtils.toColumnName(field);
-                } catch (NoSuchFieldException | ClassNotFoundException e) {
-                    throw new AnimaException(e);
-                }
+                return AnimaCache.getLambdaColumnName(serializedLambda);
             } catch (NoSuchMethodException e) {
                 // do nothing
             } catch (IllegalAccessException | InvocationTargetException e) {
