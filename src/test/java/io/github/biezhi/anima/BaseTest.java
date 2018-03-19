@@ -22,7 +22,7 @@ public class BaseTest {
         System.out.println();
     }
 
-    private static void initData() {
+    protected static void initData() {
         new User("jack", 25).save();
         new User("rose", 23).save();
         new User("tom", 24).save();
@@ -33,7 +33,7 @@ public class BaseTest {
         new User("王尼玛", 30).save();
     }
 
-    private static void h2() {
+    protected static void h2() {
         Sql2o sql2o = Anima.open("jdbc:h2:file:~/demo;FILE_LOCK=FS;PAGE_SIZE=1024;CACHE_SIZE=8192", "sa", "").getSql2o();
 
         String sql = "DROP TABLE IF EXISTS `users`;\n" +
@@ -48,7 +48,7 @@ public class BaseTest {
         }
     }
 
-    private static void sqlite() {
+    protected static void sqlite() {
         Sql2o sql2o = Anima.open("jdbc:sqlite:./demo.db").getSql2o();
         sql2o.setIsolationLevel(java.sql.Connection.TRANSACTION_SERIALIZABLE);
 
@@ -62,7 +62,7 @@ public class BaseTest {
         }
     }
 
-    private void mysql() {
+    protected static void mysql() {
         Anima.open("jdbc:mysql://127.0.0.1:3306/demo?useUnicode=true&characterEncoding=utf-8&useSSL=false", "root", "123456");
     }
 

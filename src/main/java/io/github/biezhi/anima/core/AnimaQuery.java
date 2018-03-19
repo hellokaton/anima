@@ -573,7 +573,13 @@ public class AnimaQuery<T extends Model> {
     }
 
     public static void endTransaction() {
-        connectionThreadLocal.remove();
+        if (null != connectionThreadLocal.get()) {
+            Connection connection = connectionThreadLocal.get();
+            if (connection.isRollbackOnClose()) {
+                connection.close();
+            }
+            connectionThreadLocal.remove();
+        }
     }
 
     public static void commit() {
@@ -582,6 +588,7 @@ public class AnimaQuery<T extends Model> {
 
     public static void rollback() {
         if (null != connectionThreadLocal.get()) {
+            log.warn("Rollback connection.");
             connectionThreadLocal.get().rollback();
         }
     }

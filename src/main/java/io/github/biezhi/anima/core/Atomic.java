@@ -15,6 +15,7 @@
  */
 package io.github.biezhi.anima.core;
 
+import io.github.biezhi.anima.Anima;
 import lombok.NoArgsConstructor;
 
 import java.util.function.Consumer;
@@ -33,6 +34,7 @@ import java.util.function.Consumer;
 public class Atomic {
 
     private Exception e;
+    private boolean   isRollback;
 
     public Atomic(Exception e) {
         this.e = e;
@@ -46,9 +48,19 @@ public class Atomic {
         return new Atomic(e);
     }
 
-    public <T extends Exception> void catchException(Consumer<T> consumer) {
+    public Atomic rollback(boolean isRollback) {
+        this.isRollback = isRollback;
+        return this;
+    }
+
+    public boolean isRollback() {
+        return isRollback;
+    }
+
+    public <T extends Exception> Atomic catchException(Consumer<T> consumer) {
         if (null != e) {
             consumer.accept((T) e);
         }
+        return this;
     }
 }

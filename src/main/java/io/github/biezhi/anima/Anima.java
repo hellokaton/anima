@@ -15,7 +15,9 @@
  */
 package io.github.biezhi.anima;
 
-import io.github.biezhi.anima.core.*;
+import io.github.biezhi.anima.core.AnimaQuery;
+import io.github.biezhi.anima.core.Atomic;
+import io.github.biezhi.anima.core.ResultKey;
 import io.github.biezhi.anima.core.dml.Delete;
 import io.github.biezhi.anima.core.dml.Select;
 import io.github.biezhi.anima.core.dml.Update;
@@ -48,8 +50,6 @@ import static io.github.biezhi.anima.enums.ErrorCode.SQL2O_IS_NULL;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Anima {
 
-    private static final Anima ME = new Anima();
-
     @Getter
     @Setter
     private Sql2o sql2o;
@@ -61,6 +61,9 @@ public class Anima {
     @Getter
     @Setter
     private Dialect dialect = new MySQLDialect();
+
+    @Setter
+    private Class<? extends Exception> rollbackException;
 
     private static Anima instance;
 
@@ -112,12 +115,34 @@ public class Anima {
             runnable.run();
             AnimaQuery.commit();
             return Atomic.ok();
-        } catch (RuntimeException e) {
-            AnimaQuery.rollback();
-            return Atomic.error(e);
+        } catch (Exception e) {
+            boolean isRollback = false;
+            if (null == me().rollbackException) {
+                AnimaQuery.rollback();
+                isRollback = true;
+            } else if (e.getClass().equals(me().rollbackException)) {
+                AnimaQuery.rollback();
+                isRollback = true;
+            }
+            return Atomic.error(e).rollback(isRollback);
         } finally {
             AnimaQuery.endTransaction();
         }
+    }
+
+    public Anima rollbackException(Class<? extends Exception> rollbackException) {
+        this.rollbackException = rollbackException;
+        return this;
+    }
+
+    public Anima tablePrefix(String tablePrefix) {
+        this.tablePrefix = tablePrefix;
+        return this;
+    }
+
+    public Anima dialect(Dialect dialect) {
+        this.dialect = dialect;
+        return this;
     }
 
     public static Select select() {
@@ -137,7 +162,8 @@ public class Anima {
     }
 
     public static <T extends Model> ResultKey save(T model) {
-        return new AnimaQuery(model.getClass()).save(model);
+        Class<T> clazz = (Class<T>) model.getClass();
+        return new AnimaQuery<>(clazz).save(model);
     }
 
     public static <T extends Model> void saveBatch(List<T> models) {
@@ -149,20 +175,20 @@ public class Anima {
     }
 
     public static <T extends Model, S extends Serializable> void deleteBatch(Class<T> modelClass, S... ids) {
-        AnimaQuery animaQuery = new AnimaQuery(modelClass);
+        AnimaQuery<T> animaQuery = new AnimaQuery<>(modelClass);
         atomic(() -> Arrays.stream(ids).forEach(animaQuery::deleteById)).catchException(e -> log.error("Batch save model error, message: {}", e));
     }
 
     public static <T extends Model, S extends Serializable> void deleteBatch(Class<T> modelClass, List<S> idList) {
-        AnimaQuery animaQuery = new AnimaQuery(modelClass);
+        AnimaQuery<T> animaQuery = new AnimaQuery<>(modelClass);
         atomic(() -> idList.stream().forEach(animaQuery::deleteById)).catchException(e -> log.error("Batch save model error, message: {}", e));
     }
 
     public static <T extends Model> int deleteById(Class<T> modelClass, Serializable id) {
-        return new AnimaQuery(modelClass).deleteById(id);
+        return new AnimaQuery<>(modelClass).deleteById(id);
     }
 
-    public static int execute(String sql, Object...params) {
+    public static int execute(String sql, Object... params) {
         return new AnimaQuery().execute(sql, params);
     }
 
