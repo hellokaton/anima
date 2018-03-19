@@ -354,10 +354,10 @@ public class AnimaQuery<T extends Model> {
 
     public Stream<T> stream() {
         List<T> all = all();
-        if (AnimaUtils.isNotEmpty(all)) {
-            return all.stream();
+        if (null == all || all.isEmpty()) {
+            return Stream.empty();
         }
-        return Stream.empty();
+        return all.stream();
     }
 
     public Stream<T> parallel() {
@@ -663,6 +663,7 @@ public class AnimaQuery<T extends Model> {
         if (!relations.contains(HasOne.class) && AnimaCache.hasOne(modelClass)) {
             this.setHasOne(models);
         }
+        this.relations.clear();
     }
 
     private void setBelongs(List<T> models) {
@@ -747,7 +748,6 @@ public class AnimaQuery<T extends Model> {
         this.paramValues.clear();
         this.excludedColumns.clear();
         this.updateColumns.clear();
-        this.relations.clear();
         if (null == connectionThreadLocal.get() && null != conn) {
             conn.close();
         }

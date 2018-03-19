@@ -154,6 +154,42 @@ List<User> user = select().from(User.class)
 // SELECT * FROM users WHERE user_name IS NOT NULL AND age > ?
 ```
 
+**relationship**
+
+```java
+@Table(name = "order_info")
+@NoArgsConstructor
+@Data
+public class OrderInfo extends Model {
+
+    private Long id;
+
+    private Integer uid;
+
+    @Column(name = "productname")
+    private String productName;
+
+    private LocalDateTime createTime;
+
+    public OrderInfo(Integer uid, String productName) {
+        this.uid = uid;
+        this.productName = productName;
+        this.createTime = LocalDateTime.now();
+    }
+
+    @BelongsTo(fk = "uid")
+    private User user;
+    
+    @HasOne(fk = "order_id")
+    private Address address;
+
+}
+```
+
+```java
+OrderInfo orderInfo = select().from(OrderInfo.class).order("id desc").one();
+```
+
 ### Insert
 
 ```java

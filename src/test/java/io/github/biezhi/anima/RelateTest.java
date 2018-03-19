@@ -1,6 +1,7 @@
 package io.github.biezhi.anima;
 
 import io.github.biezhi.anima.annotation.BelongsTo;
+import io.github.biezhi.anima.annotation.HasOne;
 import io.github.biezhi.anima.model.OrderInfo;
 import io.github.biezhi.anima.model.UserDto;
 import org.junit.Assert;
@@ -35,9 +36,16 @@ public class RelateTest extends BaseTest {
         Assert.assertNotNull(orders);
         Assert.assertNotNull(orders.get(0).getUser());
 
-//        orders = select().from(OrderInfo.class).exclude(BelongsTo.class).order("id desc").limit(4);
-//        Assert.assertNotNull(orders);
-//        Assert.assertNull(orders.get(0).getUser());
+        OrderInfo orderInfo = select().from(OrderInfo.class).exclude(BelongsTo.class).byId(3);
+        Assert.assertNotNull(orderInfo);
+        Assert.assertNotNull(orderInfo.getAddress());
+        Assert.assertNull(orderInfo.getUser());
+
+        orderInfo = select().from(OrderInfo.class).exclude(HasOne.class).byId(3);
+        Assert.assertNotNull(orderInfo);
+        Assert.assertNotNull(orderInfo.getUser());
+        Assert.assertNull(orderInfo.getAddress());
+
     }
 
     @Test
