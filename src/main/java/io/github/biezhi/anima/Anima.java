@@ -21,9 +21,11 @@ import io.github.biezhi.anima.core.ResultKey;
 import io.github.biezhi.anima.core.dml.Delete;
 import io.github.biezhi.anima.core.dml.Select;
 import io.github.biezhi.anima.core.dml.Update;
+import io.github.biezhi.anima.core.functions.TypeFunction;
 import io.github.biezhi.anima.dialect.Dialect;
 import io.github.biezhi.anima.dialect.MySQLDialect;
 import io.github.biezhi.anima.exception.AnimaException;
+import io.github.biezhi.anima.utils.AnimaUtils;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -37,6 +39,7 @@ import javax.sql.DataSource;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static io.github.biezhi.anima.enums.ErrorCode.SQL2O_IS_NULL;
 
@@ -151,6 +154,10 @@ public class Anima {
 
     public static Select select(String columns) {
         return new Select(columns);
+    }
+
+    public static <T extends Model, R> Select select(TypeFunction<T, R>... functions) {
+        return select(Arrays.stream(functions).map(AnimaUtils::getLambdaColumnName).collect(Collectors.joining(", ")));
     }
 
     public static Update update() {

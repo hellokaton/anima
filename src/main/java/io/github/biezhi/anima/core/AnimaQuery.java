@@ -32,7 +32,6 @@ import org.sql2o.Connection;
 import org.sql2o.Sql2o;
 
 import java.io.Serializable;
-import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -100,7 +99,7 @@ public class AnimaQuery<T extends Model> {
     }
 
     public <R> AnimaQuery<T> where(TypeFunction<T, R> function) {
-        String columnName = getColumnName(function);
+        String columnName = AnimaUtils.getLambdaColumnName(function);
         conditionSQL.append(" AND ").append(columnName);
         return this;
     }
@@ -130,7 +129,7 @@ public class AnimaQuery<T extends Model> {
     }
 
     public <R> AnimaQuery<T> and(TypeFunction<T, R> function) {
-        String columnName = getColumnName(function);
+        String columnName = AnimaUtils.getLambdaColumnName(function);
         conditionSQL.append(" AND ").append(columnName);
         return this;
     }
@@ -283,7 +282,7 @@ public class AnimaQuery<T extends Model> {
     }
 
     public <R> AnimaQuery<T> order(TypeFunction<T, R> function, OrderBy orderBy) {
-        String columnName = this.getColumnName(function);
+        String columnName = AnimaUtils.getLambdaColumnName(function);
         return order(columnName, orderBy);
     }
 
@@ -367,9 +366,13 @@ public class AnimaQuery<T extends Model> {
         return this.queryOne(Long.class, sql, paramValues);
     }
 
-    public AnimaQuery set(String column, Object value) {
+    public AnimaQuery<T> set(String column, Object value) {
         updateColumns.put(column, value);
         return this;
+    }
+
+    public <R> AnimaQuery<T> set(TypeFunction<T, R> function, Object value) {
+        return this.set(AnimaUtils.getLambdaColumnName(function), value);
     }
 
     private <S> S queryOne(Class<S> type, String sql, Object[] params) {
@@ -610,17 +613,6 @@ public class AnimaQuery<T extends Model> {
             throw new AnimaException("SQL2O instance not is null.");
         }
         return sql2o;
-    }
-
-    private <R> String getColumnName(TypeFunction<T, R> function) {
-        String methodName = AnimaUtils.getLambdaMethodName(function);
-        String fieldName  = AnimaUtils.methodToFieldName(methodName);
-        try {
-            Field field = modelClass.getDeclaredField(fieldName);
-            return AnimaUtils.toColumnName(field);
-        } catch (NoSuchFieldException e) {
-            throw new AnimaException(e);
-        }
     }
 
     private void clean(Connection conn) {

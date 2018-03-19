@@ -18,7 +18,6 @@ package io.github.biezhi.anima.utils;
 import io.github.biezhi.anima.Model;
 import io.github.biezhi.anima.annotation.Column;
 import io.github.biezhi.anima.annotation.Ignore;
-import io.github.biezhi.anima.core.functions.TypeFunction;
 import io.github.biezhi.anima.enums.SupportedType;
 import io.github.biezhi.anima.exception.AnimaException;
 
@@ -131,11 +130,7 @@ public class AnimaUtils {
         return false;
     }
 
-    public static <T, R> String getLambdaMethodName(TypeFunction<T, R> methodReference) {
-        return getLambda(methodReference);
-    }
-
-    private static String getLambda(Serializable lambda) {
+    public static String getLambdaColumnName(Serializable lambda) {
         for (Class<?> cl = lambda.getClass(); cl != null; cl = cl.getSuperclass()) {
             try {
                 Method m = cl.getDeclaredMethod("writeReplace");
@@ -145,7 +140,15 @@ public class AnimaUtils {
                     break; // custom interface implementation
                 }
                 SerializedLambda serializedLambda = (SerializedLambda) replacement;
-                return serializedLambda.getImplMethodName();
+                String           className        = serializedLambda.getImplClass().replace("/", ".");
+                String           methodName       = serializedLambda.getImplMethodName();
+                String           fieldName        = methodToFieldName(methodName);
+                try {
+                    Field field = Class.forName(className).getDeclaredField(fieldName);
+                    return AnimaUtils.toColumnName(field);
+                } catch (NoSuchFieldException | ClassNotFoundException e) {
+                    throw new AnimaException(e);
+                }
             } catch (NoSuchMethodException e) {
                 // do nothing
             } catch (IllegalAccessException | InvocationTargetException e) {
