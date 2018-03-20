@@ -14,36 +14,38 @@ import java.io.Serializable;
  */
 public class Model {
 
+    private AnimaQuery<? extends Model> animaQuery = new AnimaQuery<>(this.getClass());
+
     public ResultKey save() {
-        return new AnimaQuery(this.getClass()).save(this);
+        return animaQuery.save(this);
     }
 
     public int update() {
-        return new AnimaQuery(this.getClass()).updateByModel(this);
+        return animaQuery.updateByModel(this);
     }
 
     public int updateById(Serializable id) {
-        return new AnimaQuery(this.getClass()).updateById(this, id);
+        return new AnimaQuery<>(this.getClass()).updateById(this, id);
     }
 
     public int delete() {
-        return new AnimaQuery(this.getClass()).deleteByModel(this);
+        return animaQuery.deleteByModel(this);
     }
 
-    public <T extends Model> AnimaQuery<T> set(String column, Object value) {
-        return new AnimaQuery(this.getClass()).set(column, value);
+    public AnimaQuery<? extends Model> set(String column, Object value) {
+        return animaQuery.set(column, value);
     }
 
-    public <T extends Model, R> AnimaQuery<T> set(TypeFunction<T, R> function, Object value) {
-        return new AnimaQuery(this.getClass()).set(function, value);
+    public <T extends Model, R> AnimaQuery<? extends Model> set(TypeFunction<T, R> function, Object value) {
+        return animaQuery.set(function, value);
     }
 
-    public <T extends Model> AnimaQuery<T> where(String statement, Object value) {
-        return new AnimaQuery(this.getClass()).where(statement, value);
+    public AnimaQuery<? extends Model> where(String statement, Object value) {
+        return animaQuery.where(statement, value);
     }
 
-    public <T extends Model, R> AnimaQuery<T> where(TypeFunction<T, R> function, Object value) {
-        return new AnimaQuery(this.getClass()).where(function, value);
+    public <T extends Model, R> AnimaQuery<? extends Model> where(TypeFunction<T, R> function, Object value) {
+        return animaQuery.where(function, value);
     }
 
 }

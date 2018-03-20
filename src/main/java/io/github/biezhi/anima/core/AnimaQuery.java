@@ -89,7 +89,7 @@ public class AnimaQuery<T extends Model> {
     }
 
     public AnimaQuery<T> exclude(Class<? extends Annotation>... relations) {
-        if(null != relations && relations.length > 0){
+        if (null != relations && relations.length > 0) {
             this.relations.addAll(Arrays.asList(relations));
         }
         return this;
@@ -113,13 +113,13 @@ public class AnimaQuery<T extends Model> {
         return this;
     }
 
-    public <R> AnimaQuery<T> where(TypeFunction<T, R> function) {
+    public <S extends Model, R> AnimaQuery<T> where(TypeFunction<S, R> function) {
         String columnName = AnimaUtils.getLambdaColumnName(function);
         conditionSQL.append(" AND ").append(columnName);
         return this;
     }
 
-    public <R> AnimaQuery<T> where(TypeFunction<T, R> function, Object value) {
+    public <S extends Model, R> AnimaQuery<T> where(TypeFunction<S, R> function, Object value) {
         String columnName = AnimaUtils.getLambdaColumnName(function);
         conditionSQL.append(" AND ").append(columnName).append(" = ?");
         paramValues.add(value);
@@ -415,7 +415,7 @@ public class AnimaQuery<T extends Model> {
         return this;
     }
 
-    public <R> AnimaQuery<T> set(TypeFunction<T, R> function, Object value) {
+    public <S extends Model, R> AnimaQuery<T> set(TypeFunction<S, R> function, Object value) {
         return this.set(AnimaUtils.getLambdaColumnName(function), value);
     }
 
@@ -477,7 +477,7 @@ public class AnimaQuery<T extends Model> {
         }
     }
 
-    public ResultKey save(T model) {
+    public <S extends Model> ResultKey save(S model) {
         String       sql             = this.buildInsertSQL(model);
         List<Object> columnValueList = AnimaUtils.toColumnValues(model, true);
         Connection   conn            = getConn();
@@ -498,7 +498,7 @@ public class AnimaQuery<T extends Model> {
         return this.delete();
     }
 
-    public int deleteByModel(T model) {
+    public <S extends Model> int deleteByModel(S model) {
         this.beforeCheck();
         String       sql             = this.buildDeleteSQL(model);
         List<Object> columnValueList = AnimaUtils.toColumnValues(model, false);
@@ -519,7 +519,7 @@ public class AnimaQuery<T extends Model> {
         return this.update();
     }
 
-    public int updateById(T model, Serializable id) {
+    public <S extends Model> int updateById(S model, Serializable id) {
         this.where(primaryKeyColumn, id);
         String       sql             = this.buildUpdateSQL(model, null);
         List<Object> columnValueList = AnimaUtils.toColumnValues(model, false);
@@ -527,7 +527,7 @@ public class AnimaQuery<T extends Model> {
         return this.execute(sql, columnValueList);
     }
 
-    public int updateByModel(T model) {
+    public <S extends Model> int updateByModel(S model) {
         this.beforeCheck();
         String       sql             = this.buildUpdateSQL(model, null);
         List<Object> columnValueList = AnimaUtils.toColumnValues(model, false);
@@ -574,7 +574,7 @@ public class AnimaQuery<T extends Model> {
         return Anima.me().getDialect().paginate(sqlParams);
     }
 
-    private String buildInsertSQL(T model) {
+    private <S extends Model> String buildInsertSQL(S model) {
         SQLParams sqlParams = SQLParams.builder()
                 .model(model)
                 .modelClass(this.modelClass)
@@ -585,7 +585,7 @@ public class AnimaQuery<T extends Model> {
         return Anima.me().getDialect().insert(sqlParams);
     }
 
-    private String buildUpdateSQL(T model, Map<String, Object> updateColumns) {
+    private <S extends Model> String buildUpdateSQL(S model, Map<String, Object> updateColumns) {
         SQLParams sqlParams = SQLParams.builder()
                 .model(model)
                 .modelClass(this.modelClass)
@@ -598,7 +598,7 @@ public class AnimaQuery<T extends Model> {
         return Anima.me().getDialect().update(sqlParams);
     }
 
-    private String buildDeleteSQL(T model) {
+    private <S extends Model> String buildDeleteSQL(S model) {
         SQLParams sqlParams = SQLParams.builder()
                 .model(model)
                 .modelClass(this.modelClass)
