@@ -88,13 +88,6 @@ public class AnimaQuery<T extends Model> {
         return this;
     }
 
-    public AnimaQuery<T> exclude(Class<? extends Annotation>... relations) {
-        if (null != relations && relations.length > 0) {
-            this.relations.addAll(Arrays.asList(relations));
-        }
-        return this;
-    }
-
     public AnimaQuery<T> exclude(Class<? extends Annotation> relation) {
         this.relations.add(relation);
         return this;
