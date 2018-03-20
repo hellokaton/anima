@@ -8,7 +8,6 @@ import org.sql2o.data.Row;
 import org.sql2o.data.Table;
 import org.sql2o.data.TableResultSetIterator;
 import org.sql2o.quirks.Quirks;
-import org.sql2o.reflection.PojoIntrospector;
 
 import java.sql.*;
 import java.util.*;
@@ -19,10 +18,9 @@ import static org.sql2o.converters.Convert.throwIfNull;
  * Represents a sql2o statement. With sql2o, all statements are instances of the Query class.
  */
 @Slf4j
-@SuppressWarnings("UnusedDeclaration")
 public class Query implements AutoCloseable {
 
-    private Connection          connection;
+	private Connection          connection;
     private Map<String, String> caseSensitiveColumnMappings;
     private Map<String, String> columnMappings;
     private PreparedStatement preparedStatement = null;
@@ -120,20 +118,6 @@ public class Query implements AutoCloseable {
     // ------------------------------------------------
     // ------------- Add Parameters -------------------
     // ------------------------------------------------
-
-    @SuppressWarnings("unchecked")
-    private Object convertParameter(Object value) {
-        if (value == null) {
-            return null;
-        }
-        Converter converter = getQuirks().converterOf(value.getClass());
-        if (converter == null) {
-            // let's try to add parameter AS IS
-            return value;
-        }
-        return converter.toDatabaseParam(value);
-    }
-
     public Query withParams(Collection<Object> paramValues) {
         if (null == paramValues) {
             return this;
@@ -152,22 +136,6 @@ public class Query implements AutoCloseable {
         int i = 0;
         for (Object paramValue : paramValues) {
             paramIndexValues.put(++i, paramValue);
-        }
-        return this;
-    }
-
-    public Query bind(final Object pojo) {
-        Class                                          clazz       = pojo.getClass();
-        Map<String, PojoIntrospector.ReadableProperty> propertyMap = PojoIntrospector.readableProperties(clazz);
-        for (PojoIntrospector.ReadableProperty property : propertyMap.values()) {
-            try {
-//                if (this.getParamNameToIdxMap().containsKey(property.name)) {
-//                    @SuppressWarnings("unchecked") final Class<Object> type = (Class<Object>) property.type;
-//                    this.addParameter(property.name, type, property.get(pojo));
-//                }
-            } catch (IllegalArgumentException ex) {
-                log.debug("Ignoring Illegal Arguments", ex);
-            }
         }
         return this;
     }
@@ -501,7 +469,6 @@ public class Query implements AutoCloseable {
         return executeAndFetch(newScalarResultSetHandler(returnType));
     }
 
-    @SuppressWarnings("unchecked")
     private <T> ResultSetHandler<T> newScalarResultSetHandler(final Class<T> returnType) {
         final Quirks quirks = getQuirks();
         try {
@@ -681,18 +648,6 @@ public class Query implements AutoCloseable {
 
     private void logExecution() {
         log.debug("Execute SQL => {}", this.parsedQuery);
-    }
-
-    // from http://stackoverflow.com/questions/5606338/cast-primitive-type-array-into-object-array-in-java
-    private static Object[] toObjectArray(Object val) {
-        if (val instanceof Object[])
-            return (Object[]) val;
-        int      arrayLength = java.lang.reflect.Array.getLength(val);
-        Object[] outputArray = new Object[arrayLength];
-        for (int i = 0; i < arrayLength; ++i) {
-            outputArray[i] = java.lang.reflect.Array.get(val, i);
-        }
-        return outputArray;
     }
 
     static abstract class ParameterSetter {

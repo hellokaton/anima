@@ -83,9 +83,7 @@ public abstract class ResultSetIteratorBase<T> implements Iterator<T> {
         try {
             if (!rs.next())
                 return null;
-
-            @SuppressWarnings("unchecked")
-            ResultSetValue<T> resultSetValue = new <T>ResultSetValue(readNext());
+            ResultSetValue<T> resultSetValue = new ResultSetValue<T>(readNext());
             return resultSetValue;
         }
         catch (SQLException ex) {
@@ -99,10 +97,10 @@ public abstract class ResultSetIteratorBase<T> implements Iterator<T> {
         return quirks.getColumnName(meta, colIdx);
     }
 
-    private final class ResultSetValue<T> {
-        public final T value;
+    private final class ResultSetValue<S> {
+        public final S value;
 
-        public ResultSetValue(T value){
+        public ResultSetValue(S value){
             this.value = value;
         }
     }

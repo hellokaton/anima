@@ -1,6 +1,7 @@
 package org.sql2o.issues;
 
 import org.hsqldb.jdbcDriver;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -9,6 +10,8 @@ import org.sql2o.Sql2o;
 import org.sql2o.Sql2oException;
 import org.sql2o.data.Table;
 import org.sql2o.issues.pojos.Issue1Pojo;
+
+import lombok.Data;
 
 import java.sql.Driver;
 import java.sql.DriverManager;
@@ -113,17 +116,10 @@ public class IssuesTest {
      */
     @Test public void testErrorWhenFieldDoesntExist() {
 
+        @Data
         class LocalPojo {
             private long id;
             private String strVal;
-
-            public long getId() {
-                return id;
-            }
-
-            public String getStrVal() {
-                return strVal;
-            }
         }
 
         String createQuery = "create table testErrorWhenFieldDoesntExist(id_val integer primary key, str_val varchar(100))";
@@ -139,6 +135,8 @@ public class IssuesTest {
                 // This is expected to fail to map columns and throw an exception.
                 LocalPojo p = connection.createQuery("select * from testErrorWhenFieldDoesntExist")
                         .executeAndFetchFirst(LocalPojo.class);
+
+                Assert.assertNotNull(p);
             } catch(Exception e) {
                 ex = e;
             }
@@ -160,6 +158,7 @@ public class IssuesTest {
     @Test
     public void testIndexOutOfRangeExceptionWithMultipleColumnsWithSameName() {
 
+        @Data
         class ThePojo {
             public int id;
             public String name;
@@ -171,11 +170,8 @@ public class IssuesTest {
         Table t;
         try (Connection connection = sql2o.open()) {
             p = connection.createQuery(sql).executeAndFetchFirst(ThePojo.class);
-
             t = connection.createQuery(sql).executeAndFetchTable();
         }
-
-
 
         assertEquals(11, p.id);
         assertEquals("something else", p.name);
@@ -190,6 +186,7 @@ public class IssuesTest {
     @Test
     public void testIgnoreSqlComments() {
 
+        @Data
         class ThePojo {
             public int id;
             public int intval;
@@ -244,6 +241,7 @@ public class IssuesTest {
 
             try {
                 Pojo pojo = connection.createQuery(sql).executeAndFetchFirst(Pojo.class);
+                Assert.assertNotNull(pojo);
                 fail("Expeced an exception to be thrown");
             } catch(Sql2oException e) {
                 assertEquals("Could not map VAL2 to any property.", e.getMessage());

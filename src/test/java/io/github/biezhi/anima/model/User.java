@@ -1,7 +1,6 @@
 package io.github.biezhi.anima.model;
 
 import io.github.biezhi.anima.Model;
-import io.github.biezhi.anima.annotation.Column;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

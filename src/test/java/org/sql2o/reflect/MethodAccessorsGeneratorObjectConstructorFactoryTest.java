@@ -54,10 +54,6 @@ public class MethodAccessorsGeneratorObjectConstructorFactoryTest extends Abstra
     public void testCallParentConstructor2(){
         class POJO5 extends POJO4 {
             public boolean pojo5_constructorInvoked = true;
-
-            public POJO5() {
-                fail("Constructor can't be called");
-            }
         }
 
         POJO5 pojo = (POJO5) ocf.newConstructor(POJO5.class).newInstance();

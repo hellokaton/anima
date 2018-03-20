@@ -4,6 +4,7 @@ import io.github.biezhi.anima.Model;
 import io.github.biezhi.anima.annotation.HasMany;
 import io.github.biezhi.anima.annotation.Table;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.List;
 
@@ -13,6 +14,7 @@ import java.util.List;
  */
 @Table(name = "users")
 @Data
+@EqualsAndHashCode(callSuper=true)
 public class UserDto extends Model {
 
     private Integer id;

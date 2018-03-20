@@ -21,7 +21,6 @@ public class UserInserterFactory {
             user.name = "a name " + idx;
             user.setEmail(String.format("test%s@email.com", idx));
             user.text = "some text";
-            insertQuery.bind(user).addToBatch();
         }
     }
 

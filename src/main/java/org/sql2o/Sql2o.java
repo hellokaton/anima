@@ -1,6 +1,5 @@
 package org.sql2o;
 
-import lombok.extern.slf4j.Slf4j;
 import org.sql2o.connectionsources.DataSourceConnectionSource;
 import org.sql2o.connectionsources.ConnectionSource;
 import org.sql2o.quirks.Quirks;
@@ -25,7 +24,6 @@ import java.util.Map;
  * When quirks are specified, Sql2o will use workarounds to avoid these quirks.
  * @author Lars Aaberg
  */
-@Slf4j
 public class Sql2o {
     final Quirks quirks;
     private Map<String, String> defaultColumnMappings;
@@ -166,7 +164,6 @@ public class Sql2o {
      * @param <V>
      * @return
      */
-    @SuppressWarnings("unchecked")
     public <V> V withConnection(StatementRunnableWithResult<V> runnable, Object argument) {
         Connection connection = null;
         try{

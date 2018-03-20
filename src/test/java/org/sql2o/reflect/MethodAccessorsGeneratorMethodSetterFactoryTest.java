@@ -1,7 +1,6 @@
 package org.sql2o.reflect;
 
 import org.sql2o.reflection.MethodAccessorsGenerator;
-import org.sql2o.reflection.MethodSetterFactory;
 
 /**
  * User: dimzon

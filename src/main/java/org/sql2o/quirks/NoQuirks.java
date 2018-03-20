@@ -19,7 +19,7 @@ import java.util.UUID;
  */
 public class NoQuirks implements Quirks {
 
-    protected final Map<Class,Converter>  converters;
+    protected final Map<Class, Converter> converters;
 
     public NoQuirks(Map<Class, Converter> converters) {
         // protective copy
@@ -34,13 +34,13 @@ public class NoQuirks implements Quirks {
         this.converters.put(LocalDateTime.class, new LocalDateTimeConverter());
     }
 
-    @SuppressWarnings("unchecked") @Override
+    @Override
     public <E> Converter<E> converterOf(Class<E> ofClass) {
         // if nobody change this collection outside constructor
         // it's thread-safe
-        Converter c =  converters.get(ofClass);
+        Converter c = converters.get(ofClass);
         // if no "local" converter let's look in global
-        return c!=null?c:Convert.getConverterIfExists(ofClass);
+        return c != null ? c : Convert.getConverterIfExists(ofClass);
     }
 
     @Override
