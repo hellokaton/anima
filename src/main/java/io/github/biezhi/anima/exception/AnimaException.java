@@ -21,7 +21,9 @@ import lombok.Getter;
 @Getter
 public class AnimaException extends RuntimeException {
 
-    private Integer code;
+    private static final long serialVersionUID = 3030374277105375809L;
+
+	private Integer code;
     private String  message;
 
     public AnimaException() {

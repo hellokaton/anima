@@ -156,8 +156,9 @@ public class Anima {
         return new Select(columns);
     }
 
+    @SafeVarargs
     public static <T extends Model, R> Select select(TypeFunction<T, R>... functions) {
-        return select(Arrays.stream(functions).map(AnimaUtils::getLambdaColumnName).collect(Collectors.joining(", ")));
+		return select(Arrays.stream(functions).map(AnimaUtils::getLambdaColumnName).collect(Collectors.joining(", ")));
     }
 
     public static Update update() {
@@ -169,8 +170,7 @@ public class Anima {
     }
 
     public static <T extends Model> ResultKey save(T model) {
-        Class<T> clazz = (Class<T>) model.getClass();
-        return new AnimaQuery<>(clazz).save(model);
+        return model.save();
     }
 
     public static <T extends Model> void saveBatch(List<T> models) {

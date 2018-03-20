@@ -14,6 +14,7 @@ public class OtherTest extends BaseTest {
     public void testTx1() {
         Anima.atomic(() -> {
             int a = 1 / 0;
+            System.out.println(a);
             new User("apple", 666).save();
         }).catchException(e -> {
             e.printStackTrace();

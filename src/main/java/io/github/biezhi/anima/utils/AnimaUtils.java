@@ -41,7 +41,7 @@ public class AnimaUtils {
         return null != value && !value.isEmpty();
     }
 
-    public static boolean isNotEmpty(Collection collection) {
+    public static boolean isNotEmpty(Collection<?> collection) {
         return null != collection && !collection.isEmpty();
     }
 

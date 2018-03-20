@@ -64,6 +64,7 @@ public class ExceptionTest extends BaseTest {
 
         isRollback = Anima.atomic(() -> {
             int a = 1 / 0;
+            System.out.println(a);
             new User("apple", 666).save();
         }).catchException(e -> {
         }).isRollback();
@@ -81,7 +82,9 @@ public class ExceptionTest extends BaseTest {
         throw new CustomException();
     }
 
-    class CustomException extends RuntimeException {
+    static class CustomException extends RuntimeException {
+
+		private static final long serialVersionUID = 6329605066783987521L;
 
     }
 }

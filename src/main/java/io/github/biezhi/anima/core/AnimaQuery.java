@@ -89,7 +89,9 @@ public class AnimaQuery<T extends Model> {
     }
 
     public AnimaQuery<T> exclude(Class<? extends Annotation>... relations) {
-        this.relations.addAll(Arrays.asList(relations));
+        if(null != relations && relations.length > 0){
+            this.relations.addAll(Arrays.asList(relations));
+        }
         return this;
     }
 
@@ -317,7 +319,7 @@ public class AnimaQuery<T extends Model> {
         return this.queryOne(returnType, sql, params);
     }
 
-    public T byId(Serializable id) {
+    public T byId(Object id) {
         this.beforeCheck();
         this.where(primaryKeyColumn, id);
         String sql   = this.buildSelectSQL(false);
@@ -326,8 +328,8 @@ public class AnimaQuery<T extends Model> {
         return model;
     }
 
-    public List<T> byIds(Serializable... ids) {
-        this.in(primaryKeyColumn, ids);
+    public List<T> byIds(Object... ids) {
+        this.in(this.primaryKeyColumn, ids);
         return this.all();
     }
 

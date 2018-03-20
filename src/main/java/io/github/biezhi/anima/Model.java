@@ -30,7 +30,7 @@ public class Model {
         return new AnimaQuery(this.getClass()).deleteByModel(this);
     }
 
-    public AnimaQuery set(String column, Object value) {
+    public <T extends Model> AnimaQuery<T> set(String column, Object value) {
         return new AnimaQuery(this.getClass()).set(column, value);
     }
 
@@ -38,11 +38,11 @@ public class Model {
         return new AnimaQuery(this.getClass()).set(function, value);
     }
 
-    public AnimaQuery where(String statement, Object value) {
+    public <T extends Model> AnimaQuery<T> where(String statement, Object value) {
         return new AnimaQuery(this.getClass()).where(statement, value);
     }
 
-    public <T extends Model, R> AnimaQuery where(TypeFunction<T, R> function, Object value) {
+    public <T extends Model, R> AnimaQuery<T> where(TypeFunction<T, R> function, Object value) {
         return new AnimaQuery(this.getClass()).where(function, value);
     }
 

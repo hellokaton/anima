@@ -15,29 +15,31 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import static io.github.biezhi.anima.utils.AnimaUtils.isNotEmpty;
 import static io.github.biezhi.anima.utils.AnimaUtils.methodToFieldName;
 
 /**
+ * Anima Cache
+ * 
  * @author biezhi
  * @date 2018/3/19
  */
 public final class AnimaCache {
 
-    static final Map<Class, Boolean>           CACHE_HAS_BELONGS_TO = new HashMap<>(8);
-    static final Map<Class, Boolean>           CACHE_HAS_ONE        = new HashMap<>(8);
-    static final Map<Class, Boolean>           CACHE_HAS_MANY       = new HashMap<>(8);
-    static final Map<Class, String>            CACHE_TABLE_NAME     = new HashMap<>(8);
-    static final Map<Class, String>            CACHE_PK_NAME        = new HashMap<>(8);
-    static final Map<SerializedLambda, String> CACHE_LAMBDA_NAME    = new HashMap<>(8);
-    static final Map<String, Field>            CACHE_MODEL_FIELD    = new HashMap<>(8);
+    static final Map<Class<?>, Boolean> CACHE_HAS_BELONGS_TO = new HashMap<>(8);
+    static final Map<Class<?>, Boolean> CACHE_HAS_ONE = new HashMap<>(8);
+    static final Map<Class<?>, Boolean> CACHE_HAS_MANY = new HashMap<>(8);
+    static final Map<Class<?>, String> CACHE_TABLE_NAME = new HashMap<>(8);
+    static final Map<Class<?>, String> CACHE_PK_NAME = new HashMap<>(8);
+    static final Map<SerializedLambda, String> CACHE_LAMBDA_NAME = new HashMap<>(8);
+    static final Map<String, Field> CACHE_MODEL_FIELD = new HashMap<>(8);
 
     public static boolean hasBelongsTo(Class<? extends Model> modelClass) {
         Boolean has = CACHE_HAS_BELONGS_TO.get(modelClass);
         if (null != has) {
             return has;
         }
-        has = Arrays.stream(modelClass.getDeclaredFields()).anyMatch(field -> null != field.getAnnotation(BelongsTo.class));
+        has = Arrays.stream(modelClass.getDeclaredFields())
+                .anyMatch(field -> null != field.getAnnotation(BelongsTo.class));
         CACHE_HAS_BELONGS_TO.put(modelClass, has);
         return has;
     }
@@ -47,7 +49,8 @@ public final class AnimaCache {
         if (null != has) {
             return has;
         }
-        has = Arrays.stream(modelClass.getDeclaredFields()).anyMatch(field -> null != field.getAnnotation(HasMany.class));
+        has = Arrays.stream(modelClass.getDeclaredFields())
+                .anyMatch(field -> null != field.getAnnotation(HasMany.class));
         CACHE_HAS_BELONGS_TO.put(modelClass, has);
         return has;
     }
@@ -57,7 +60,8 @@ public final class AnimaCache {
         if (null != has) {
             return has;
         }
-        has = Arrays.stream(modelClass.getDeclaredFields()).anyMatch(field -> null != field.getAnnotation(HasOne.class));
+        has = Arrays.stream(modelClass.getDeclaredFields())
+                .anyMatch(field -> null != field.getAnnotation(HasOne.class));
         CACHE_HAS_BELONGS_TO.put(modelClass, has);
         return has;
     }
@@ -94,9 +98,9 @@ public final class AnimaCache {
         if (null != name) {
             return name;
         }
-        String className  = serializedLambda.getImplClass().replace("/", ".");
+        String className = serializedLambda.getImplClass().replace("/", ".");
         String methodName = serializedLambda.getImplMethodName();
-        String fieldName  = methodToFieldName(methodName);
+        String fieldName = methodToFieldName(methodName);
         try {
             Field field = Class.forName(className).getDeclaredField(fieldName);
             name = AnimaUtils.toColumnName(field);
@@ -108,8 +112,8 @@ public final class AnimaCache {
     }
 
     public static Field getField(Class<?> clazz, String fieldName) {
-        String key   = clazz.getName() + ":" + fieldName;
-        Field  field = CACHE_MODEL_FIELD.get(key);
+        String key = clazz.getName() + ":" + fieldName;
+        Field field = CACHE_MODEL_FIELD.get(key);
         if (null != field) {
             return field;
         }
