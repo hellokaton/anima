@@ -20,7 +20,6 @@ public class PojoMetadata {
 
     private static final Cache caseSensitiveFalse = new Cache();
     private static final Cache caseSensitiveTrue  = new Cache();
-    private final boolean       isJpaColumnInClasspath = true;
 
     private final PropertyAndFieldInfo propertyInfo;
     private final Map<String, String>  columnMappings;
@@ -29,7 +28,7 @@ public class PojoMetadata {
     private      boolean caseSensitive;
     private      boolean autoDeriveColumnNames;
     public final boolean throwOnMappingFailure;
-    private      Class   clazz;
+    private      Class<?>   clazz;
 
     public boolean isCaseSensitive() {
         return caseSensitive;
@@ -61,11 +60,11 @@ public class PojoMetadata {
         return result;
     }
 
-    public PojoMetadata(Class clazz, boolean caseSensitive, boolean autoDeriveColumnNames, Map<String, String> columnMappings, boolean throwOnMappingError) {
+    public PojoMetadata(Class<?> clazz, boolean caseSensitive, boolean autoDeriveColumnNames, Map<String, String> columnMappings, boolean throwOnMappingError) {
         this.caseSensitive = caseSensitive;
         this.autoDeriveColumnNames = autoDeriveColumnNames;
         this.clazz = clazz;
-        this.columnMappings = columnMappings == null ? Collections.<String, String>emptyMap() : columnMappings;
+        this.columnMappings = columnMappings == null ? Collections.emptyMap() : columnMappings;
 
         this.propertyInfo = getPropertyInfoThroughCache();
         this.throwOnMappingFailure = throwOnMappingError;
@@ -85,18 +84,19 @@ public class PojoMetadata {
 
     private PropertyAndFieldInfo initializePropertyInfo() {
 
-        HashMap<String, Getter> propertyGetters = new HashMap<String, Getter>();
-        HashMap<String, Setter> propertySetters = new HashMap<String, Setter>();
-        HashMap<String, Field>  fields          = new HashMap<String, Field>();
+        HashMap<String, Getter> propertyGetters = new HashMap<>();
+        HashMap<String, Setter> propertySetters = new HashMap<>();
+        HashMap<String, Field>  fields          = new HashMap<>();
 
-        Class             theClass          = clazz;
+        Class<?>             theClass          = clazz;
         ObjectConstructor objectConstructor = factoryFacade.newConstructor(theClass);
         do {
+            boolean isJpaColumnInClasspath = true;
             for (Field f : theClass.getDeclaredFields()) {
                 if (Modifier.isStatic(f.getModifiers())) {
                     continue;
                 }
-                String propertyName = readAnnotatedColumnName(f, isJpaColumnInClasspath);
+                String propertyName = readAnnotatedColumnName(f, true);
                 if (propertyName == null) {
                     propertyName = f.getName();
                 }
@@ -138,7 +138,7 @@ public class PojoMetadata {
             theClass = theClass.getSuperclass();
         } while (!theClass.equals(Object.class));
 
-        return new PropertyAndFieldInfo(propertyGetters, propertySetters, fields, objectConstructor);
+        return new PropertyAndFieldInfo(propertyGetters, propertySetters, objectConstructor);
 
     }
 
@@ -178,9 +178,7 @@ public class PojoMetadata {
     }
 
     public Setter getPropertySetter(String propertyName) {
-
         Setter setter = getPropertySetterIfExists(propertyName);
-
         if (setter != null) {
             return setter;
         } else {
@@ -208,7 +206,7 @@ public class PojoMetadata {
         return propertyInfo.propertySetters.get(name);
     }
 
-    public Class getType() {
+    public Class<?> getType() {
         return this.clazz;
     }
 
@@ -219,22 +217,22 @@ public class PojoMetadata {
     }
 
     /**
-     * Try to read the {@link javax.persistence.Column} annotation and return the name of the column.
-     * Returns null if no {@link javax.persistence.Column} annotation is present or if the name of the column is empty
+     * Try to read the {@link io.github.biezhi.anima.annotation.Column} annotation and return the name of the column.
+     * Returns null if no {@link io.github.biezhi.anima.annotation.Column} annotation is present or if the name of the column is empty
      */
     private String readAnnotatedColumnName(AnnotatedElement classMember, boolean isJpaColumnInClasspath) {
         if (isJpaColumnInClasspath) {
             Column columnInformation = classMember.getAnnotation(Column.class);
-            if (columnInformation != null && columnInformation.name() != null && !columnInformation.name().isEmpty()) {
+            if (columnInformation != null && !columnInformation.name().isEmpty()) {
                 return columnInformation.name();
             }
         }
         return null;
     }
 
-    private static class Cache extends AbstractCache<Class, PropertyAndFieldInfo, PojoMetadata> {
+    private static class Cache extends AbstractCache<Class<?>, PropertyAndFieldInfo, PojoMetadata> {
         @Override
-        protected PropertyAndFieldInfo evaluate(Class key, PojoMetadata param) {
+        protected PropertyAndFieldInfo evaluate(Class<?> key, PojoMetadata param) {
             return param.initializePropertyInfo();
         }
     }
@@ -242,18 +240,16 @@ public class PojoMetadata {
     private static class PropertyAndFieldInfo {
         // since this class is private we can just use field access
         // to make HotSpot a little less work for inlining
-        public final Map<String, Getter> propertyGetters;
-        public final Map<String, Setter> propertySetters;
-        public final Map<String, Field>  fields;
-        public final ObjectConstructor   objectConstructor;
+        final Map<String, Getter> propertyGetters;
+        final Map<String, Setter> propertySetters;
+        final ObjectConstructor   objectConstructor;
 
         private PropertyAndFieldInfo(
                 Map<String, Getter> propertyGetters, Map<String, Setter> propertySetters,
-                Map<String, Field> fields, ObjectConstructor objectConstructor) {
+                ObjectConstructor objectConstructor) {
 
             this.propertyGetters = propertyGetters;
             this.propertySetters = propertySetters;
-            this.fields = fields;
             this.objectConstructor = objectConstructor;
         }
     }

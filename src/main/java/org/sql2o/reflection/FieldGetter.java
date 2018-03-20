@@ -26,7 +26,7 @@ public class FieldGetter implements Getter {
         }
     }
 
-    public Class getType() {
+    public Class<?> getType() {
         return field.getType();
     }
 }

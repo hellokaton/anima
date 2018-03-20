@@ -7,7 +7,6 @@ import org.sql2o.quirks.Quirks;
 import java.math.BigDecimal;
 import java.util.*;
 
-import static java.util.Arrays.asList;
 import static org.sql2o.converters.Convert.throwIfNull;
 
 /**
@@ -144,9 +143,9 @@ public class Row {
      * View row as a simple map.
      */
     public Map<String, Object> asMap() {
-        Map map = new HashMap();
+        Map<String, Object> map = new HashMap<>();
         Set<String> keys = columnNameToIdxMap.keySet();
-        Iterator iterator = keys.iterator();
+        Iterator<String> iterator = keys.iterator();
         while (iterator.hasNext()) {
             String colum = iterator.next().toString();
             int index = columnNameToIdxMap.get(colum);

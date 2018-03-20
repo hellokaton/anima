@@ -117,7 +117,7 @@ public class MethodAccessorsGenerator implements MethodGetterFactory, MethodSett
     }
 
     public Getter newGetter(final Method method) {
-        final Class type = method.getReturnType();
+        final Class<?> type = method.getReturnType();
         final MethodAccessor methodAccessor = newMethodAccessor(method);
 
         return new Getter() {

@@ -22,14 +22,16 @@ import java.util.Map;
  * <p>
  * Some jdbc implementations have quirks, therefore it may be necessary to use a constructor with the quirks parameter.
  * When quirks are specified, Sql2o will use workarounds to avoid these quirks.
+ *
  * @author Lars Aaberg
  */
 public class Sql2o {
-    final Quirks quirks;
-    private Map<String, String> defaultColumnMappings;
-    private boolean defaultCaseSensitive;
-    private int isolationLevel;
-    private ConnectionSource connectionSource;
+
+    private final Quirks              quirks;
+    private       Map<String, String> defaultColumnMappings;
+    private       boolean             defaultCaseSensitive;
+    private       int                 isolationLevel;
+    private       ConnectionSource    connectionSource;
 
     public Sql2o(String jndiLookup) {
         this(JndiDataSource.getJndiDatasource(jndiLookup));
@@ -38,17 +40,19 @@ public class Sql2o {
     /**
      * Creates a new instance of the Sql2o class. Internally this constructor will create a {@link GenericDatasource},
      * and call the {@link Sql2o#Sql2o(DataSource)} constructor which takes a DataSource as parameter.
-     * @param url   JDBC database url
-     * @param user  database username
-     * @param pass  database password
+     *
+     * @param url  JDBC database url
+     * @param user database username
+     * @param pass database password
      */
-    public Sql2o(String url, String user, String pass){
+    public Sql2o(String url, String user, String pass) {
         this(url, user, pass, QuirksDetector.forURL(url));
     }
 
     /**
      * Created a new instance of the Sql2o class. Internally this constructor will create a {@link GenericDatasource},
      * and call the {@link Sql2o#Sql2o(DataSource)} constructor which takes a DataSource as parameter.
+     *
      * @param url    JDBC database url
      * @param user   database username
      * @param pass   database password
@@ -60,7 +64,8 @@ public class Sql2o {
 
     /**
      * Creates a new instance of the Sql2o class, which uses the given DataSource to acquire connections to the database.
-     * @param dataSource    The DataSource Sql2o uses to acquire connections to the database.
+     *
+     * @param dataSource The DataSource Sql2o uses to acquire connections to the database.
      */
     public Sql2o(DataSource dataSource) {
         this(dataSource, QuirksDetector.forObject(dataSource));
@@ -68,12 +73,13 @@ public class Sql2o {
 
     /**
      * Creates a new instance of the Sql2o class, which uses the given DataSource to acquire connections to the database.
+     *
      * @param dataSource The DataSource Sql2o uses to acquire connections to the database.
      * @param quirks     {@link Quirks} allows sql2o to work around known quirks and issues in different JDBC drivers.
      */
-    public Sql2o(DataSource dataSource, Quirks quirks){
+    public Sql2o(DataSource dataSource, Quirks quirks) {
         this.connectionSource = new DataSourceConnectionSource(dataSource);
-        this.quirks=quirks;
+        this.quirks = quirks;
         this.defaultColumnMappings = new HashMap<>();
     }
 
@@ -83,6 +89,7 @@ public class Sql2o {
 
     /**
      * Gets the {@link ConnectionSource} that Sql2o uses internally to acquire database connections.
+     *
      * @return The ConnectionSource instance
      */
     public ConnectionSource getConnectionSource() {
@@ -91,6 +98,7 @@ public class Sql2o {
 
     /**
      * Sets the {@link ConnectionSource} that Sql2o uses internally to acquire database connections.
+     *
      * @param connectionSource the ConnectionSource instance to use
      */
     public void setConnectionSource(ConnectionSource connectionSource) {
@@ -100,7 +108,8 @@ public class Sql2o {
     /**
      * Gets the default column mappings Map. column mappings added to this Map are always available when Sql2o attempts
      * to map between result sets and object instances.
-     * @return  The {@link Map<String, String>} instance, which Sql2o internally uses to map column names with property
+     *
+     * @return The {@link Map<String, String>} instance, which Sql2o internally uses to map column names with property
      * names.
      */
     public Map<String, String> getDefaultColumnMappings() {
@@ -109,8 +118,9 @@ public class Sql2o {
 
     /**
      * Sets the default column mappings Map.
-     * @param defaultColumnMappings     A {@link Map} instance Sql2o uses internally to map between column names and
-     *                                  property names.
+     *
+     * @param defaultColumnMappings A {@link Map} instance Sql2o uses internally to map between column names and
+     *                              property names.
      */
     public void setDefaultColumnMappings(Map<String, String> defaultColumnMappings) {
         this.defaultColumnMappings = defaultColumnMappings;
@@ -119,6 +129,7 @@ public class Sql2o {
     /**
      * Gets value indicating if this instance of Sql2o is case sensitive when mapping between columns names and property
      * names.
+     *
      * @return
      */
     public boolean isDefaultCaseSensitive() {
@@ -128,6 +139,7 @@ public class Sql2o {
     /**
      * Sets a value indicating if this instance of Sql2o is case sensitive when mapping between columns names and property
      * names. This should almost always be false, because most relational databases are not case sensitive.
+     *
      * @param defaultCaseSensitive
      */
     public void setDefaultCaseSensitive(boolean defaultCaseSensitive) {
@@ -140,6 +152,7 @@ public class Sql2o {
 
     /**
      * Opens a connection to the database
+     *
      * @param connectionSource the {@link ConnectionSource} implementation substitution,
      *                         that will be used instead of one from {@link Sql2o} instance.
      * @return instance of the {@link Connection} class.
@@ -150,6 +163,7 @@ public class Sql2o {
 
     /**
      * Opens a connection to the database
+     *
      * @return instance of the {@link Connection} class.
      */
     public Connection open() {
@@ -159,6 +173,7 @@ public class Sql2o {
     /**
      * Invokes the run method on the {@link StatementRunnableWithResult} instance. This method guarantees that
      * the connection is closed properly, when either the run method completes or if an exception occurs.
+     *
      * @param runnable
      * @param argument
      * @param <V>
@@ -166,9 +181,9 @@ public class Sql2o {
      */
     public <V> V withConnection(StatementRunnableWithResult<V> runnable, Object argument) {
         Connection connection = null;
-        try{
+        try {
             connection = open();
-            return (V)runnable.run(connection, argument);
+            return (V) runnable.run(connection, argument);
         } catch (Throwable t) {
             throw new Sql2oException("An error occurred while executing StatementRunnable", t);
         } finally {
@@ -181,6 +196,7 @@ public class Sql2o {
     /**
      * Invokes the run method on the {@link StatementRunnableWithResult} instance. This method guarantees that
      * the connection is closed properly, when either the run method completes or if an exception occurs.
+     *
      * @param runnable
      * @param <V>
      * @return
@@ -192,6 +208,7 @@ public class Sql2o {
     /**
      * Invokes the run method on the {@link StatementRunnableWithResult} instance. This method guarantees that
      * the connection is closed properly, when either the run method completes or if an exception occurs.
+     *
      * @param runnable
      */
     public void withConnection(StatementRunnable runnable) {
@@ -201,18 +218,19 @@ public class Sql2o {
     /**
      * Invokes the run method on the {@link StatementRunnableWithResult} instance. This method guarantees that
      * the connection is closed properly, when either the run method completes or if an exception occurs.
+     *
      * @param runnable
      * @param argument
      */
     public void withConnection(StatementRunnable runnable, Object argument) {
         Connection connection = null;
-        try{
+        try {
             connection = open();
 
             runnable.run(connection, argument);
         } catch (Throwable t) {
             throw new Sql2oException("An error occurred while executing StatementRunnable", t);
-        } finally{
+        } finally {
             if (connection != null) {
                 connection.close();
             }
@@ -223,10 +241,11 @@ public class Sql2o {
      * Begins a transaction with the given isolation level. Every statement executed on the return {@link Connection}
      * instance, will be executed in the transaction. It is very important to always call either the {@link Connection#commit()}
      * method or the {@link Connection#rollback()} method to close the transaction. Use proper try-catch logic.
+     *
      * @param isolationLevel the isolation level of the transaction
      * @return the {@link Connection} instance to use to run statements in the transaction.
      */
-    public Connection beginTransaction(int isolationLevel){
+    public Connection beginTransaction(int isolationLevel) {
         return beginTransaction(getConnectionSource(), isolationLevel);
     }
 
@@ -234,9 +253,10 @@ public class Sql2o {
      * Begins a transaction with the given isolation level. Every statement executed on the return {@link Connection}
      * instance, will be executed in the transaction. It is very important to always call either the {@link Connection#commit()}
      * method or the {@link Connection#rollback()} method to close the transaction. Use proper try-catch logic.
+     *
      * @param connectionSource the {@link ConnectionSource} implementation substitution,
      *                         that will be used instead of one from {@link Sql2o} instance.
-     * @param isolationLevel the isolation level of the transaction
+     * @param isolationLevel   the isolation level of the transaction
      * @return the {@link Connection} instance to use to run statements in the transaction.
      */
     public Connection beginTransaction(ConnectionSource connectionSource, int isolationLevel) {
@@ -263,10 +283,11 @@ public class Sql2o {
      * Begins a transaction with isolation level {@link java.sql.Connection#TRANSACTION_READ_COMMITTED}. Every statement executed on the return {@link Connection}
      * instance, will be executed in the transaction. It is very important to always call either the {@link Connection#commit()}
      * method or the {@link Connection#rollback()} method to close the transaction. Use proper try-catch logic.
+     *
      * @return the {@link Connection} instance to use to run statements in the transaction.
      */
-    public Connection beginTransaction(){
-        if(isolationLevel > 0){
+    public Connection beginTransaction() {
+        if (isolationLevel > 0) {
             return this.beginTransaction(this.isolationLevel);
         }
         return this.beginTransaction(java.sql.Connection.TRANSACTION_READ_COMMITTED);
@@ -276,6 +297,7 @@ public class Sql2o {
      * Begins a transaction with isolation level {@link java.sql.Connection#TRANSACTION_READ_COMMITTED}. Every statement executed on the return {@link Connection}
      * instance, will be executed in the transaction. It is very important to always call either the {@link Connection#commit()}
      * method or the {@link Connection#rollback()} method to close the transaction. Use proper try-catch logic.
+     *
      * @param connectionSource the {@link ConnectionSource} implementation substitution,
      *                         that will be used instead of one from {@link Sql2o} instance.
      * @return the {@link Connection} instance to use to run statements in the transaction.
@@ -290,11 +312,12 @@ public class Sql2o {
      * executed in a transaction. The transaction will automatically be committed if the {@link StatementRunnable#run(Connection, Object) run}
      * method finishes without throwing an exception. If an exception is thrown within the {@link StatementRunnable#run(Connection, Object) run} method,
      * the transaction will automatically be rolled back.
-     *
+     * <p>
      * The isolation level of the transaction will be set to {@link java.sql.Connection#TRANSACTION_READ_COMMITTED}
+     *
      * @param runnable The {@link StatementRunnable} instance.
      */
-    public void runInTransaction(StatementRunnable runnable){
+    public void runInTransaction(StatementRunnable runnable) {
         runInTransaction(runnable, null);
     }
 
@@ -304,12 +327,13 @@ public class Sql2o {
      * executed in a transaction. The transaction will automatically be committed if the {@link StatementRunnable#run(Connection, Object) run}
      * method finishes without throwing an exception. If an exception is thrown within the {@link StatementRunnable#run(Connection, Object) run} method,
      * the transaction will automatically be rolled back.
-     *
+     * <p>
      * The isolation level of the transaction will be set to {@link java.sql.Connection#TRANSACTION_READ_COMMITTED}
+     *
      * @param runnable The {@link StatementRunnable} instance.
      * @param argument An argument which will be forwarded to the {@link StatementRunnable#run(Connection, Object) run} method
      */
-    public void runInTransaction(StatementRunnable runnable, Object argument){
+    public void runInTransaction(StatementRunnable runnable, Object argument) {
         runInTransaction(runnable, argument, java.sql.Connection.TRANSACTION_READ_COMMITTED);
     }
 
@@ -319,11 +343,12 @@ public class Sql2o {
      * executed in a transaction. The transaction will automatically be committed if the {@link StatementRunnable#run(Connection, Object) run}
      * method finishes without throwing an exception. If an exception is thrown within the {@link StatementRunnable#run(Connection, Object) run} method,
      * the transaction will automatically be rolled back.
-     * @param runnable The {@link StatementRunnable} instance.
-     * @param argument An argument which will be forwarded to the {@link StatementRunnable#run(Connection, Object) run} method
+     *
+     * @param runnable       The {@link StatementRunnable} instance.
+     * @param argument       An argument which will be forwarded to the {@link StatementRunnable#run(Connection, Object) run} method
      * @param isolationLevel The isolation level of the transaction
      */
-    public void runInTransaction(StatementRunnable runnable, Object argument, int isolationLevel){
+    public void runInTransaction(StatementRunnable runnable, Object argument, int isolationLevel) {
 
         Connection connection = this.beginTransaction(isolationLevel);
         connection.setRollbackOnException(false);
@@ -337,28 +362,26 @@ public class Sql2o {
         connection.commit();
     }
 
-    public <V> V runInTransaction(StatementRunnableWithResult<V> runnableWithResult){
+    public <V> V runInTransaction(StatementRunnableWithResult<V> runnableWithResult) {
         return runInTransaction(runnableWithResult, null);
     }
-    
-    public <V> V runInTransaction(StatementRunnableWithResult<V> runnableWithResult, Object argument){
+
+    public <V> V runInTransaction(StatementRunnableWithResult<V> runnableWithResult, Object argument) {
         return runInTransaction(runnableWithResult, argument, java.sql.Connection.TRANSACTION_READ_COMMITTED);
     }
 
     @SuppressWarnings("unchecked")
-    public <V> V runInTransaction(StatementRunnableWithResult<V> runnableWithResult, Object argument, int isolationLevel){
+    public <V> V runInTransaction(StatementRunnableWithResult<V> runnableWithResult, Object argument, int isolationLevel) {
         Connection connection = this.beginTransaction(isolationLevel);
-        Object result;
-        
-        try{
+        Object     result;
+        try {
             result = runnableWithResult.run(connection, argument);
         } catch (Throwable throwable) {
             connection.rollback();
             throw new Sql2oException("An error occurred while executing StatementRunnableWithResult. Transaction rolled back.", throwable);
         }
-        
         connection.commit();
-        return (V)result;
+        return (V) result;
     }
 
 }

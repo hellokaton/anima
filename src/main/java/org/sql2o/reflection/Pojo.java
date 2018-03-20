@@ -66,7 +66,7 @@ public class Pojo {
         else{
             getter = metadata.getPropertyGetter(propertyPath);
 
-            Converter converter;
+            Converter<?> converter;
 
             try {
                 converter = throwIfNull(getter.getType(), quirks.converterOf(getter.getType()));

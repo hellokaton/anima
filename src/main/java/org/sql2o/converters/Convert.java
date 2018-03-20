@@ -98,7 +98,7 @@ public class Convert {
         }
     }
 
-    public static <E> Converter<E> throwIfNull(Class<E> clazz, Converter<E> converter) throws ConverterException {
+    public static <V> Converter<V> throwIfNull(Class<?> clazz, Converter<V> converter) throws ConverterException {
         if (converter == null) {
             throw new ConverterException("No converter registered for class: " + clazz.getName());
         }

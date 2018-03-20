@@ -9,6 +9,6 @@ public interface Getter {
 
 	Object getProperty(Object obj);
 
-    Class getType();
+    Class<?> getType();
 
 }

@@ -12,12 +12,9 @@ import java.time.ZoneId;
  */
 public class LocalDateTimeConverter implements Converter<LocalDateTime> {
 
-    private final LocalDateTime localDateTime;
-
     // it's possible to create instance for other timezone
     // and re-register converter
     public LocalDateTimeConverter(LocalDateTime localDateTime) {
-        this.localDateTime = localDateTime;
     }
 
     public LocalDateTimeConverter() {

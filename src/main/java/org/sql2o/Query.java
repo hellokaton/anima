@@ -1,5 +1,6 @@
 package org.sql2o;
 
+import io.github.biezhi.anima.Anima;
 import lombok.extern.slf4j.Slf4j;
 import org.sql2o.converters.Converter;
 import org.sql2o.converters.ConverterException;
@@ -9,7 +10,10 @@ import org.sql2o.data.Table;
 import org.sql2o.data.TableResultSetIterator;
 import org.sql2o.quirks.Quirks;
 
-import java.sql.*;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.*;
 
 import static org.sql2o.converters.Convert.throwIfNull;
@@ -20,7 +24,7 @@ import static org.sql2o.converters.Convert.throwIfNull;
 @Slf4j
 public class Query implements AutoCloseable {
 
-	private Connection          connection;
+    private Connection          connection;
     private Map<String, String> caseSensitiveColumnMappings;
     private Map<String, String> columnMappings;
     private PreparedStatement preparedStatement = null;
@@ -31,9 +35,9 @@ public class Query implements AutoCloseable {
     private       boolean  returnGeneratedKeys;
     private final String[] columnNames;
     private       String   parsedQuery;
-    private int maxBatchRecords     = 0;
-    private int currentBatchRecords = 0;
-    private Map<Integer, Object> paramIndexValues = new HashMap<>();
+    private int                  maxBatchRecords     = 0;
+    private int                  currentBatchRecords = 0;
+    private Map<Integer, Object> paramIndexValues    = new HashMap<>();
 
     private ResultSetHandlerFactoryBuilder resultSetHandlerFactoryBuilder;
 
@@ -217,15 +221,14 @@ public class Query implements AutoCloseable {
             try {
                 if (rs != null) {
                     rs.close();
-
                     // log the query
-                    long afterClose = System.currentTimeMillis();
-                    log.debug("Total       => {} ms, execution: {} ms, reading and parsing: {} ms; executed [{}]", new Object[]{
-                            afterClose - start,
-                            afterExecQuery - start,
-                            afterClose - afterExecQuery,
-                            name
-                    });
+                    if (Anima.me().isEnableSQLStatistic() && log.isDebugEnabled()) {
+                        long afterClose = System.currentTimeMillis();
+                        log.debug("Total       => {} ms, execution: {} ms, reading and parsing: {} ms; executed [{}]", afterClose - start,
+                                afterExecQuery - start,
+                                afterClose - afterExecQuery,
+                                name);
+                    }
                     rs = null;
                 }
             } catch (SQLException ex) {
@@ -306,11 +309,7 @@ public class Query implements AutoCloseable {
     }
 
     private static <T> ResultSetHandlerFactory<T> newResultSetHandlerFactory(final ResultSetHandler<T> resultSetHandler) {
-        return new ResultSetHandlerFactory<T>() {
-            public ResultSetHandler<T> newResultSetHandler(ResultSetMetaData resultSetMetaData) throws SQLException {
-                return resultSetHandler;
-            }
-        };
+        return resultSetMetaData -> resultSetHandler;
     }
 
     public <T> List<T> executeAndFetch(Class<T> returnType) {
@@ -403,11 +402,10 @@ public class Query implements AutoCloseable {
             closeConnectionIfNecessary();
         }
 
-        long end = System.currentTimeMillis();
-        log.debug("total: {} ms; executed update [{}]", new Object[]{
-                end - start,
-                this.getName() == null ? "No name" : this.getName()
-        });
+        if (Anima.me().isEnableSQLStatistic() && log.isDebugEnabled()) {
+            long end = System.currentTimeMillis();
+            log.debug("total: {} ms; executed update [{}]", end - start, this.getName() == null ? "No name" : this.getName());
+        }
 
         return this.connection;
     }
@@ -418,12 +416,12 @@ public class Query implements AutoCloseable {
             logExecution();
             ResultSet rs = buildPreparedStatement().executeQuery();
             if (rs.next()) {
-                Object o   = getQuirks().getRSVal(rs, 1);
-                long   end = System.currentTimeMillis();
-                log.debug("total: {} ms; executed scalar [{}]", new Object[]{
-                        end - start,
-                        this.getName() == null ? "No name" : this.getName()
-                });
+                Object o = getQuirks().getRSVal(rs, 1);
+
+                if (Anima.me().isEnableSQLStatistic() && log.isDebugEnabled()) {
+                    long end = System.currentTimeMillis();
+                    log.debug("total: {} ms; executed scalar [{}]", end - start, this.getName() == null ? "No name" : this.getName());
+                }
                 return o;
             } else {
                 return null;
@@ -464,7 +462,6 @@ public class Query implements AutoCloseable {
         }
     }
 
-
     public <T> List<T> executeScalarList(final Class<T> returnType) {
         return executeAndFetch(newScalarResultSetHandler(returnType));
     }
@@ -473,14 +470,12 @@ public class Query implements AutoCloseable {
         final Quirks quirks = getQuirks();
         try {
             final Converter<T> converter = throwIfNull(returnType, quirks.converterOf(returnType));
-            return new ResultSetHandler<T>() {
-                public T handle(ResultSet resultSet) throws SQLException {
-                    Object value = quirks.getRSVal(resultSet, 1);
-                    try {
-                        return (converter.convert(value));
-                    } catch (ConverterException e) {
-                        throw new Sql2oException("Error occurred while converting value from database to type " + returnType, e);
-                    }
+            return resultSet -> {
+                Object value = quirks.getRSVal(resultSet, 1);
+                try {
+                    return (converter.convert(value));
+                } catch (ConverterException e) {
+                    throw new Sql2oException("Error occurred while converting value from database to type " + returnType, e);
                 }
             };
         } catch (ConverterException e) {
@@ -595,11 +590,10 @@ public class Query implements AutoCloseable {
             closeConnectionIfNecessary();
         }
 
-        long end = System.currentTimeMillis();
-        log.debug("total: {} ms; executed batch [{}]", new Object[]{
-                end - start,
-                this.getName() == null ? "No name" : this.getName()
-        });
+        if (Anima.me().isEnableSQLStatistic() && log.isDebugEnabled()) {
+            long end = System.currentTimeMillis();
+            log.debug("total: {} ms; executed batch [{}]", end - start, this.getName() == null ? "No name" : this.getName());
+        }
 
         return this.connection;
     }
@@ -630,12 +624,10 @@ public class Query implements AutoCloseable {
     public Query addColumnMapping(String columnName, String propertyName) {
         this.caseSensitiveColumnMappings.put(columnName, propertyName);
         this.columnMappings.put(columnName.toLowerCase(), propertyName.toLowerCase());
-
         return this;
     }
 
     /************** private stuff ***************/
-
     private void closeConnectionIfNecessary() {
         try {
             if (connection.autoClose) {
@@ -648,21 +640,6 @@ public class Query implements AutoCloseable {
 
     private void logExecution() {
         log.debug("Execute SQL => {}", this.parsedQuery);
-    }
-
-    static abstract class ParameterSetter {
-        // the number of parameter to set ; always equals to 1 except when working on an array parameter
-        int parameterCount;
-
-        public ParameterSetter() {
-            this(1);
-        }
-
-        ParameterSetter(int parameterCount) {
-            this.parameterCount = parameterCount;
-        }
-
-        abstract void setParameter(int paramIdx, PreparedStatement statement) throws SQLException;
     }
 
 }

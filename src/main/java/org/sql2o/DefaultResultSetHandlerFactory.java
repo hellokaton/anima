@@ -31,7 +31,7 @@ public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactor
             final Getter getter = metadata.getPropertyGetterIfExists(propertyPath);
             // behavior change: do not throw if POJO contains less properties
             if (getter == null) return null;
-            final Converter converter = quirks.converterOf(getter.getType());
+            final Converter<?> converter = quirks.converterOf(getter.getType());
             // getter without converter
             if (converter == null) return getter;
             return new Getter() {
@@ -43,7 +43,7 @@ public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactor
                     }
                 }
 
-                public Class getType() {
+                public Class<?> getType() {
                     return getter.getType();
                 }
             };
@@ -57,7 +57,7 @@ public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactor
                 return pojo.getProperty(propertyPath, quirks);
             }
 
-            public Class getType() {
+            public Class<?> getType() {
                 // doesn't used anyway
                 return Object.class;
             }
@@ -75,7 +75,7 @@ public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactor
             final Setter setter = metadata.getPropertySetterIfExists(propertyPath);
             // behavior change: do not throw if POJO contains less properties
             if (setter == null) return null;
-            final Converter converter = quirks.converterOf(setter.getType());
+            final Converter<?> converter = quirks.converterOf(setter.getType());
             // setter without converter
             if (converter == null) return setter;
             return new Setter() {
@@ -87,7 +87,7 @@ public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactor
                     }
                 }
 
-                public Class getType() {
+                public Class<?> getType() {
                     return setter.getType();
                 }
             };
@@ -101,7 +101,7 @@ public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactor
                 pojo.setProperty(propertyPath, value, quirks);
             }
 
-            public Class getType() {
+            public Class<?> getType() {
                 // doesn't used anyway
                 return Object.class;
             }
@@ -110,9 +110,9 @@ public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactor
 
     private static class Key {
         final String stringKey;
-        final DefaultResultSetHandlerFactory f;
+        final DefaultResultSetHandlerFactory<?> f;
 
-        DefaultResultSetHandlerFactory factory(){
+        DefaultResultSetHandlerFactory<?> factory(){
             return f;
         }
 
@@ -124,7 +124,7 @@ public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactor
             return f.quirks;
         }
 
-        private Key(String stringKey, DefaultResultSetHandlerFactory f) {
+        private Key(String stringKey, DefaultResultSetHandlerFactory<?> f) {
             this.stringKey = stringKey;
             this.f = f;
         }
@@ -152,10 +152,10 @@ public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactor
     }
 
 
-    private static final AbstractCache<Key,ResultSetHandler,ResultSetMetaData>
-     c = new AbstractCache<Key, ResultSetHandler, ResultSetMetaData>() {
+    private static final AbstractCache<Key,ResultSetHandler<?>,ResultSetMetaData>
+     c = new AbstractCache<Key, ResultSetHandler<?>, ResultSetMetaData>() {
         @Override
-        protected ResultSetHandler evaluate(Key key, ResultSetMetaData param) {
+        protected ResultSetHandler<?> evaluate(Key key, ResultSetMetaData param) {
             try {
                 return key.factory().newResultSetHandler0(param);
             } catch (SQLException e) {
@@ -170,7 +170,7 @@ public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactor
         for (int i = 1; i <= meta.getColumnCount(); i++) {
             stringBuilder.append(quirks.getColumnName(meta,i)).append("\n");
         }
-        return c.get(new Key(stringBuilder.toString(), this),meta);
+        return (ResultSetHandler<T>) c.get(new Key(stringBuilder.toString(), this),meta);
 
     }
 

@@ -14,4 +14,5 @@ public interface Converter<T> {
      * Conversion from Java to SQL.
      */
     Object toDatabaseParam(T val);
+
 }

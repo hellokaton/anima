@@ -68,6 +68,9 @@ public class Anima {
     @Setter
     private Class<? extends Exception> rollbackException;
 
+    @Getter
+    private boolean enableSQLStatistic = true;
+
     private static Anima instance;
 
     public static Anima me() {
@@ -148,6 +151,11 @@ public class Anima {
         return this;
     }
 
+    public Anima enableSQLStatistic(boolean enableSQLStatistic) {
+        this.enableSQLStatistic = enableSQLStatistic;
+        return this;
+    }
+
     public static Select select() {
         return new Select();
     }
@@ -158,7 +166,7 @@ public class Anima {
 
     @SafeVarargs
     public static <T extends Model, R> Select select(TypeFunction<T, R>... functions) {
-		return select(Arrays.stream(functions).map(AnimaUtils::getLambdaColumnName).collect(Collectors.joining(", ")));
+        return select(Arrays.stream(functions).map(AnimaUtils::getLambdaColumnName).collect(Collectors.joining(", ")));
     }
 
     public static Update update() {
