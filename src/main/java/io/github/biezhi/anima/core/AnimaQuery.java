@@ -95,6 +95,11 @@ public class AnimaQuery<T extends Model> {
         return this;
     }
 
+    public AnimaQuery<T> exclude(Class<? extends Annotation> relation) {
+        this.relations.add(relation);
+        return this;
+    }
+
     public AnimaQuery<T> select(String columns) {
         if (null != this.selectColumns) {
             throw new AnimaException("Select method can only be called once.");
@@ -488,7 +493,7 @@ public class AnimaQuery<T extends Model> {
         return this.execute(sql, paramValues);
     }
 
-    public int deleteById(Serializable id) {
+    public <S extends Serializable> int deleteById(S id) {
         this.where(primaryKeyColumn, id);
         return this.delete();
     }

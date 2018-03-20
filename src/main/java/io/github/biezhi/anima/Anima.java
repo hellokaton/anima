@@ -181,6 +181,7 @@ public class Anima {
         }).catchException(e -> log.error("Batch save model error, message: {}", e));
     }
 
+    @SafeVarargs
     public static <T extends Model, S extends Serializable> void deleteBatch(Class<T> modelClass, S... ids) {
         AnimaQuery<T> animaQuery = new AnimaQuery<>(modelClass);
         atomic(() -> Arrays.stream(ids).forEach(animaQuery::deleteById)).catchException(e -> log.error("Batch save model error, message: {}", e));
@@ -196,7 +197,7 @@ public class Anima {
     }
 
     public static int execute(String sql, Object... params) {
-        return new AnimaQuery().execute(sql, params);
+        return new AnimaQuery<>().execute(sql, params);
     }
 
 
