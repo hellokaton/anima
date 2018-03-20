@@ -5,7 +5,9 @@ package org.sql2o.converters;
  */
 public class ConverterException extends Exception{
 
-    public ConverterException(String message) {
+    private static final long serialVersionUID = -6515158190992901520L;
+
+	public ConverterException(String message) {
         super(message);
     }
 

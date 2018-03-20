@@ -215,7 +215,7 @@ public class UnsafeFieldSetterFactory implements FieldSetterFactory, ObjectConst
                     theUnsafe.putFloatVolatile(obj, offset, ((Number) value).floatValue());
                 }
 
-                public Class getType() {
+                public Class<?> getType() {
                     return Float.TYPE;
                 }
             };
@@ -227,7 +227,7 @@ public class UnsafeFieldSetterFactory implements FieldSetterFactory, ObjectConst
                     theUnsafe.putDoubleVolatile(obj, offset, ((Number) value).doubleValue());
                 }
 
-                public Class getType() {
+                public Class<?> getType() {
                     return Double.TYPE;
                 }
             };
@@ -247,13 +247,11 @@ public class UnsafeFieldSetterFactory implements FieldSetterFactory, ObjectConst
         return getConstructor(clazz);
     }
     public static ObjectConstructor getConstructor(final Class<?> clazz) {
-        return new ObjectConstructor() {
-            public Object newInstance() {
-                try {
-                    return theUnsafe.allocateInstance(clazz);
-                } catch (InstantiationException e) {
-                    throw new Sql2oException("Could not create a new instance of class " + clazz, e);
-                }
+        return () -> {
+            try {
+                return theUnsafe.allocateInstance(clazz);
+            } catch (InstantiationException e) {
+                throw new Sql2oException("Could not create a new instance of class " + clazz, e);
             }
         };
     }

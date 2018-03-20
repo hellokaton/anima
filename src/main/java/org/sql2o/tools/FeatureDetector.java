@@ -5,7 +5,6 @@ package org.sql2o.tools;
  *
  * @author Alden Quimby
  */
-@SuppressWarnings("UnusedDeclaration")
 public final class FeatureDetector {
 
     private FeatureDetector() {}

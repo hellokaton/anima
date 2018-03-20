@@ -8,5 +8,7 @@ package org.sql2o.reflection;
 public interface Getter {
 
 	Object getProperty(Object obj);
+
     Class getType();
+
 }

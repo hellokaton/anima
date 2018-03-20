@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 
 @SuppressWarnings("Unsafe")
 public class FactoryFacade {
+
     private final static FactoryFacade instance;
 
     static {

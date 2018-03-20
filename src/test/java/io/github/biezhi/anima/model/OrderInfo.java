@@ -6,6 +6,7 @@ import io.github.biezhi.anima.annotation.Column;
 import io.github.biezhi.anima.annotation.HasOne;
 import io.github.biezhi.anima.annotation.Table;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 @Table(name = "order_info")
 @NoArgsConstructor
 @Data
+@EqualsAndHashCode(callSuper=false)
 public class OrderInfo extends Model {
 
     private Long id;

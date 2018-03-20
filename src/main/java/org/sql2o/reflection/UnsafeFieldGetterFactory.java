@@ -12,9 +12,10 @@ import java.lang.reflect.Modifier;
 @SuppressWarnings("Unsafe")
 public class UnsafeFieldGetterFactory implements FieldGetterFactory, ObjectConstructorFactory {
     private final static Unsafe theUnsafe;
+
     static {
         try {
-            Class unsafeClass = Class.forName("sun.misc.Unsafe");
+            Class<?> unsafeClass   = Class.forName("sun.misc.Unsafe");
             Field declaredField = unsafeClass.getDeclaredField("theUnsafe");
             declaredField.setAccessible(true);
             theUnsafe = (Unsafe) declaredField.get(null);
@@ -24,10 +25,10 @@ public class UnsafeFieldGetterFactory implements FieldGetterFactory, ObjectConst
     }
 
     public Getter newGetter(final Field field) {
-        final Class type = field.getType();
+        final Class<?>   type     = field.getType();
         final boolean isStatic = Modifier.isStatic(field.getModifiers());
 
-        final long offset =  isStatic
+        final long offset = isStatic
                 ? theUnsafe.staticFieldOffset(field)
                 : theUnsafe.objectFieldOffset(field);
 
@@ -38,7 +39,7 @@ public class UnsafeFieldGetterFactory implements FieldGetterFactory, ObjectConst
                         return theUnsafe.getBoolean(obj, offset);
                     }
 
-                    public Class getType() {
+                    public Class<?> getType() {
                         return Boolean.TYPE;
                     }
                 };
@@ -50,7 +51,7 @@ public class UnsafeFieldGetterFactory implements FieldGetterFactory, ObjectConst
                         return theUnsafe.getChar(obj, offset);
                     }
 
-                    public Class getType() {
+                    public Class<?> getType() {
                         return Character.TYPE;
                     }
                 };
@@ -62,7 +63,7 @@ public class UnsafeFieldGetterFactory implements FieldGetterFactory, ObjectConst
                         return theUnsafe.getByte(obj, offset);
                     }
 
-                    public Class getType() {
+                    public Class<?> getType() {
                         return Byte.TYPE;
                     }
                 };
@@ -74,7 +75,7 @@ public class UnsafeFieldGetterFactory implements FieldGetterFactory, ObjectConst
                         return theUnsafe.getShort(obj, offset);
                     }
 
-                    public Class getType() {
+                    public Class<?> getType() {
                         return Short.TYPE;
                     }
                 };
@@ -86,7 +87,7 @@ public class UnsafeFieldGetterFactory implements FieldGetterFactory, ObjectConst
                         return theUnsafe.getInt(obj, offset);
                     }
 
-                    public Class getType() {
+                    public Class<?> getType() {
                         return Integer.TYPE;
                     }
                 };
@@ -98,7 +99,7 @@ public class UnsafeFieldGetterFactory implements FieldGetterFactory, ObjectConst
                         return theUnsafe.getLong(obj, offset);
                     }
 
-                    public Class getType() {
+                    public Class<?> getType() {
                         return Long.TYPE;
                     }
                 };
@@ -110,7 +111,7 @@ public class UnsafeFieldGetterFactory implements FieldGetterFactory, ObjectConst
                         return theUnsafe.getFloat(obj, offset);
                     }
 
-                    public Class getType() {
+                    public Class<?> getType() {
                         return Float.TYPE;
                     }
                 };
@@ -121,7 +122,7 @@ public class UnsafeFieldGetterFactory implements FieldGetterFactory, ObjectConst
                         return theUnsafe.getDouble(obj, offset);
                     }
 
-                    public Class getType() {
+                    public Class<?> getType() {
                         return Double.TYPE;
                     }
                 };
@@ -131,7 +132,7 @@ public class UnsafeFieldGetterFactory implements FieldGetterFactory, ObjectConst
                     return theUnsafe.getObject(obj, offset);
                 }
 
-                public Class getType() {
+                public Class<?> getType() {
                     return type;
                 }
             };
@@ -143,7 +144,7 @@ public class UnsafeFieldGetterFactory implements FieldGetterFactory, ObjectConst
                     return theUnsafe.getBooleanVolatile(obj, offset);
                 }
 
-                public Class getType() {
+                public Class<?> getType() {
                     return Boolean.TYPE;
                 }
             };
@@ -154,7 +155,7 @@ public class UnsafeFieldGetterFactory implements FieldGetterFactory, ObjectConst
                     return theUnsafe.getCharVolatile(obj, offset);
                 }
 
-                public Class getType() {
+                public Class<?> getType() {
                     return Character.TYPE;
                 }
             };
@@ -165,7 +166,7 @@ public class UnsafeFieldGetterFactory implements FieldGetterFactory, ObjectConst
                     return theUnsafe.getByteVolatile(obj, offset);
                 }
 
-                public Class getType() {
+                public Class<?> getType() {
                     return Byte.TYPE;
                 }
             };
@@ -176,7 +177,7 @@ public class UnsafeFieldGetterFactory implements FieldGetterFactory, ObjectConst
                     return theUnsafe.getShortVolatile(obj, offset);
                 }
 
-                public Class getType() {
+                public Class<?> getType() {
                     return Short.TYPE;
                 }
             };
@@ -187,7 +188,7 @@ public class UnsafeFieldGetterFactory implements FieldGetterFactory, ObjectConst
                     return theUnsafe.getIntVolatile(obj, offset);
                 }
 
-                public Class getType() {
+                public Class<?> getType() {
                     return Integer.TYPE;
                 }
             };
@@ -198,7 +199,7 @@ public class UnsafeFieldGetterFactory implements FieldGetterFactory, ObjectConst
                     return theUnsafe.getLongVolatile(obj, offset);
                 }
 
-                public Class getType() {
+                public Class<?> getType() {
                     return Long.TYPE;
                 }
             };
@@ -209,7 +210,7 @@ public class UnsafeFieldGetterFactory implements FieldGetterFactory, ObjectConst
                     return theUnsafe.getFloatVolatile(obj, offset);
                 }
 
-                public Class getType() {
+                public Class<?> getType() {
                     return Float.TYPE;
                 }
             };
@@ -220,7 +221,7 @@ public class UnsafeFieldGetterFactory implements FieldGetterFactory, ObjectConst
                     return theUnsafe.getDoubleVolatile(obj, offset);
                 }
 
-                public Class getType() {
+                public Class<?> getType() {
                     return Double.TYPE;
                 }
             };
@@ -230,7 +231,7 @@ public class UnsafeFieldGetterFactory implements FieldGetterFactory, ObjectConst
                 return theUnsafe.getObjectVolatile(obj, offset);
             }
 
-            public Class getType() {
+            public Class<?> getType() {
                 return type;
             }
         };
@@ -239,14 +240,13 @@ public class UnsafeFieldGetterFactory implements FieldGetterFactory, ObjectConst
     public ObjectConstructor newConstructor(final Class<?> clazz) {
         return getConstructor(clazz);
     }
+
     public static ObjectConstructor getConstructor(final Class<?> clazz) {
-        return new ObjectConstructor() {
-            public Object newInstance() {
-                try {
-                    return theUnsafe.allocateInstance(clazz);
-                } catch (InstantiationException e) {
-                    throw new Sql2oException("Could not create a new instance of class " + clazz, e);
-                }
+        return () -> {
+            try {
+                return theUnsafe.allocateInstance(clazz);
+            } catch (InstantiationException e) {
+                throw new Sql2oException("Could not create a new instance of class " + clazz, e);
             }
         };
     }

@@ -106,10 +106,10 @@ public class Convert {
     }
 
     public static <E> Converter<E> getConverterIfExists(Class<E> clazz) {
-        Converter c;
+        Converter<E> c;
         rl.lock();
         try {
-            c = registeredConverters.get(clazz);
+            c = (Converter<E>) registeredConverters.get(clazz);
         } finally {
             rl.unlock();
         }
