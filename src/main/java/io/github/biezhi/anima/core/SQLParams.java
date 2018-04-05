@@ -45,5 +45,6 @@ public class SQLParams {
     private List<String>           excludedColumns;
     private PageRow                pageRow;
     private String                 orderBy;
+    private boolean                isSQLLimit;
 
 }

@@ -24,20 +24,20 @@ import static org.sql2o.converters.Convert.throwIfNull;
 @Slf4j
 public class Query implements AutoCloseable {
 
-    private Connection          connection;
-    private Map<String, String> caseSensitiveColumnMappings;
-    private Map<String, String> columnMappings;
-    private PreparedStatement preparedStatement = null;
-    private boolean caseSensitive;
-    private boolean autoDeriveColumnNames;
-    private boolean throwOnMappingFailure = true;
-    private       String   name;
-    private       boolean  returnGeneratedKeys;
-    private final String[] columnNames;
-    private       String   parsedQuery;
-    private int                  maxBatchRecords     = 0;
-    private int                  currentBatchRecords = 0;
-    private Map<Integer, Object> paramIndexValues    = new HashMap<>();
+    private       Connection           connection;
+    private       Map<String, String>  caseSensitiveColumnMappings;
+    private       Map<String, String>  columnMappings;
+    private       PreparedStatement    preparedStatement     = null;
+    private       boolean              caseSensitive;
+    private       boolean              autoDeriveColumnNames;
+    private       boolean              throwOnMappingFailure = true;
+    private       String               name;
+    private       boolean              returnGeneratedKeys;
+    private final String[]             columnNames;
+    private       String               parsedQuery;
+    private       int                  maxBatchRecords       = 0;
+    private       int                  currentBatchRecords   = 0;
+    private       Map<Integer, Object> paramIndexValues      = new HashMap<>();
 
     private ResultSetHandlerFactoryBuilder resultSetHandlerFactoryBuilder;
 
@@ -322,20 +322,11 @@ public class Query implements AutoCloseable {
 
     public <T> List<T> executeAndFetch(ResultSetHandlerFactory<T> factory) {
         List<T> list = new ArrayList<>();
-
-        // if sql2o moves to java 7 at some point, this could be much cleaner using try-with-resources
-        ResultSetIterable<T> iterable = null;
-        try {
-            iterable = executeAndFetchLazy(factory);
+        try (ResultSetIterable<T> iterable = executeAndFetchLazy(factory)) {
             for (T item : iterable) {
                 list.add(item);
             }
-        } finally {
-            if (iterable != null) {
-                iterable.close();
-            }
         }
-
         return list;
     }
 
@@ -348,16 +339,9 @@ public class Query implements AutoCloseable {
     }
 
     public <T> T executeAndFetchFirst(ResultSetHandlerFactory<T> resultSetHandlerFactory) {
-        // if sql2o moves to java 7 at some point, this could be much cleaner using try-with-resources
-        ResultSetIterable<T> iterable = null;
-        try {
-            iterable = executeAndFetchLazy(resultSetHandlerFactory);
+        try (ResultSetIterable<T> iterable = executeAndFetchLazy(resultSetHandlerFactory)) {
             Iterator<T> iterator = iterable.iterator();
             return iterator.hasNext() ? iterator.next() : null;
-        } finally {
-            if (iterable != null) {
-                iterable.close();
-            }
         }
     }
 

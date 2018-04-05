@@ -62,6 +62,8 @@ public class AnimaQuery<T extends Model> {
     private Map<String, Object>              updateColumns   = new LinkedHashMap<>(8);
     private Set<Class<? extends Annotation>> relations       = new HashSet<>();
 
+    private boolean isSQLLimit;
+
     private String selectColumns;
 
     private String  primaryKeyColumn;
@@ -373,6 +375,11 @@ public class AnimaQuery<T extends Model> {
     }
 
     public List<T> limit(int limit) {
+        if (Anima.me().isUseSQLLimit()) {
+            isSQLLimit = true;
+            paramValues.add(limit);
+            return all();
+        }
         return stream().limit(limit).collect(Collectors.toList());
     }
 
@@ -421,6 +428,9 @@ public class AnimaQuery<T extends Model> {
     }
 
     private <S> S queryOne(Class<S> type, String sql, List<Object> params) {
+        if (Anima.me().isUseSQLLimit()) {
+            sql += " LIMIT 1";
+        }
         List<S> list = queryList(type, sql, params);
         return AnimaUtils.isNotEmpty(list) ? list.get(0) : null;
     }
@@ -535,6 +545,7 @@ public class AnimaQuery<T extends Model> {
                 .pkName(this.primaryKeyColumn)
                 .conditionSQL(this.conditionSQL)
                 .excludedColumns(this.excludedColumns)
+                .isSQLLimit(isSQLLimit)
                 .build();
 
         if (addOrderBy) {
@@ -743,11 +754,13 @@ public class AnimaQuery<T extends Model> {
 
     private void clean(Connection conn) {
         this.selectColumns = null;
+        this.isSQLLimit = false;
         this.orderBySQL = new StringBuilder();
         this.conditionSQL = new StringBuilder();
         this.paramValues.clear();
         this.excludedColumns.clear();
         this.updateColumns.clear();
+        this.relations.clear();
         if (null == connectionThreadLocal.get() && null != conn) {
             conn.close();
         }

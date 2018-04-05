@@ -71,6 +71,9 @@ public class Anima {
     @Getter
     private boolean enableSQLStatistic = true;
 
+    @Getter
+    private boolean useSQLLimit = true;
+
     private static Anima instance;
 
     public static Anima me() {
@@ -153,6 +156,11 @@ public class Anima {
 
     public Anima enableSQLStatistic(boolean enableSQLStatistic) {
         this.enableSQLStatistic = enableSQLStatistic;
+        return this;
+    }
+
+    public Anima useSQLLimit(boolean useSQLLimit) {
+        this.useSQLLimit = useSQLLimit;
         return this;
     }
 
