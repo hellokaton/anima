@@ -4,6 +4,8 @@ import io.github.biezhi.anima.model.User;
 import org.junit.Assert;
 import org.junit.Test;
 
+import static io.github.biezhi.anima.Anima.select;
+
 /**
  * @author biezhi
  * @date 2018/3/14
@@ -21,13 +23,27 @@ public class OtherTest extends BaseTest {
             Assert.assertEquals(ArithmeticException.class, e.getClass());
         });
 
-        Assert.assertEquals(8, Anima.select().from(User.class).count());
+        Assert.assertEquals(8, select().from(User.class).count());
     }
 
     @Test
     public void testTx2() {
         Anima.atomic(() -> new User("google", 666).save());
-        Assert.assertEquals(9, Anima.select().from(User.class).count());
+        Assert.assertEquals(9, select().from(User.class).count());
+    }
+
+    @Test
+    public void testTx3() {
+        Anima.atomic(() -> {
+            select().from(User.class).count();
+            int a = 1 / 0;
+            System.out.println(a);
+            new User("apple2018", 666).save();
+        }).catchException(e -> {
+            Assert.assertEquals(ArithmeticException.class, e.getClass());
+        });
+
+        Assert.assertEquals(0, select().from(User.class).where(User::getUserName, "apple2018").count());
     }
 
     @Test

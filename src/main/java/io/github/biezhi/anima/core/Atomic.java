@@ -55,11 +55,12 @@ public class Atomic {
     public boolean isRollback() {
         return isRollback;
     }
-    
+
     public Atomic catchException(Consumer<Exception> consumer) {
         if (null != e) {
             consumer.accept(e);
         }
         return this;
     }
+
 }

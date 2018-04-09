@@ -190,17 +190,27 @@ public class AnimaQuery<T extends Model> {
         return this;
     }
 
+    public <S extends Model, R> AnimaQuery<T> like(TypeFunction<S, R> function, Object value) {
+        String columnName = AnimaUtils.getLambdaColumnName(function);
+        return this.like(columnName, value);
+    }
+
     public AnimaQuery<T> like(Object value) {
         conditionSQL.append(" LIKE ?");
         paramValues.add(value);
         return this;
     }
 
-    public AnimaQuery<T> between(String coulmn, Object a, Object b) {
-        conditionSQL.append(" AND ").append(coulmn).append(" BETWEEN ? and ?");
+    public AnimaQuery<T> between(String column, Object a, Object b) {
+        conditionSQL.append(" AND ").append(column).append(" BETWEEN ? and ?");
         paramValues.add(a);
         paramValues.add(b);
         return this;
+    }
+
+    public <S extends Model, R> AnimaQuery<T> between(TypeFunction<S, R> function, Object a, Object b) {
+        String columnName = AnimaUtils.getLambdaColumnName(function);
+        return this.between(columnName, a, b);
     }
 
     public AnimaQuery<T> between(Object a, Object b) {
@@ -216,6 +226,11 @@ public class AnimaQuery<T extends Model> {
         return this;
     }
 
+    public <S extends Model, R> AnimaQuery<T> gt(TypeFunction<S, R> function, Object value) {
+        String columnName = AnimaUtils.getLambdaColumnName(function);
+        return this.gt(columnName, value);
+    }
+
     public AnimaQuery<T> gt(Object value) {
         conditionSQL.append(" > ?");
         paramValues.add(value);
@@ -228,16 +243,31 @@ public class AnimaQuery<T extends Model> {
         return this;
     }
 
+    public <S extends Model, R> AnimaQuery<T> gte(TypeFunction<S, R> function, Object value) {
+        String columnName = AnimaUtils.getLambdaColumnName(function);
+        return this.gte(columnName, value);
+    }
+
     public AnimaQuery<T> lt(Object value) {
         conditionSQL.append(" < ?");
         paramValues.add(value);
         return this;
     }
 
+    public <S extends Model, R> AnimaQuery<T> lt(TypeFunction<S, R> function, Object value) {
+        String columnName = AnimaUtils.getLambdaColumnName(function);
+        return this.lt(columnName, value);
+    }
+
     public AnimaQuery<T> lte(Object value) {
         conditionSQL.append(" <= ?");
         paramValues.add(value);
         return this;
+    }
+
+    public <S extends Model, R> AnimaQuery<T> lte(TypeFunction<S, R> function, Object value) {
+        String columnName = AnimaUtils.getLambdaColumnName(function);
+        return this.lte(columnName, value);
     }
 
     public AnimaQuery<T> gte(String column, Object value) {
@@ -292,6 +322,16 @@ public class AnimaQuery<T extends Model> {
         }
         conditionSQL.append(")");
         return this;
+    }
+
+    public <S extends Model, R> AnimaQuery<T> in(TypeFunction<S, R> function, Object... values) {
+        String columnName = AnimaUtils.getLambdaColumnName(function);
+        return this.in(columnName, values);
+    }
+
+    public <S extends Model, R> AnimaQuery<T> in(TypeFunction<S, R> function, List<T> values) {
+        String columnName = AnimaUtils.getLambdaColumnName(function);
+        return this.in(columnName, values);
     }
 
     public AnimaQuery<T> order(String order) {
@@ -420,9 +460,13 @@ public class AnimaQuery<T extends Model> {
     }
 
     private <S> S queryOne(Class<S> type, String sql, Object[] params) {
-        try (Connection conn = getConn()) {
+        Connection conn = getConn();
+        try {
             return conn.createQuery(sql).withParams(params).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeAndFetchFirst(type);
         } finally {
+            if (null == connectionThreadLocal.get() && null != conn) {
+                conn.close();
+            }
             this.clean(null);
         }
     }
@@ -436,19 +480,19 @@ public class AnimaQuery<T extends Model> {
     }
 
     private <S> List<S> queryList(Class<S> type, String sql, Object[] params) {
-        try (Connection conn = getConn()) {
+        Connection conn = getConn();
+        try {
             return conn.createQuery(sql).withParams(params).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeAndFetch(type);
         } finally {
+            if (null == connectionThreadLocal.get() && null != conn) {
+                conn.close();
+            }
             this.clean(null);
         }
     }
 
     private <S> List<S> queryList(Class<S> type, String sql, List<Object> params) {
-        try (Connection conn = getConn()) {
-            return conn.createQuery(sql).withParams(params).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeAndFetch(type);
-        } finally {
-            this.clean(null);
-        }
+        return this.queryList(type, sql, params.toArray());
     }
 
     public int execute() {
@@ -467,17 +511,15 @@ public class AnimaQuery<T extends Model> {
         try {
             return conn.createQuery(sql).withParams(params).executeUpdate().getResult();
         } finally {
+            if (null == connectionThreadLocal.get() && null != conn) {
+                conn.close();
+            }
             this.clean(conn);
         }
     }
 
     public int execute(String sql, List<Object> params) {
-        Connection conn = getConn();
-        try {
-            return conn.createQuery(sql).withParams(params).executeUpdate().getResult();
-        } finally {
-            this.clean(conn);
-        }
+        return this.execute(sql, params.toArray());
     }
 
     public <S extends Model> ResultKey save(S model) {
@@ -487,6 +529,9 @@ public class AnimaQuery<T extends Model> {
         try {
             return new ResultKey(conn.createQuery(sql).withParams(columnValueList).executeUpdate().getKey());
         } finally {
+            if (null == connectionThreadLocal.get() && null != conn) {
+                conn.close();
+            }
             this.clean(conn);
         }
     }

@@ -32,7 +32,7 @@ supports multiple relational mappings, and is a database manipulation tool.
 **As Gradle**
 
 ```java
-compile 'io.github.biezhi:anima:0.0.8'
+compile 'io.github.biezhi:anima:0.1.0'
 ```
 
 **As Maven**
@@ -41,7 +41,7 @@ compile 'io.github.biezhi:anima:0.0.8'
 <dependency>
     <groupId>io.github.biezhi</groupId>
     <artifactId>anima</artifactId>
-    <version>0.0.8</version>
+    <version>0.1.0</version>
 </dependency>
 ```
 

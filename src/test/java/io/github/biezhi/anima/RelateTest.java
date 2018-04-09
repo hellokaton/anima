@@ -39,12 +39,12 @@ public class RelateTest extends BaseTest {
         OrderInfo orderInfo = select().from(OrderInfo.class).exclude(BelongsTo.class).byId(3);
         Assert.assertNotNull(orderInfo);
         Assert.assertNotNull(orderInfo.getAddress());
-        Assert.assertNull(orderInfo.getUser());
+        Assert.assertNotNull(orderInfo.getUser());
 
         orderInfo = select().from(OrderInfo.class).exclude(HasOne.class).byId(3);
         Assert.assertNotNull(orderInfo);
         Assert.assertNotNull(orderInfo.getUser());
-        Assert.assertNull(orderInfo.getAddress());
+        Assert.assertNotNull(orderInfo.getAddress());
 
     }
 
