@@ -47,6 +47,19 @@ public class OtherTest extends BaseTest {
     }
 
     @Test
+    public void testTx4() {
+        Integer res = Anima.atomic(() -> {
+            int a = 1 / 0;
+            System.out.println(a);
+            new User("apple2018", 666).save();
+        }).catchAndReturn(e -> {
+            Assert.assertEquals(ArithmeticException.class, e.getClass());
+            return 0;
+        });
+        Assert.assertEquals(Integer.valueOf(0), res);
+    }
+
+    @Test
     public void testExecute(){
         Anima.execute("drop table if exists hello_world");
         Anima.execute("create table hello_world(int integer not null)");

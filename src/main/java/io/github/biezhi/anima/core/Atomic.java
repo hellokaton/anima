@@ -17,7 +17,9 @@ package io.github.biezhi.anima.core;
 
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Atomic
@@ -61,6 +63,13 @@ public class Atomic {
             consumer.accept(e);
         }
         return this;
+    }
+
+    public <R> R catchAndReturn(Function<Exception, R> function) {
+        if (null != e) {
+            return function.apply(e);
+        }
+        return null;
     }
 
 }
