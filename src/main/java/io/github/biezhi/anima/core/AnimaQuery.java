@@ -423,16 +423,19 @@ public class AnimaQuery<T extends Model> {
         return stream().limit(limit).collect(Collectors.toList());
     }
 
+    public Page<T> page(String sql, int page, int limit) {
+        return this.page(sql, new PageRow(page, limit));
+    }
+
     public Page<T> page(int page, int limit) {
         return this.page(new PageRow(page, limit));
     }
 
-    public Page<T> page(PageRow pageRow) {
+    public Page<T> page(String sql, PageRow pageRow) {
         this.beforeCheck();
-        String sql      = this.buildSelectSQL(false);
-        String countSql = "SELECT COUNT(*) FROM (" + sql + ") tmp";
-
-        try (Connection conn = getConn()) {
+        String     countSql = "SELECT COUNT(*) FROM (" + sql + ") tmp";
+        Connection conn     = getConn();
+        try {
             long    count    = conn.createQuery(countSql).withParams(paramValues).executeAndFetchFirst(Long.class);
             String  pageSQL  = this.buildPageSQL(pageRow);
             List<T> list     = conn.createQuery(pageSQL).withParams(paramValues).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeAndFetch(modelClass);
@@ -440,8 +443,16 @@ public class AnimaQuery<T extends Model> {
             pageBean.setRows(list);
             return pageBean;
         } finally {
+            if (null == connectionThreadLocal.get() && null != conn) {
+                conn.close();
+            }
             this.clean(null);
         }
+    }
+
+    public Page<T> page(PageRow pageRow) {
+        String sql = this.buildSelectSQL(false);
+        return this.page(sql, pageRow);
     }
 
     public long count() {
