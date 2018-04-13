@@ -1,5 +1,6 @@
 package io.github.biezhi.anima;
 
+import io.github.biezhi.anima.enums.OrderBy;
 import io.github.biezhi.anima.model.User;
 import io.github.biezhi.anima.page.Page;
 import org.junit.Assert;
@@ -136,6 +137,8 @@ public class SelectTest extends BaseTest {
     @Test
     public void testOrderBy() {
         select().from(User.class).order("id desc").order("age asc").all();
+
+        select().from(User.class).order(User::getId, OrderBy.DESC).order(User::getAge, OrderBy.ASC).all();
     }
 
     @Test
