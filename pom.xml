@@ -6,7 +6,7 @@
 
     <groupId>io.github.biezhi</groupId>
     <artifactId>anima</artifactId>
-    <version>0.1.2</version>
+    <version>0.1.3</version>
 
     <name>anima</name>
     <url>https://biezhi.github.io/anima</url>
@@ -39,7 +39,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.16.18</version>
+            <version>1.16.20</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
