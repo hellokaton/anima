@@ -831,7 +831,6 @@ public class AnimaQuery<T extends Model> {
         this.paramValues.clear();
         this.excludedColumns.clear();
         this.updateColumns.clear();
-        this.relations.clear();
         if (null == connectionThreadLocal.get() && null != conn) {
             conn.close();
         }
