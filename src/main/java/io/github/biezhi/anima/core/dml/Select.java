@@ -40,7 +40,7 @@ public class Select {
     }
 
     public <T> ResultList<T> bySQL(Class<T> type, String sql, Object... params) {
-        return new AnimaQuery<>().bySQL(type, sql, params);
+        return new ResultList<>(type, sql, params);
     }
 
 }

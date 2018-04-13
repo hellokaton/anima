@@ -163,20 +163,36 @@ public class AnimaQuery<T extends Model> {
         return this;
     }
 
-    public AnimaQuery<T> not(String key, Object value) {
+    public AnimaQuery<T> notEq(String key, Object value) {
         conditionSQL.append(" AND ").append(key).append(" != ?");
         paramValues.add(value);
         return this;
     }
 
-    public AnimaQuery<T> not(Object value) {
+    public <S extends Model, R> AnimaQuery<T> notEq(TypeFunction<S, R> function, Object value) {
+        String columnName = AnimaUtils.getLambdaColumnName(function);
+        return this.notEq(columnName, value);
+    }
+
+    public AnimaQuery<T> notEq(Object value) {
         conditionSQL.append(" != ?");
         paramValues.add(value);
         return this;
     }
 
+    public AnimaQuery<T> notEmpty(String column) {
+        conditionSQL.append(" AND ").append(column).append(" != ''");
+        return this;
+    }
+
+    public <S extends Model, R> AnimaQuery<T> notEmpty(TypeFunction<S, R> function) {
+        String columnName = AnimaUtils.getLambdaColumnName(function);
+        return this.notEmpty(columnName);
+    }
+
     public AnimaQuery<T> notEmpty() {
-        return this.not("");
+        conditionSQL.append(" != ''");
+        return this;
     }
 
     public AnimaQuery<T> notNull(String key) {
@@ -373,11 +389,6 @@ public class AnimaQuery<T extends Model> {
         return this.all();
     }
 
-    public <S> ResultList<S> bySQL(Class<S> type, String sql, Object... params) {
-        List<S> list = this.queryList(type, sql, params);
-        return new ResultList<>(list);
-    }
-
     public T one() {
         this.beforeCheck();
         String sql   = this.buildSelectSQL(true);
@@ -423,22 +434,26 @@ public class AnimaQuery<T extends Model> {
         return stream().limit(limit).collect(Collectors.toList());
     }
 
-    public Page<T> page(String sql, int page, int limit) {
-        return this.page(sql, new PageRow(page, limit));
-    }
-
     public Page<T> page(int page, int limit) {
         return this.page(new PageRow(page, limit));
     }
 
     public Page<T> page(String sql, PageRow pageRow) {
+        return this.page(sql, paramValues, pageRow);
+    }
+
+    public Page<T> page(String sql, List<Object> paramValues, PageRow pageRow) {
+        return this.page(sql, paramValues.toArray(), pageRow);
+    }
+
+    public Page<T> page(String sql, Object[] params, PageRow pageRow) {
         this.beforeCheck();
         String     countSql = "SELECT COUNT(*) FROM (" + sql + ") tmp";
         Connection conn     = getConn();
         try {
-            long    count    = conn.createQuery(countSql).withParams(paramValues).executeAndFetchFirst(Long.class);
+            long    count    = conn.createQuery(countSql).withParams(params).executeAndFetchFirst(Long.class);
             String  pageSQL  = this.buildPageSQL(pageRow);
-            List<T> list     = conn.createQuery(pageSQL).withParams(paramValues).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeAndFetch(modelClass);
+            List<T> list     = conn.createQuery(pageSQL).withParams(params).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeAndFetch(modelClass);
             Page<T> pageBean = new Page<>(count, pageRow.getPageNum(), pageRow.getPageSize());
             pageBean.setRows(list);
             return pageBean;
@@ -470,7 +485,7 @@ public class AnimaQuery<T extends Model> {
         return this.set(AnimaUtils.getLambdaColumnName(function), value);
     }
 
-    private <S> S queryOne(Class<S> type, String sql, Object[] params) {
+    public <S> S queryOne(Class<S> type, String sql, Object[] params) {
         Connection conn = getConn();
         try {
             return conn.createQuery(sql).withParams(params).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeAndFetchFirst(type);
@@ -482,7 +497,7 @@ public class AnimaQuery<T extends Model> {
         }
     }
 
-    private <S> S queryOne(Class<S> type, String sql, List<Object> params) {
+    public <S> S queryOne(Class<S> type, String sql, List<Object> params) {
         if (Anima.me().isUseSQLLimit()) {
             sql += " LIMIT 1";
         }
@@ -490,7 +505,7 @@ public class AnimaQuery<T extends Model> {
         return AnimaUtils.isNotEmpty(list) ? list.get(0) : null;
     }
 
-    private <S> List<S> queryList(Class<S> type, String sql, Object[] params) {
+    public <S> List<S> queryList(Class<S> type, String sql, Object[] params) {
         Connection conn = getConn();
         try {
             return conn.createQuery(sql).withParams(params).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeAndFetch(type);
@@ -502,7 +517,7 @@ public class AnimaQuery<T extends Model> {
         }
     }
 
-    private <S> List<S> queryList(Class<S> type, String sql, List<Object> params) {
+    public <S> List<S> queryList(Class<S> type, String sql, List<Object> params) {
         return this.queryList(type, sql, params.toArray());
     }
 

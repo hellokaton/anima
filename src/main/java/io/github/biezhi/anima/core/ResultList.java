@@ -15,6 +15,10 @@
  */
 package io.github.biezhi.anima.core;
 
+import io.github.biezhi.anima.Model;
+import io.github.biezhi.anima.page.Page;
+import io.github.biezhi.anima.page.PageRow;
+
 import java.util.List;
 
 /**
@@ -27,22 +31,32 @@ import java.util.List;
  */
 public class ResultList<T> {
 
-    private List<T> list;
 
-    public ResultList(List<T> list) {
-        this.list = list;
+    private final Class<T> type;
+    private final String   sql;
+    private final Object[] params;
+
+    public ResultList(Class<T> type, String sql, Object[] params) {
+        this.type = type;
+        this.sql = sql;
+        this.params = params;
     }
 
     public T one() {
-        if (null == list || list.isEmpty()) {
-            return null;
-        }
-        return (T) list.get(0);
+        return new AnimaQuery<>().queryOne(type, sql, params);
     }
 
     public List<T> all() {
-        return list;
+        return new AnimaQuery<>().queryList(type, sql, params);
     }
 
+    public <S extends Model> Page<S> page(PageRow pageRow) {
+        Class<S> modelType = (Class<S>) type;
+        return new AnimaQuery<>(modelType).page(sql, params, pageRow);
+    }
+
+    public <S extends Model> Page<S> page(int page, int limit) {
+        return this.page(new PageRow(page, limit));
+    }
 
 }

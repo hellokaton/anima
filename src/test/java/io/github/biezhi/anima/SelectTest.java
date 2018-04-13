@@ -43,14 +43,16 @@ public class SelectTest extends BaseTest {
     public void testFindBySQL() {
         String name = select().bySQL(String.class, "select user_name from users limit 1").one();
         Assert.assertNotNull(name);
-    }
 
-    @Test
-    public void testFindAllBySQL() {
         List<String> names = select().bySQL(String.class, "select user_name from users limit ?", 3).all();
         Assert.assertNotNull(names);
         Assert.assertEquals(3, names.size());
+
+        Page<User> userPage = select().bySQL(User.class, "select * from users").page(1, 10);
+        Assert.assertNotNull(userPage);
+
     }
+
 
     @Test
     public void testAll() {
@@ -105,7 +107,23 @@ public class SelectTest extends BaseTest {
     public void testCondition() {
         select().from(User.class).gt("age", 15).like("user_name", "ja%").count();
 
-        select().from(User.class).where("id > ?", 1).not("age", 10).lte("age", 90).count();
+        select().from(User.class).where("id > ?", 1).notEq("age", 10).lte("age", 90).count();
+    }
+
+    @Test
+    public void testNotEmpty() {
+        select().from(User.class).where(User::getUserName).notEmpty().count();
+        select().from(User.class).notEmpty(User::getUserName).count();
+        select().from(User.class).where("user_name").notEmpty().count();
+        select().from(User.class).notEmpty("user_name").count();
+    }
+
+    @Test
+    public void testNotEquals() {
+        select().from(User.class).where(User::getUserName).notEq("biezhi").count();
+        select().from(User.class).notEq(User::getUserName, "biezhi").count();
+        select().from(User.class).where("user_name").notEq("biezhi").count();
+        select().from(User.class).notEq("user_name", "biezhi").count();
     }
 
     @Test
@@ -116,7 +134,7 @@ public class SelectTest extends BaseTest {
     }
 
     @Test
-    public void testOrderBy(){
+    public void testOrderBy() {
         select().from(User.class).order("id desc").order("age asc").all();
     }
 
