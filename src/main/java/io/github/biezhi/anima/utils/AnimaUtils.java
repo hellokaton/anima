@@ -107,7 +107,7 @@ public class AnimaUtils {
         Field[]       declaredFields = modelClass.getDeclaredFields();
         for (Field field : declaredFields) {
             String columnName = toColumnName(field.getName());
-            if (!excludedColumns.contains(columnName)) {
+            if (!isIgnore(field) && !excludedColumns.contains(columnName)) {
                 sql.append(columnName).append(',');
             }
         }

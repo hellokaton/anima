@@ -366,7 +366,9 @@ public class AnimaQuery<T extends Model> {
         this.where(primaryKeyColumn, id);
         String sql   = this.buildSelectSQL(false);
         T      model = this.queryOne(modelClass, sql, paramValues);
-        this.setRelate(Collections.singletonList(model));
+        if(null != model){
+            this.setRelate(Collections.singletonList(model));
+        }
         return model;
     }
 
@@ -379,7 +381,9 @@ public class AnimaQuery<T extends Model> {
         this.beforeCheck();
         String sql   = this.buildSelectSQL(true);
         T      model = this.queryOne(modelClass, sql, paramValues);
-        this.setRelate(Collections.singletonList(model));
+        if(null != model){
+            this.setRelate(Collections.singletonList(model));
+        }
         return model;
     }
 
@@ -773,10 +777,12 @@ public class AnimaQuery<T extends Model> {
                 .map(RelationParamBuilder::buildHasMany)
                 .forEach(relationParams -> {
                     for (T model : models) {
-                        Object fkValue = AnimaUtils.getPKFieldValue(model);
-                        Object fkVal = this.queryList(relationParams.getType(), relationParams.getRelateSQL(),
-                                new Object[]{fkValue});
-                        AnimaUtils.setFieldValue(relationParams.getFieldName(), model, fkVal);
+                        if(null != model){
+                            Object fkValue = AnimaUtils.getPKFieldValue(model);
+                            Object fkVal = this.queryList(relationParams.getType(), relationParams.getRelateSQL(),
+                                    new Object[]{fkValue});
+                            AnimaUtils.setFieldValue(relationParams.getFieldName(), model, fkVal);
+                        }
                     }
                 });
     }

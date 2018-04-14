@@ -166,6 +166,12 @@ public class SelectTest extends BaseTest {
     }
 
     @Test
+    public void testIgnoreAndExclude(){
+        User age = select().from(User.class).exclude("age").one();
+
+    }
+
+    @Test
     public void testStream() {
         List<String> names = select().from(User.class).parallel()
                 .filter(u -> u.getAge() > 10)
