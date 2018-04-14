@@ -98,6 +98,15 @@ public class SelectTest extends BaseTest {
     }
 
     @Test
+    public void testSelectOr() {
+        User user = select().from(User.class)
+                .where(User::getUserName, "jack")
+                .or("age > ?", 10).one();
+
+        Assert.assertNotNull(user);
+    }
+
+    @Test
     public void testLimit() {
         List<User> users = select().from(User.class).order("id desc").limit(5);
         Assert.assertNotNull(users);

@@ -322,22 +322,8 @@ public class AnimaQuery<T extends Model> {
         return this;
     }
 
-    public AnimaQuery<T> in(String key, List<T> args) {
-        if (null == args || args.isEmpty()) {
-            log.warn("Column: {}, query params is empty.");
-            return this;
-        }
-        conditionSQL.append(" AND ").append(key).append(" IN (");
-        for (int i = 0; i < args.size(); i++) {
-            if (i == args.size() - 1) {
-                conditionSQL.append("?");
-            } else {
-                conditionSQL.append("?, ");
-            }
-            paramValues.add(args.get(i));
-        }
-        conditionSQL.append(")");
-        return this;
+    public <S> AnimaQuery<T> in(String key, List<S> args) {
+        return this.in(key, args.toArray());
     }
 
     public <S extends Model, R> AnimaQuery<T> in(TypeFunction<S, R> function, Object... values) {
@@ -454,6 +440,8 @@ public class AnimaQuery<T extends Model> {
             long    count    = conn.createQuery(countSql).withParams(params).executeAndFetchFirst(Long.class);
             String  pageSQL  = this.buildPageSQL(pageRow);
             List<T> list     = conn.createQuery(pageSQL).withParams(params).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeAndFetch(modelClass);
+            this.setRelate(list);
+
             Page<T> pageBean = new Page<>(count, pageRow.getPageNum(), pageRow.getPageSize());
             pageBean.setRows(list);
             return pageBean;

@@ -76,19 +76,21 @@ public interface Dialect {
         if (null != sqlParams.getUpdateColumns() && !sqlParams.getUpdateColumns().isEmpty()) {
             sqlParams.getUpdateColumns().forEach((key, value) -> setSQL.append(key).append(" = ?, "));
         } else {
-            for (Field field : sqlParams.getModelClass().getDeclaredFields()) {
-                try {
-                    if (isIgnore(field)) {
-                        continue;
+            if (null != sqlParams.getModel()) {
+                for (Field field : sqlParams.getModelClass().getDeclaredFields()) {
+                    try {
+                        if (isIgnore(field)) {
+                            continue;
+                        }
+                        field.setAccessible(true);
+                        Object value = field.get(sqlParams.getModel());
+                        if (null == value) {
+                            continue;
+                        }
+                        setSQL.append(AnimaUtils.toColumnName(field.getName())).append(" = ?, ");
+                    } catch (IllegalArgumentException | IllegalAccessException e) {
+                        throw new AnimaException("illegal argument or Access:", e);
                     }
-                    field.setAccessible(true);
-                    Object value = field.get(sqlParams.getModel());
-                    if (null == value) {
-                        continue;
-                    }
-                    setSQL.append(AnimaUtils.toColumnName(field.getName())).append(" = ?, ");
-                } catch (IllegalArgumentException | IllegalAccessException e) {
-                    throw new AnimaException("illegal argument or Access:", e);
                 }
             }
         }
@@ -106,24 +108,26 @@ public interface Dialect {
         if (sqlParams.getConditionSQL().length() > 0) {
             sql.append(" WHERE ").append(sqlParams.getConditionSQL().substring(5));
         } else {
-            StringBuilder columnNames = new StringBuilder();
-            for (Field field : sqlParams.getModelClass().getDeclaredFields()) {
-                if (isIgnore(field)) {
-                    continue;
-                }
-                try {
-                    field.setAccessible(true);
-                    Object value = field.get(sqlParams.getModel());
-                    if (null == value) {
+            if (null != sqlParams.getModel()) {
+                StringBuilder columnNames = new StringBuilder();
+                for (Field field : sqlParams.getModelClass().getDeclaredFields()) {
+                    if (isIgnore(field)) {
                         continue;
                     }
-                    columnNames.append(AnimaUtils.toColumnName(field.getName())).append(" = ? and ");
-                } catch (IllegalArgumentException | IllegalAccessException e) {
-                    throw new AnimaException("illegal argument or Access:", e);
+                    try {
+                        field.setAccessible(true);
+                        Object value = field.get(sqlParams.getModel());
+                        if (null == value) {
+                            continue;
+                        }
+                        columnNames.append(AnimaUtils.toColumnName(field.getName())).append(" = ? and ");
+                    } catch (IllegalArgumentException | IllegalAccessException e) {
+                        throw new AnimaException("illegal argument or Access:", e);
+                    }
                 }
-            }
-            if (columnNames.length() > 0) {
-                sql.append(" WHERE ").append(columnNames.substring(0, columnNames.length() - 5));
+                if (columnNames.length() > 0) {
+                    sql.append(" WHERE ").append(columnNames.substring(0, columnNames.length() - 5));
+                }
             }
         }
         return sql.toString();
