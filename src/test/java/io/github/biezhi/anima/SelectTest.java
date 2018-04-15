@@ -6,6 +6,7 @@ import io.github.biezhi.anima.page.Page;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -81,6 +82,20 @@ public class SelectTest extends BaseTest {
     public void testIn() {
         List<User> users = select().from(User.class).in("id", 1, 2, 3).all();
         Assert.assertNotNull(users);
+        Assert.assertEquals(3, users.size());
+
+        users = select().from(User.class).in("id", Arrays.asList(1, 2, 3)).all();
+        Assert.assertNotNull(users);
+        Assert.assertEquals(3, users.size());
+
+        users = select().from(User.class).where(User::getId).in(1, 2, 3).all();
+        Assert.assertNotNull(users);
+        Assert.assertEquals(3, users.size());
+
+        users = select().from(User.class).where(User::getId).in(Arrays.asList(1, 2, 3)).all();
+        Assert.assertNotNull(users);
+        Assert.assertEquals(3, users.size());
+
     }
 
     @Test
@@ -166,7 +181,7 @@ public class SelectTest extends BaseTest {
     }
 
     @Test
-    public void testIgnoreAndExclude(){
+    public void testIgnoreAndExclude() {
         User age = select().from(User.class).exclude("age").one();
 
     }

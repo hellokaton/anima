@@ -322,6 +322,28 @@ public class AnimaQuery<T extends Model> {
         return this;
     }
 
+    public AnimaQuery<T> in(Object... args) {
+        if (null == args || args.length == 0) {
+            log.warn("Column: {}, query params is empty.");
+            return this;
+        }
+        conditionSQL.append(" IN (");
+        for (int i = 0; i < args.length; i++) {
+            if (i == args.length - 1) {
+                conditionSQL.append("?");
+            } else {
+                conditionSQL.append("?, ");
+            }
+            paramValues.add(args[i]);
+        }
+        conditionSQL.append(")");
+        return this;
+    }
+
+    public <S> AnimaQuery<T> in(List<S> list) {
+        return this.in(list.toArray());
+    }
+
     public <S> AnimaQuery<T> in(String key, List<S> args) {
         return this.in(key, args.toArray());
     }
@@ -366,7 +388,7 @@ public class AnimaQuery<T extends Model> {
         this.where(primaryKeyColumn, id);
         String sql   = this.buildSelectSQL(false);
         T      model = this.queryOne(modelClass, sql, paramValues);
-        if(null != model){
+        if (null != model) {
             this.setRelate(Collections.singletonList(model));
         }
         return model;
@@ -381,7 +403,7 @@ public class AnimaQuery<T extends Model> {
         this.beforeCheck();
         String sql   = this.buildSelectSQL(true);
         T      model = this.queryOne(modelClass, sql, paramValues);
-        if(null != model){
+        if (null != model) {
             this.setRelate(Collections.singletonList(model));
         }
         return model;
@@ -441,9 +463,9 @@ public class AnimaQuery<T extends Model> {
         String     countSql = "SELECT COUNT(*) FROM (" + sql + ") tmp";
         Connection conn     = getConn();
         try {
-            long    count    = conn.createQuery(countSql).withParams(params).executeAndFetchFirst(Long.class);
-            String  pageSQL  = this.buildPageSQL(pageRow);
-            List<T> list     = conn.createQuery(pageSQL).withParams(params).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeAndFetch(modelClass);
+            long    count   = conn.createQuery(countSql).withParams(params).executeAndFetchFirst(Long.class);
+            String  pageSQL = this.buildPageSQL(pageRow);
+            List<T> list    = conn.createQuery(pageSQL).withParams(params).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeAndFetch(modelClass);
             this.setRelate(list);
 
             Page<T> pageBean = new Page<>(count, pageRow.getPageNum(), pageRow.getPageSize());
@@ -777,7 +799,7 @@ public class AnimaQuery<T extends Model> {
                 .map(RelationParamBuilder::buildHasMany)
                 .forEach(relationParams -> {
                     for (T model : models) {
-                        if(null != model){
+                        if (null != model) {
                             Object fkValue = AnimaUtils.getPKFieldValue(model);
                             Object fkVal = this.queryList(relationParams.getType(), relationParams.getRelateSQL(),
                                     new Object[]{fkValue});
