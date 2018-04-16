@@ -1,6 +1,8 @@
 # Anima
 
-[![Anima](screenshot/cover.png)](https://github.com/biezhi/anima)
+<p align="center">
+    <a href="https://github.com/biezhi/anima/wiki"><img src="screenshot/cover.png" width="623"/></a>
+</p>
 
 `Anima` allows you to query database like `SQL` and `Stream`.
 a simple DSL syntax, supports multiple databases, integrates well with Java8, 
