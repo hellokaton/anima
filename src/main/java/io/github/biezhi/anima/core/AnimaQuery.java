@@ -1021,8 +1021,10 @@ public class AnimaQuery<T extends Model> {
     }
 
     public static void beginTransaction() {
-        Connection connection = AnimaQuery.getSql2o().beginTransaction();
-        connectionThreadLocal.set(connection);
+        if (null == connectionThreadLocal.get()) {
+            Connection connection = AnimaQuery.getSql2o().beginTransaction();
+            connectionThreadLocal.set(connection);
+        }
     }
 
     public static void endTransaction() {
