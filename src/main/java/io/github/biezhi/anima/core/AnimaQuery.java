@@ -956,6 +956,21 @@ public class AnimaQuery<T extends Model> {
      * @return AnimaQuery
      */
     public AnimaQuery<T> join(JoinParam joinParam) {
+        if (null == joinParam) {
+            throw new AnimaException("Join param not null");
+        }
+        if (null == joinParam.getJoinModel()) {
+            throw new AnimaException("Join param [model] not null");
+        }
+        if (AnimaUtils.isEmpty(joinParam.getFieldName())) {
+            throw new AnimaException("Join param [as] not empty");
+        }
+        if (AnimaUtils.isEmpty(joinParam.getOnLeft())) {
+            throw new AnimaException("Join param [onLeft] not empty");
+        }
+        if (AnimaUtils.isEmpty(joinParam.getOnRight())) {
+            throw new AnimaException("Join param [onRight] not empty");
+        }
         this.joinParams.add(joinParam);
         return this;
     }

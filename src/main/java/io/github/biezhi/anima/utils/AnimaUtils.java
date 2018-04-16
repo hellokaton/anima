@@ -45,6 +45,10 @@ public class AnimaUtils {
         return null != collection && !collection.isEmpty();
     }
 
+    public static boolean isEmpty(String value){
+        return null == value || value.isEmpty();
+    }
+
     /**
      * User -> user | prefix_user
      */

@@ -172,11 +172,10 @@ select().from(User.class).order(User::getId, OrderBy.DESC).order(User::getAge, O
 // SELECT * FROM users ORDER BY  id DESC, age ASC
 ```
 
-**RelationShip**
+**Join**
 
 ```java
 @Table(name = "order_info")
-@NoArgsConstructor
 @Data
 public class OrderInfo extends Model {
 
@@ -189,23 +188,45 @@ public class OrderInfo extends Model {
 
     private LocalDateTime createTime;
 
-    public OrderInfo(Integer uid, String productName) {
-        this.uid = uid;
-        this.productName = productName;
-        this.createTime = LocalDateTime.now();
-    }
-
-    @BelongsTo(fk = "uid")
+    @Ignore
     private User user;
     
-    @HasOne(fk = "order_id")
+    @Ignore
     private Address address;
 
 }
 ```
 
 ```java
-OrderInfo orderInfo = select().from(OrderInfo.class).order("id desc").one();
+// HasOne
+OrderInfo orderInfo = select().from(OrderInfo.class)
+        .join(
+            Joins.with(Address.class).as(OrderInfo::getAddress)
+                 .on(OrderInfo::getId, Address::getOrderId)
+        ).byId(3);
+
+orderInfo = select().from(OrderInfo.class)
+        .join(
+            Joins.with(Address.class).as(OrderInfo::getAddress)
+                 .on(OrderInfo::getId, Address::getOrderId)
+        )
+        .join(
+                Joins.with(User.class).as(OrderInfo::getUser)
+                        .on(OrderInfo::getUid, User::getId)
+        ).byId(3);
+
+// ManyToOne
+orderInfo = select().from(OrderInfo.class)
+        .join(
+            Joins.with(User.class).as(OrderInfo::getUser)
+                 .on(OrderInfo::getUid, User::getId)
+        ).byId(3);
+
+// OneToMany
+UserDto userDto = select().from(UserDto.class).join(
+            Joins.with(OrderInfo.class).as(UserDto::getOrders)
+                 .on(UserDto::getId, OrderInfo::getUid)
+        ).byId(1);
 ```
 
 ### Insert
