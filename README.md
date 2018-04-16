@@ -1,5 +1,7 @@
 # Anima
 
+![logo][screenshot/cover.png]
+
 `Anima` allows you to query database like `SQL` and `Stream`.
 a simple DSL syntax, supports multiple databases, integrates well with Java8, 
 supports multiple relational mappings, and is a database manipulation tool.
