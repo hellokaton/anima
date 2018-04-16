@@ -632,24 +632,61 @@ public class AnimaQuery<T extends Model> {
         return this;
     }
 
+    /**
+     * Set in params
+     *
+     * @param list in param values
+     * @param <S>
+     * @return AnimaQuery
+     */
     public <S> AnimaQuery<T> in(List<S> list) {
         return this.in(list.toArray());
     }
 
-    public <S> AnimaQuery<T> in(String key, List<S> args) {
-        return this.in(key, args.toArray());
+    /**
+     * generate "in" statement, simultaneous setting value
+     *
+     * @param column column name
+     * @param args   in param values
+     * @param <S>
+     * @return AnimaQuery
+     */
+    public <S> AnimaQuery<T> in(String column, List<S> args) {
+        return this.in(column, args.toArray());
     }
 
-    public <S extends Model, R> AnimaQuery<T> in(TypeFunction<S, R> function, Object... values) {
+    /**
+     * generate "in" statement with lambda, simultaneous setting value
+     *
+     * @param function column name with lambda
+     * @param values   in param values
+     * @param <R>
+     * @return AnimaQuery
+     */
+    public <R> AnimaQuery<T> in(TypeFunction<T, R> function, Object... values) {
         String columnName = AnimaUtils.getLambdaColumnName(function);
         return this.in(columnName, values);
     }
 
-    public <S extends Model, R> AnimaQuery<T> in(TypeFunction<S, R> function, List<T> values) {
+    /**
+     * generate "in" statement with lambda, simultaneous setting value
+     *
+     * @param function column name with lambda
+     * @param values   in param values
+     * @param <R>
+     * @return AnimaQuery
+     */
+    public <S, R> AnimaQuery<T> in(TypeFunction<T, R> function, List<S> values) {
         String columnName = AnimaUtils.getLambdaColumnName(function);
         return this.in(columnName, values);
     }
 
+    /**
+     * generate order by statement
+     *
+     * @param order like "id desc"
+     * @return AnimaQuery
+     */
     public AnimaQuery<T> order(String order) {
         if (this.orderBySQL.length() > 0) {
             this.orderBySQL.append(',');
@@ -658,6 +695,13 @@ public class AnimaQuery<T extends Model> {
         return this;
     }
 
+    /**
+     * generate order by statement
+     *
+     * @param columnName column name
+     * @param orderBy    order by @see OrderBy
+     * @return AnimaQuery
+     */
     public AnimaQuery<T> order(String columnName, OrderBy orderBy) {
         if (this.orderBySQL.length() > 0) {
             this.orderBySQL.append(',');
@@ -666,15 +710,25 @@ public class AnimaQuery<T extends Model> {
         return this;
     }
 
+    /**
+     * generate order by statement with lambda
+     *
+     * @param function column name with lambda
+     * @param orderBy  order by @see OrderBy
+     * @param <R>
+     * @return AnimaQuery
+     */
     public <R> AnimaQuery<T> order(TypeFunction<T, R> function, OrderBy orderBy) {
         String columnName = AnimaUtils.getLambdaColumnName(function);
         return order(columnName, orderBy);
     }
 
-    public T find(Class<T> returnType, String sql, Object[] params) {
-        return this.queryOne(returnType, sql, params);
-    }
-
+    /**
+     * query model by primary key
+     *
+     * @param id primary key value
+     * @return model instance
+     */
     public T byId(Object id) {
         this.beforeCheck();
         this.where(primaryKeyColumn, id);
@@ -686,11 +740,22 @@ public class AnimaQuery<T extends Model> {
         return model;
     }
 
+    /**
+     * query models by primary keys
+     *
+     * @param ids primary key values
+     * @return models
+     */
     public List<T> byIds(Object... ids) {
         this.in(this.primaryKeyColumn, ids);
         return this.all();
     }
 
+    /**
+     * query and find one model
+     *
+     * @return one model
+     */
     public T one() {
         this.beforeCheck();
         String sql   = this.buildSelectSQL(true);
@@ -701,6 +766,11 @@ public class AnimaQuery<T extends Model> {
         return model;
     }
 
+    /**
+     * query and find all model
+     *
+     * @return model list
+     */
     public List<T> all() {
         this.beforeCheck();
         String  sql    = this.buildSelectSQL(true);
@@ -709,6 +779,9 @@ public class AnimaQuery<T extends Model> {
         return models;
     }
 
+    /**
+     * @return models stream
+     */
     public Stream<T> stream() {
         List<T> all = all();
         if (null == all || all.isEmpty()) {
@@ -717,39 +790,97 @@ public class AnimaQuery<T extends Model> {
         return all.stream();
     }
 
+    /**
+     * Parallel processing of the model list.
+     *
+     * @return parallel stream
+     */
     public Stream<T> parallel() {
         return stream().parallel();
     }
 
+    /**
+     * Transform the results of the model.
+     *
+     * @param function transform lambda
+     * @param <R>
+     * @return Stream
+     */
     public <R> Stream<R> map(Function<T, R> function) {
         return stream().map(function);
     }
 
+    /**
+     * Filter the list of models that are found.
+     *
+     * @param predicate predicate lambda
+     * @return Stream
+     */
     public Stream<T> filter(Predicate<T> predicate) {
         return stream().filter(predicate);
     }
 
+    /**
+     * Take the data of the fixed number from the result.
+     *
+     * @param limit model size
+     * @return model list
+     */
     public List<T> limit(int limit) {
         if (Anima.me().isUseSQLLimit()) {
             isSQLLimit = true;
             paramValues.add(limit);
             return all();
         }
-        return stream().limit(limit).collect(Collectors.toList());
+        List<T> all = all();
+        if (all.size() > limit) {
+            return all.stream().limit(limit).collect(Collectors.toList());
+        }
+        return all;
     }
 
+    /**
+     * Paging query results
+     *
+     * @param page  page number
+     * @param limit number each page
+     * @return Page
+     */
     public Page<T> page(int page, int limit) {
         return this.page(new PageRow(page, limit));
     }
 
+    /**
+     * Paging query results by sql
+     *
+     * @param sql     sql statement
+     * @param pageRow page param
+     * @return Page
+     */
     public Page<T> page(String sql, PageRow pageRow) {
         return this.page(sql, paramValues, pageRow);
     }
 
+    /**
+     * Paging query results by sql
+     *
+     * @param sql         sql statement
+     * @param paramValues param values
+     * @param pageRow     page param
+     * @return Page
+     */
     public Page<T> page(String sql, List<Object> paramValues, PageRow pageRow) {
         return this.page(sql, paramValues.toArray(), pageRow);
     }
 
+    /**
+     * Paging query results by sql
+     *
+     * @param sql     sql statement
+     * @param params  param values
+     * @param pageRow page param
+     * @return Page
+     */
     public Page<T> page(String sql, Object[] params, PageRow pageRow) {
         this.beforeCheck();
         String     countSql = "SELECT COUNT(*) FROM (" + sql + ") tmp";
@@ -771,31 +902,73 @@ public class AnimaQuery<T extends Model> {
         }
     }
 
+    /**
+     * Paging query results
+     *
+     * @param pageRow page params
+     * @return Page
+     */
     public Page<T> page(PageRow pageRow) {
         String sql = this.buildSelectSQL(false);
         return this.page(sql, pageRow);
     }
 
+    /**
+     * Count the number of rows.
+     *
+     * @return models count
+     */
     public long count() {
         this.beforeCheck();
         String sql = this.buildCountSQL();
         return this.queryOne(Long.class, sql, paramValues);
     }
 
+    /**
+     * Update columns set value
+     *
+     * @param column column name
+     * @param value  column value
+     * @return AnimaQuery
+     */
     public AnimaQuery<T> set(String column, Object value) {
         updateColumns.put(column, value);
         return this;
     }
 
+    /**
+     * Update the model sets column.
+     *
+     * @param function column name with lambda
+     * @param value    column value
+     * @param <S>
+     * @param <R>
+     * @return
+     */
     public <S extends Model, R> AnimaQuery<T> set(TypeFunction<S, R> function, Object value) {
         return this.set(AnimaUtils.getLambdaColumnName(function), value);
     }
 
+    /**
+     * Add a cascading query.
+     *
+     * @param joinParam Join params
+     * @return AnimaQuery
+     */
     public AnimaQuery<T> join(JoinParam joinParam) {
         this.joinParams.add(joinParam);
         return this;
     }
 
+    /**
+     * Querying a model
+     *
+     * @param type   model type
+     * @param sql    sql statement
+     * @param params params
+     * @param <S>
+     * @return S
+     */
     public <S> S queryOne(Class<S> type, String sql, Object[] params) {
         Connection conn = getConn();
         try {
@@ -808,6 +981,15 @@ public class AnimaQuery<T extends Model> {
         }
     }
 
+    /**
+     * Querying a model
+     *
+     * @param type   model type
+     * @param sql    sql statement
+     * @param params params
+     * @param <S>
+     * @return S
+     */
     public <S> S queryOne(Class<S> type, String sql, List<Object> params) {
         if (Anima.me().isUseSQLLimit()) {
             sql += " LIMIT 1";
@@ -816,6 +998,15 @@ public class AnimaQuery<T extends Model> {
         return AnimaUtils.isNotEmpty(list) ? list.get(0) : null;
     }
 
+    /**
+     * Querying a list
+     *
+     * @param type   model type
+     * @param sql    sql statement
+     * @param params params
+     * @param <S>
+     * @return List<S>
+     */
     public <S> List<S> queryList(Class<S> type, String sql, Object[] params) {
         Connection conn = getConn();
         try {
@@ -828,10 +1019,24 @@ public class AnimaQuery<T extends Model> {
         }
     }
 
+    /**
+     * Querying a list
+     *
+     * @param type   model type
+     * @param sql    sql statement
+     * @param params params
+     * @param <S>
+     * @return List<S>
+     */
     public <S> List<S> queryList(Class<S> type, String sql, List<Object> params) {
         return this.queryList(type, sql, params.toArray());
     }
 
+    /**
+     * Execute sql statement
+     *
+     * @return affect the number of rows
+     */
     public int execute() {
         switch (dmlType) {
             case UPDATE:
@@ -843,6 +1048,13 @@ public class AnimaQuery<T extends Model> {
         }
     }
 
+    /**
+     * Execute sql statement
+     *
+     * @param sql    sql statement
+     * @param params params
+     * @return affect the number of rows
+     */
     public int execute(String sql, Object... params) {
         Connection conn = getConn();
         try {
@@ -855,10 +1067,24 @@ public class AnimaQuery<T extends Model> {
         }
     }
 
+    /**
+     * Execute sql statement
+     *
+     * @param sql    sql statement
+     * @param params params
+     * @return affect the number of rows
+     */
     public int execute(String sql, List<Object> params) {
         return this.execute(sql, params.toArray());
     }
 
+    /**
+     * Save a model
+     *
+     * @param model model instance
+     * @param <S>
+     * @return ResultKey
+     */
     public <S extends Model> ResultKey save(S model) {
         String       sql             = this.buildInsertSQL(model);
         List<Object> columnValueList = AnimaUtils.toColumnValues(model, true);
@@ -873,16 +1099,35 @@ public class AnimaQuery<T extends Model> {
         }
     }
 
+    /**
+     * Delete model
+     *
+     * @return affect the number of rows
+     */
     public int delete() {
         String sql = this.buildDeleteSQL(null);
         return this.execute(sql, paramValues);
     }
 
+    /**
+     * Delete model by primary key
+     *
+     * @param id  primary key value
+     * @param <S>
+     * @return affect the number of rows, normally it's 1.
+     */
     public <S extends Serializable> int deleteById(S id) {
         this.where(primaryKeyColumn, id);
         return this.delete();
     }
 
+    /**
+     * Delete model
+     *
+     * @param model model instance
+     * @param <S>
+     * @return affect the number of rows
+     */
     public <S extends Model> int deleteByModel(S model) {
         this.beforeCheck();
         String       sql             = this.buildDeleteSQL(model);
@@ -890,6 +1135,11 @@ public class AnimaQuery<T extends Model> {
         return this.execute(sql, columnValueList);
     }
 
+    /**
+     * Update operation
+     *
+     * @return affect the number of rows
+     */
     public int update() {
         this.beforeCheck();
         String       sql             = this.buildUpdateSQL(null, updateColumns);
@@ -899,11 +1149,25 @@ public class AnimaQuery<T extends Model> {
         return this.execute(sql, columnValueList);
     }
 
+    /**
+     * Update model by primary key
+     *
+     * @param id primary key value
+     * @return affect the number of rows, normally it's 1.
+     */
     public int updateById(Serializable id) {
         this.where(primaryKeyColumn, id);
         return this.update();
     }
 
+    /**
+     * Update model by primary key
+     *
+     * @param model model instance
+     * @param id    primary key value
+     * @param <S>
+     * @return affect the number of rows, normally it's 1.
+     */
     public <S extends Model> int updateById(S model, Serializable id) {
         this.where(primaryKeyColumn, id);
         String       sql             = this.buildUpdateSQL(model, null);
@@ -912,6 +1176,13 @@ public class AnimaQuery<T extends Model> {
         return this.execute(sql, columnValueList);
     }
 
+    /**
+     * Update a model
+     *
+     * @param model model instance
+     * @param <S>
+     * @return affect the number of rows
+     */
     public <S extends Model> int updateByModel(S model) {
         this.beforeCheck();
         String       sql             = this.buildUpdateSQL(model, null);
@@ -930,6 +1201,12 @@ public class AnimaQuery<T extends Model> {
         }
     }
 
+    /**
+     * Build a select statement.
+     *
+     * @param addOrderBy add the order by clause.
+     * @return select sql
+     */
     private String buildSelectSQL(boolean addOrderBy) {
         SQLParams sqlParams = SQLParams.builder()
                 .modelClass(this.modelClass)
@@ -947,6 +1224,11 @@ public class AnimaQuery<T extends Model> {
         return Anima.me().getDialect().select(sqlParams);
     }
 
+    /**
+     * Build a count statement.
+     *
+     * @return count sql
+     */
     private String buildCountSQL() {
         SQLParams sqlParams = SQLParams.builder()
                 .modelClass(this.modelClass)
@@ -957,6 +1239,12 @@ public class AnimaQuery<T extends Model> {
         return Anima.me().getDialect().count(sqlParams);
     }
 
+    /**
+     * Build a paging statement
+     *
+     * @param pageRow page param
+     * @return paging sql
+     */
     private String buildPageSQL(PageRow pageRow) {
         SQLParams sqlParams = SQLParams.builder()
                 .modelClass(this.modelClass)
@@ -971,6 +1259,13 @@ public class AnimaQuery<T extends Model> {
         return Anima.me().getDialect().paginate(sqlParams);
     }
 
+    /**
+     * Build a insert statement.
+     *
+     * @param model model instance
+     * @param <S>
+     * @return insert sql
+     */
     private <S extends Model> String buildInsertSQL(S model) {
         SQLParams sqlParams = SQLParams.builder()
                 .model(model)
@@ -982,6 +1277,14 @@ public class AnimaQuery<T extends Model> {
         return Anima.me().getDialect().insert(sqlParams);
     }
 
+    /**
+     * Build a update statement.
+     *
+     * @param model         model instance
+     * @param updateColumns update columns
+     * @param <S>
+     * @return update sql
+     */
     private <S extends Model> String buildUpdateSQL(S model, Map<String, Object> updateColumns) {
         SQLParams sqlParams = SQLParams.builder()
                 .model(model)
@@ -995,6 +1298,13 @@ public class AnimaQuery<T extends Model> {
         return Anima.me().getDialect().update(sqlParams);
     }
 
+    /**
+     * Build a delete statement.
+     *
+     * @param model model instance
+     * @param <S>
+     * @return delete sql
+     */
     private <S extends Model> String buildDeleteSQL(S model) {
         SQLParams sqlParams = SQLParams.builder()
                 .model(model)
@@ -1006,12 +1316,20 @@ public class AnimaQuery<T extends Model> {
         return Anima.me().getDialect().delete(sqlParams);
     }
 
+    /**
+     * pre check
+     */
     private void beforeCheck() {
         if (null == this.modelClass) {
             throw new AnimaException(ErrorCode.FROM_NOT_NULL);
         }
     }
 
+    /**
+     * Get a database connection.
+     *
+     * @return Connection
+     */
     private static Connection getConn() {
         Connection connection = connectionThreadLocal.get();
         if (null == connection) {
@@ -1020,6 +1338,9 @@ public class AnimaQuery<T extends Model> {
         return connection;
     }
 
+    /**
+     * Begin a transaction.
+     */
     public static void beginTransaction() {
         if (null == connectionThreadLocal.get()) {
             Connection connection = AnimaQuery.getSql2o().beginTransaction();
@@ -1027,6 +1348,9 @@ public class AnimaQuery<T extends Model> {
         }
     }
 
+    /**
+     * End a transaction.
+     */
     public static void endTransaction() {
         if (null != connectionThreadLocal.get()) {
             Connection connection = connectionThreadLocal.get();
@@ -1037,10 +1361,16 @@ public class AnimaQuery<T extends Model> {
         }
     }
 
+    /**
+     * Commit connection
+     */
     public static void commit() {
         connectionThreadLocal.get().commit();
     }
 
+    /**
+     * Roll back connection
+     */
     public static void rollback() {
         if (null != connectionThreadLocal.get()) {
             log.warn("Rollback connection.");
@@ -1056,6 +1386,11 @@ public class AnimaQuery<T extends Model> {
         return sql2o;
     }
 
+    /**
+     * Set models join fields
+     *
+     * @param models model list
+     */
     private void setJoin(List<T> models) {
         if (null == models || models.isEmpty() || joinParams.size() == 0) {
             return;
@@ -1063,6 +1398,11 @@ public class AnimaQuery<T extends Model> {
         models.stream().filter(Objects::nonNull).forEach(this::setJoin);
     }
 
+    /**
+     * Set model join fields
+     *
+     * @param model model instance
+     */
     private void setJoin(T model) {
         for (JoinParam joinParam : joinParams) {
             try {
@@ -1085,6 +1425,11 @@ public class AnimaQuery<T extends Model> {
         }
     }
 
+    /**
+     * Clear the battlefield after a database operation.
+     *
+     * @param conn sql2o connection
+     */
     private void clean(Connection conn) {
         this.selectColumns = null;
         this.isSQLLimit = false;

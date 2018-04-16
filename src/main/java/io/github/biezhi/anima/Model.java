@@ -17,7 +17,7 @@ public class Model {
     /**
      * The query object for the current model.
      */
-    private AnimaQuery<? extends Model> animaQuery = new AnimaQuery<>(this.getClass());
+    private AnimaQuery<? extends Model> query = new AnimaQuery<>(this.getClass());
 
     /**
      * Save model
@@ -25,7 +25,7 @@ public class Model {
      * @return ResultKey
      */
     public ResultKey save() {
-        return animaQuery.save(this);
+        return query.save(this);
     }
 
     /**
@@ -34,7 +34,7 @@ public class Model {
      * @return number of rows affected after execution
      */
     public int update() {
-        return animaQuery.updateByModel(this);
+        return query.updateByModel(this);
     }
 
     /**
@@ -53,7 +53,7 @@ public class Model {
      * @return number of rows affected after execution
      */
     public int delete() {
-        return animaQuery.deleteByModel(this);
+        return query.deleteByModel(this);
     }
 
     /**
@@ -64,7 +64,7 @@ public class Model {
      * @return AnimaQuery
      */
     public AnimaQuery<? extends Model> set(String column, Object value) {
-        return animaQuery.set(column, value);
+        return query.set(column, value);
     }
 
     /**
@@ -77,7 +77,7 @@ public class Model {
      * @return AnimaQuery
      */
     public <T extends Model, R> AnimaQuery<? extends Model> set(TypeFunction<T, R> function, Object value) {
-        return animaQuery.set(function, value);
+        return query.set(function, value);
     }
 
     /**
@@ -88,7 +88,7 @@ public class Model {
      * @return AnimaQuery
      */
     public AnimaQuery<? extends Model> where(String statement, Object value) {
-        return animaQuery.where(statement, value);
+        return query.where(statement, value);
     }
 
     /**
@@ -101,7 +101,7 @@ public class Model {
      * @return AnimaQuery
      */
     public <T extends Model, R> AnimaQuery<? extends Model> where(TypeFunction<T, R> function, Object value) {
-        return animaQuery.where(function, value);
+        return query.where(function, value);
     }
 
 }
