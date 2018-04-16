@@ -1,17 +1,12 @@
 package io.github.biezhi.anima.core;
 
 import io.github.biezhi.anima.Anima;
-import io.github.biezhi.anima.Model;
-import io.github.biezhi.anima.annotation.BelongsTo;
-import io.github.biezhi.anima.annotation.HasMany;
-import io.github.biezhi.anima.annotation.HasOne;
 import io.github.biezhi.anima.annotation.Table;
 import io.github.biezhi.anima.exception.AnimaException;
 import io.github.biezhi.anima.utils.AnimaUtils;
 
 import java.lang.invoke.SerializedLambda;
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,38 +28,6 @@ public final class AnimaCache {
     static final Map<SerializedLambda, String> CACHE_LAMBDA_NAME = new HashMap<>(8);
     static final Map<String, Field> CACHE_MODEL_FIELD = new HashMap<>(8);
 
-    public static boolean hasBelongsTo(Class<? extends Model> modelClass) {
-        Boolean has = CACHE_HAS_BELONGS_TO.get(modelClass);
-        if (null != has) {
-            return has;
-        }
-        has = Arrays.stream(modelClass.getDeclaredFields())
-                .anyMatch(field -> null != field.getAnnotation(BelongsTo.class));
-        CACHE_HAS_BELONGS_TO.put(modelClass, has);
-        return has;
-    }
-
-    public static boolean hasMany(Class<? extends Model> modelClass) {
-        Boolean has = CACHE_HAS_MANY.get(modelClass);
-        if (null != has) {
-            return has;
-        }
-        has = Arrays.stream(modelClass.getDeclaredFields())
-                .anyMatch(field -> null != field.getAnnotation(HasMany.class));
-        CACHE_HAS_BELONGS_TO.put(modelClass, has);
-        return has;
-    }
-
-    public static boolean hasOne(Class<? extends Model> modelClass) {
-        Boolean has = CACHE_HAS_ONE.get(modelClass);
-        if (null != has) {
-            return has;
-        }
-        has = Arrays.stream(modelClass.getDeclaredFields())
-                .anyMatch(field -> null != field.getAnnotation(HasOne.class));
-        CACHE_HAS_BELONGS_TO.put(modelClass, has);
-        return has;
-    }
 
     public static String getTableName(Class<?> modelClass) {
         String tableName = CACHE_TABLE_NAME.get(modelClass);

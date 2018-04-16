@@ -120,9 +120,6 @@ public class AnimaUtils {
     public static boolean isIgnore(Field field) {
         if ("serialVersionUID".equals(field.getName())) return true;
         if (null != field.getAnnotation(Ignore.class)) return true;
-        if (null != field.getAnnotation(BelongsTo.class)) return true;
-        if (null != field.getAnnotation(HasMany.class)) return true;
-        if (null != field.getAnnotation(HasOne.class)) return true;
         return false;
     }
 

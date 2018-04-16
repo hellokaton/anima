@@ -17,11 +17,7 @@ package io.github.biezhi.anima.core;
 
 import io.github.biezhi.anima.Anima;
 import io.github.biezhi.anima.Model;
-import io.github.biezhi.anima.annotation.BelongsTo;
-import io.github.biezhi.anima.annotation.HasMany;
-import io.github.biezhi.anima.annotation.HasOne;
 import io.github.biezhi.anima.core.functions.TypeFunction;
-import io.github.biezhi.anima.core.relation.RelationParamBuilder;
 import io.github.biezhi.anima.enums.DMLType;
 import io.github.biezhi.anima.enums.ErrorCode;
 import io.github.biezhi.anima.enums.OrderBy;
@@ -35,7 +31,7 @@ import org.sql2o.Connection;
 import org.sql2o.Sql2o;
 
 import java.io.Serializable;
-import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -51,24 +47,71 @@ import java.util.stream.Stream;
 @NoArgsConstructor
 public class AnimaQuery<T extends Model> {
 
+    /**
+     * Java Model, a table of corresponding databases.
+     */
     private Class<T> modelClass;
 
+    /**
+     * The currently connected ThreadLocal, which stores the connection objects for SQL2O.
+     */
     private static ThreadLocal<Connection> connectionThreadLocal = new ThreadLocal<>();
 
-    private StringBuilder                    conditionSQL    = new StringBuilder();
-    private StringBuilder                    orderBySQL      = new StringBuilder();
-    private List<String>                     excludedColumns = new ArrayList<>(8);
-    private List<Object>                     paramValues     = new ArrayList<>(8);
-    private Map<String, Object>              updateColumns   = new LinkedHashMap<>(8);
-    private Set<Class<? extends Annotation>> relations       = new HashSet<>();
+    /**
+     * Storage condition clause.
+     */
+    private StringBuilder conditionSQL = new StringBuilder();
 
+    /**
+     * Storage order by clause.
+     */
+    private StringBuilder orderBySQL = new StringBuilder();
+
+    /**
+     * Store the column names to be excluded.
+     */
+    private List<String> excludedColumns = new ArrayList<>(8);
+
+    /**
+     * Storage parameter list
+     */
+    private List<Object> paramValues = new ArrayList<>(8);
+
+    /**
+     * A column that stores updates.
+     */
+    private Map<String, Object> updateColumns = new LinkedHashMap<>(8);
+
+    /**
+     * Do you use SQL for limit operations and use "limit ?" if enabled.
+     * The method of querying data is opened by default, and partial database does not support this operation.
+     */
     private boolean isSQLLimit;
 
+    /**
+     * Specify a few columns, such as “uid, name, age”
+     */
     private String selectColumns;
 
-    private String  primaryKeyColumn;
-    private String  tableName;
+    /**
+     * Primary key column name
+     */
+    private String primaryKeyColumn;
+
+    /**
+     * Model table name
+     */
+    private String tableName;
+
+    /**
+     * @see DMLType
+     */
     private DMLType dmlType;
+
+    /**
+     * Join model params
+     */
+    private List<JoinParam> joinParams = new ArrayList<>();
 
     public AnimaQuery(DMLType dmlType) {
         this.dmlType = dmlType;
@@ -85,16 +128,23 @@ public class AnimaQuery<T extends Model> {
         return this;
     }
 
+    /**
+     * Excluded columns
+     *
+     * @param columnNames table column name
+     * @return AnimaQuery
+     */
     public AnimaQuery<T> exclude(String... columnNames) {
         Collections.addAll(excludedColumns, columnNames);
         return this;
     }
 
-    public AnimaQuery<T> exclude(Class<? extends Annotation> relation) {
-        this.relations.add(relation);
-        return this;
-    }
-
+    /**
+     * Sets the query to specify the column.
+     *
+     * @param columns table column name
+     * @return AnimaQuery
+     */
     public AnimaQuery<T> select(String columns) {
         if (null != this.selectColumns) {
             throw new AnimaException("Select method can only be called once.");
@@ -103,30 +153,24 @@ public class AnimaQuery<T extends Model> {
         return this;
     }
 
+    /**
+     * where condition
+     *
+     * @param statement like "age > ?" "name = ?"
+     * @return AnimaQuery
+     */
     public AnimaQuery<T> where(String statement) {
         conditionSQL.append(" AND ").append(statement);
         return this;
     }
 
-    public <S extends Model, R> AnimaQuery<T> where(TypeFunction<S, R> function) {
-        String columnName = AnimaUtils.getLambdaColumnName(function);
-        conditionSQL.append(" AND ").append(columnName);
-        return this;
-    }
-
-    public <S extends Model, R> AnimaQuery<T> where(TypeFunction<S, R> function, Object value) {
-        String columnName = AnimaUtils.getLambdaColumnName(function);
-        conditionSQL.append(" AND ").append(columnName).append(" = ?");
-        paramValues.add(value);
-        return this;
-    }
-
-    public AnimaQuery<T> eq(Object value) {
-        conditionSQL.append(" = ?");
-        paramValues.add(value);
-        return this;
-    }
-
+    /**
+     * where condition, simultaneous setting value
+     *
+     * @param statement like "age > ?" "name = ?"
+     * @param value     column name
+     * @return AnimaQuery
+     */
     public AnimaQuery<T> where(String statement, Object value) {
         conditionSQL.append(" AND ").append(statement);
         if (!statement.contains("?")) {
@@ -136,23 +180,98 @@ public class AnimaQuery<T extends Model> {
         return this;
     }
 
+    /**
+     * Set the column name using lambda
+     *
+     * @param function lambda expressions, use the Model::getXXX
+     * @param <R>
+     * @return AnimaQuery
+     */
+    public <R> AnimaQuery<T> where(TypeFunction<T, R> function) {
+        String columnName = AnimaUtils.getLambdaColumnName(function);
+        conditionSQL.append(" AND ").append(columnName);
+        return this;
+    }
+
+    /**
+     * Set the column name using lambda, at the same time setting the value, the SQL generated is "column = ?"
+     *
+     * @param function lambda expressions, use the Model::getXXX
+     * @param value    column value
+     * @param <S>
+     * @param <R>
+     * @return AnimaQuery
+     */
+    public <S extends Model, R> AnimaQuery<T> where(TypeFunction<S, R> function, Object value) {
+        String columnName = AnimaUtils.getLambdaColumnName(function);
+        conditionSQL.append(" AND ").append(columnName).append(" = ?");
+        paramValues.add(value);
+        return this;
+    }
+
+    /**
+     * Equals statement
+     *
+     * @param value column value
+     * @return AnimaQuery
+     */
+    public AnimaQuery<T> eq(Object value) {
+        conditionSQL.append(" = ?");
+        paramValues.add(value);
+        return this;
+    }
+
+    /**
+     * generate "IS NOT NULL" statement
+     *
+     * @return AnimaQuery
+     */
     public AnimaQuery<T> notNull() {
         conditionSQL.append(" IS NOT NULL");
         return this;
     }
 
+    /**
+     * generate AND statement, simultaneous setting value
+     *
+     * @param statement condition clause
+     * @param value     column value
+     * @return
+     */
     public AnimaQuery<T> and(String statement, Object value) {
         return this.where(statement, value);
     }
 
+    /**
+     * generate AND statement with lambda
+     *
+     * @param function column name with lambda
+     * @param <R>
+     * @return AnimaQuery
+     */
     public <R> AnimaQuery<T> and(TypeFunction<T, R> function) {
         return this.where(function);
     }
 
+    /**
+     * generate AND statement with lambda, simultaneous setting value
+     *
+     * @param function column name with lambda
+     * @param value    column value
+     * @param <R>
+     * @return AnimaQuery
+     */
     public <R> AnimaQuery<T> and(TypeFunction<T, R> function, Object value) {
         return this.where(function, value);
     }
 
+    /**
+     * generate OR statement, simultaneous setting value
+     *
+     * @param statement like "name = ?" "age > ?"
+     * @param value     column value
+     * @return AnimaQuery
+     */
     public AnimaQuery<T> or(String statement, Object value) {
         conditionSQL.append(" OR (").append(statement);
         if (!statement.contains("?")) {
@@ -163,72 +282,162 @@ public class AnimaQuery<T extends Model> {
         return this;
     }
 
-    public AnimaQuery<T> notEq(String key, Object value) {
-        conditionSQL.append(" AND ").append(key).append(" != ?");
+    /**
+     * generate "!=" statement, simultaneous setting value
+     *
+     * @param columnName column name [sql]
+     * @param value      column value
+     * @return AnimaQuery
+     */
+    public AnimaQuery<T> notEq(String columnName, Object value) {
+        conditionSQL.append(" AND ").append(columnName).append(" != ?");
         paramValues.add(value);
         return this;
     }
 
-    public <S extends Model, R> AnimaQuery<T> notEq(TypeFunction<S, R> function, Object value) {
+    /**
+     * generate "!=" statement with lambda, simultaneous setting value
+     *
+     * @param function column name with lambda
+     * @param value    column value
+     * @param <R>
+     * @return AnimaQuery
+     */
+    public <R> AnimaQuery<T> notEq(TypeFunction<T, R> function, Object value) {
         String columnName = AnimaUtils.getLambdaColumnName(function);
         return this.notEq(columnName, value);
     }
 
+    /**
+     * generate "!=" statement, simultaneous setting value
+     *
+     * @param value column value
+     * @return AnimaQuery
+     */
     public AnimaQuery<T> notEq(Object value) {
         conditionSQL.append(" != ?");
         paramValues.add(value);
         return this;
     }
 
-    public AnimaQuery<T> notEmpty(String column) {
-        conditionSQL.append(" AND ").append(column).append(" != ''");
+    /**
+     * generate "!= ''" statement
+     *
+     * @param columnName column name
+     * @return AnimaQuery
+     */
+    public AnimaQuery<T> notEmpty(String columnName) {
+        conditionSQL.append(" AND ").append(columnName).append(" != ''");
         return this;
     }
 
-    public <S extends Model, R> AnimaQuery<T> notEmpty(TypeFunction<S, R> function) {
+    /**
+     * generate "!= ''" statement with lambda
+     *
+     * @param function column name with lambda
+     * @param <R>
+     * @return AnimaQuery
+     */
+    public <R> AnimaQuery<T> notEmpty(TypeFunction<T, R> function) {
         String columnName = AnimaUtils.getLambdaColumnName(function);
         return this.notEmpty(columnName);
     }
 
+    /**
+     * generate "!= ''" statement
+     *
+     * @return AnimaQuery
+     */
     public AnimaQuery<T> notEmpty() {
         conditionSQL.append(" != ''");
         return this;
     }
 
-    public AnimaQuery<T> notNull(String key) {
-        conditionSQL.append(" AND ").append(key).append(" IS NOT NULL");
+    /**
+     * generate "IS NOT NULL" statement
+     *
+     * @param columnName column name
+     * @return
+     */
+    public AnimaQuery<T> notNull(String columnName) {
+        conditionSQL.append(" AND ").append(columnName).append(" IS NOT NULL");
         return this;
     }
 
-    public AnimaQuery<T> like(String key, Object value) {
-        conditionSQL.append(" AND ").append(key).append(" LIKE ?");
+    /**
+     * generate like statement, simultaneous setting value
+     *
+     * @param columnName column name
+     * @param value      column value
+     * @return AnimaQuery
+     */
+    public AnimaQuery<T> like(String columnName, Object value) {
+        conditionSQL.append(" AND ").append(columnName).append(" LIKE ?");
         paramValues.add(value);
         return this;
     }
 
-    public <S extends Model, R> AnimaQuery<T> like(TypeFunction<S, R> function, Object value) {
+    /**
+     * generate like statement with lambda, simultaneous setting value
+     *
+     * @param function column name with lambda
+     * @param value    column value
+     * @param <R>
+     * @return AnimaQuery
+     */
+    public <R> AnimaQuery<T> like(TypeFunction<T, R> function, Object value) {
         String columnName = AnimaUtils.getLambdaColumnName(function);
         return this.like(columnName, value);
     }
 
+    /**
+     * generate like statement, simultaneous setting value
+     *
+     * @param value column value
+     * @return AnimaQuery
+     */
     public AnimaQuery<T> like(Object value) {
         conditionSQL.append(" LIKE ?");
         paramValues.add(value);
         return this;
     }
 
-    public AnimaQuery<T> between(String column, Object a, Object b) {
-        conditionSQL.append(" AND ").append(column).append(" BETWEEN ? and ?");
+    /**
+     * generate between statement, simultaneous setting value
+     *
+     * @param columnName column name
+     * @param a          first range value
+     * @param b          second range value
+     * @return AnimaQuery
+     */
+    public AnimaQuery<T> between(String columnName, Object a, Object b) {
+        conditionSQL.append(" AND ").append(columnName).append(" BETWEEN ? and ?");
         paramValues.add(a);
         paramValues.add(b);
         return this;
     }
 
-    public <S extends Model, R> AnimaQuery<T> between(TypeFunction<S, R> function, Object a, Object b) {
+    /**
+     * generate between statement with lambda, simultaneous setting value
+     *
+     * @param function column name with lambda
+     * @param a        first range value
+     * @param b        second range value
+     * @param <R>
+     * @return AnimaQuery
+     */
+    public <R> AnimaQuery<T> between(TypeFunction<T, R> function, Object a, Object b) {
         String columnName = AnimaUtils.getLambdaColumnName(function);
         return this.between(columnName, a, b);
     }
 
+    /**
+     * generate between values
+     *
+     * @param a first range value
+     * @param b second range value
+     * @return AnimaQuery
+     */
     public AnimaQuery<T> between(Object a, Object b) {
         conditionSQL.append(" BETWEEN ? and ?");
         paramValues.add(a);
@@ -236,106 +445,189 @@ public class AnimaQuery<T extends Model> {
         return this;
     }
 
-    public AnimaQuery<T> gt(String column, Object value) {
-        conditionSQL.append(" AND ").append(column).append(" > ?");
+    /**
+     * generate ">" statement, simultaneous setting value
+     *
+     * @param columnName table column name [sql]
+     * @param value      column value
+     * @return AnimaQuery
+     */
+    public AnimaQuery<T> gt(String columnName, Object value) {
+        conditionSQL.append(" AND ").append(columnName).append(" > ?");
         paramValues.add(value);
         return this;
     }
 
-    public <S extends Model, R> AnimaQuery<T> gt(TypeFunction<S, R> function, Object value) {
+    /**
+     * generate ">" statement with lambda, simultaneous setting value
+     *
+     * @param function column name with lambda
+     * @param value    column value
+     * @param <R>
+     * @return AnimaQuery
+     */
+    public <R> AnimaQuery<T> gt(TypeFunction<T, R> function, Object value) {
         String columnName = AnimaUtils.getLambdaColumnName(function);
         return this.gt(columnName, value);
     }
 
+    /**
+     * generate ">" statement value
+     *
+     * @param value column value
+     * @return AnimaQuery
+     */
     public AnimaQuery<T> gt(Object value) {
         conditionSQL.append(" > ?");
         paramValues.add(value);
         return this;
     }
 
+    /**
+     * generate ">=" statement value
+     *
+     * @param value column value
+     * @return AnimaQuery
+     */
     public AnimaQuery<T> gte(Object value) {
         conditionSQL.append(" >= ?");
         paramValues.add(value);
         return this;
     }
 
+    /**
+     * generate ">=" statement with lambda, simultaneous setting value
+     *
+     * @param function column name with lambda
+     * @param value    column value
+     * @param <R>
+     * @return AnimaQuery
+     */
     public <S extends Model, R> AnimaQuery<T> gte(TypeFunction<S, R> function, Object value) {
         String columnName = AnimaUtils.getLambdaColumnName(function);
         return this.gte(columnName, value);
     }
 
+    /**
+     * generate "<" statement value
+     *
+     * @param value column value
+     * @return AnimaQuery
+     */
     public AnimaQuery<T> lt(Object value) {
         conditionSQL.append(" < ?");
         paramValues.add(value);
         return this;
     }
 
+    /**
+     * generate "<" statement with lambda, simultaneous setting value
+     *
+     * @param function column name with lambda
+     * @param value    column value
+     * @param <R>
+     * @return AnimaQuery
+     */
     public <S extends Model, R> AnimaQuery<T> lt(TypeFunction<S, R> function, Object value) {
         String columnName = AnimaUtils.getLambdaColumnName(function);
         return this.lt(columnName, value);
     }
 
+    /**
+     * generate "<=" statement value
+     *
+     * @param value column value
+     * @return AnimaQuery
+     */
     public AnimaQuery<T> lte(Object value) {
         conditionSQL.append(" <= ?");
         paramValues.add(value);
         return this;
     }
 
+    /**
+     * generate "<=" statement with lambda, simultaneous setting value
+     *
+     * @param function column name with lambda
+     * @param value    column value
+     * @param <R>
+     * @return AnimaQuery
+     */
     public <S extends Model, R> AnimaQuery<T> lte(TypeFunction<S, R> function, Object value) {
         String columnName = AnimaUtils.getLambdaColumnName(function);
         return this.lte(columnName, value);
     }
 
+    /**
+     * generate ">=" statement, simultaneous setting value
+     *
+     * @param column table column name [sql]
+     * @param value  column value
+     * @return AnimaQuery
+     */
     public AnimaQuery<T> gte(String column, Object value) {
         conditionSQL.append(" AND ").append(column).append(" >= ?");
         paramValues.add(value);
         return this;
     }
 
+    /**
+     * generate "<" statement, simultaneous setting value
+     *
+     * @param column table column name [sql]
+     * @param value  column value
+     * @return AnimaQuery
+     */
     public AnimaQuery<T> lt(String column, Object value) {
         conditionSQL.append(" AND ").append(column).append(" < ?");
         paramValues.add(value);
         return this;
     }
 
+    /**
+     * generate "<=" statement, simultaneous setting value
+     *
+     * @param column table column name [sql]
+     * @param value  column value
+     * @return AnimaQuery
+     */
     public AnimaQuery<T> lte(String column, Object value) {
         conditionSQL.append(" AND ").append(column).append(" <= ?");
         paramValues.add(value);
         return this;
     }
 
+    /**
+     * generate "in" statement, simultaneous setting value
+     *
+     * @param column table column name [sql]
+     * @param args   column value
+     * @return AnimaQuery
+     */
     public AnimaQuery<T> in(String column, Object... args) {
         if (null == args || args.length == 0) {
             log.warn("Column: {}, query params is empty.");
             return this;
         }
         conditionSQL.append(" AND ").append(column).append(" IN (");
-        for (int i = 0; i < args.length; i++) {
-            if (i == args.length - 1) {
-                conditionSQL.append("?");
-            } else {
-                conditionSQL.append("?, ");
-            }
-            paramValues.add(args[i]);
-        }
+        this.setArguments(args);
         conditionSQL.append(")");
         return this;
     }
 
+    /**
+     * generate "in" statement value
+     *
+     * @param args column value
+     * @return AnimaQuery
+     */
     public AnimaQuery<T> in(Object... args) {
         if (null == args || args.length == 0) {
             log.warn("Column: {}, query params is empty.");
             return this;
         }
         conditionSQL.append(" IN (");
-        for (int i = 0; i < args.length; i++) {
-            if (i == args.length - 1) {
-                conditionSQL.append("?");
-            } else {
-                conditionSQL.append("?, ");
-            }
-            paramValues.add(args[i]);
-        }
+        this.setArguments(args);
         conditionSQL.append(")");
         return this;
     }
@@ -389,7 +681,7 @@ public class AnimaQuery<T extends Model> {
         String sql   = this.buildSelectSQL(false);
         T      model = this.queryOne(modelClass, sql, paramValues);
         if (null != model) {
-            this.setRelate(Collections.singletonList(model));
+            this.setJoin(Collections.singletonList(model));
         }
         return model;
     }
@@ -403,8 +695,8 @@ public class AnimaQuery<T extends Model> {
         this.beforeCheck();
         String sql   = this.buildSelectSQL(true);
         T      model = this.queryOne(modelClass, sql, paramValues);
-        if (null != model) {
-            this.setRelate(Collections.singletonList(model));
+        if (null != model && null != joinParams) {
+            this.setJoin(Collections.singletonList(model));
         }
         return model;
     }
@@ -413,7 +705,7 @@ public class AnimaQuery<T extends Model> {
         this.beforeCheck();
         String  sql    = this.buildSelectSQL(true);
         List<T> models = this.queryList(modelClass, sql, paramValues);
-        this.setRelate(models);
+        this.setJoin(models);
         return models;
     }
 
@@ -466,7 +758,7 @@ public class AnimaQuery<T extends Model> {
             long    count   = conn.createQuery(countSql).withParams(params).executeAndFetchFirst(Long.class);
             String  pageSQL = this.buildPageSQL(pageRow);
             List<T> list    = conn.createQuery(pageSQL).withParams(params).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeAndFetch(modelClass);
-            this.setRelate(list);
+            this.setJoin(list);
 
             Page<T> pageBean = new Page<>(count, pageRow.getPageNum(), pageRow.getPageSize());
             pageBean.setRows(list);
@@ -497,6 +789,11 @@ public class AnimaQuery<T extends Model> {
 
     public <S extends Model, R> AnimaQuery<T> set(TypeFunction<S, R> function, Object value) {
         return this.set(AnimaUtils.getLambdaColumnName(function), value);
+    }
+
+    public AnimaQuery<T> join(JoinParam joinParam) {
+        this.joinParams.add(joinParam);
+        return this;
     }
 
     public <S> S queryOne(Class<S> type, String sql, Object[] params) {
@@ -620,6 +917,17 @@ public class AnimaQuery<T extends Model> {
         String       sql             = this.buildUpdateSQL(model, null);
         List<Object> columnValueList = AnimaUtils.toColumnValues(model, false);
         return this.execute(sql, columnValueList);
+    }
+
+    private void setArguments(Object[] args) {
+        for (int i = 0; i < args.length; i++) {
+            if (i == args.length - 1) {
+                conditionSQL.append("?");
+            } else {
+                conditionSQL.append("?, ");
+            }
+            paramValues.add(args[i]);
+        }
     }
 
     private String buildSelectSQL(boolean addOrderBy) {
@@ -746,97 +1054,33 @@ public class AnimaQuery<T extends Model> {
         return sql2o;
     }
 
-    private void setRelate(List<T> models) {
-        if (null == models || models.isEmpty()) {
+    private void setJoin(List<T> models) {
+        if (null == models || models.isEmpty() || joinParams.size() == 0) {
             return;
         }
-        if (!relations.contains(BelongsTo.class) && AnimaCache.hasBelongsTo(modelClass)) {
-            this.setBelongs(models);
-        }
-        if (!relations.contains(HasMany.class) && AnimaCache.hasMany(modelClass)) {
-            this.setHasMany(models);
-        }
-        if (!relations.contains(HasOne.class) && AnimaCache.hasOne(modelClass)) {
-            this.setHasOne(models);
-        }
-        this.relations.clear();
+        models.stream().filter(Objects::nonNull).forEach(this::setJoin);
     }
 
-    private void setBelongs(List<T> models) {
-        Arrays.stream(modelClass.getDeclaredFields())
-                .filter(field -> null != field.getAnnotation(BelongsTo.class))
-                .map(RelationParamBuilder::buildBelongsTo)
-                .forEach(relationParams -> {
-                    if (models.size() == 1) {
-                        Object fkValue = AnimaUtils.getFieldValue(relationParams.getFk(), models.get(0));
-                        Object fkVal   = this.queryOne(relationParams.getType(), relationParams.getRelateSQL(), new Object[]{fkValue});
-                        AnimaUtils.setFieldValue(relationParams.getFieldName(), models.get(0), fkVal);
-                    } else {
-                        Object[]      pkIds       = new Object[models.size()];
-                        int           pos         = 0;
-                        StringBuilder placeholder = new StringBuilder();
-                        for (T model : models) {
-                            Object fkValue = AnimaUtils.getFieldValue(relationParams.getFk(), model);
-                            pkIds[pos++] = fkValue;
-                            placeholder.append(",?");
-                        }
-
-                        String belongSQL = "SELECT * FROM " + relationParams.getTableName() + " WHERE " + relationParams.getPk() + " in (" + placeholder.substring(1) + ")";
-                        List<?> list = this.queryList(relationParams.getType(),
-                                belongSQL, pkIds);
-                        for (int i = 0; i < models.size(); i++) {
-                            if (list.size() > i) {
-                                AnimaUtils.setFieldValue(relationParams.getFieldName(), models.get(i), list.get(i));
-                            }
-                        }
-                    }
-                });
-    }
-
-    private void setHasMany(List<T> models) {
-        Arrays.stream(modelClass.getDeclaredFields())
-                .filter(field -> null != field.getAnnotation(HasMany.class))
-                .map(RelationParamBuilder::buildHasMany)
-                .forEach(relationParams -> {
-                    for (T model : models) {
-                        if (null != model) {
-                            Object fkValue = AnimaUtils.getPKFieldValue(model);
-                            Object fkVal = this.queryList(relationParams.getType(), relationParams.getRelateSQL(),
-                                    new Object[]{fkValue});
-                            AnimaUtils.setFieldValue(relationParams.getFieldName(), model, fkVal);
-                        }
-                    }
-                });
-    }
-
-    private void setHasOne(List<T> models) {
-        Arrays.stream(modelClass.getDeclaredFields())
-                .filter(field -> null != field.getAnnotation(HasOne.class))
-                .map(RelationParamBuilder::buildHasOne)
-                .forEach(relationParams -> {
-                    if (models.size() == 1) {
-                        Object fkValue = AnimaUtils.getPKFieldValue(models.get(0));
-                        Object fkVal   = this.queryOne(relationParams.getType(), relationParams.getRelateSQL(), new Object[]{fkValue});
-                        AnimaUtils.setFieldValue(relationParams.getFieldName(), models.get(0), fkVal);
-                    } else {
-                        Object[]      pkIds       = new Object[models.size()];
-                        int           pos         = 0;
-                        StringBuilder placeholder = new StringBuilder();
-                        for (T model : models) {
-                            Object fkValue = AnimaUtils.getFieldValue(AnimaUtils.methodToFieldName(primaryKeyColumn), model);
-                            pkIds[pos++] = fkValue;
-                            placeholder.append(",?");
-                        }
-
-                        String  hasOneSQL = "SELECT * FROM " + relationParams.getTableName() + " WHERE " + relationParams.getFk() + " in (" + placeholder.substring(1) + ")";
-                        List<?> list      = this.queryList(relationParams.getType(), hasOneSQL, pkIds);
-                        for (int i = 0; i < models.size(); i++) {
-                            if (list.size() > i) {
-                                AnimaUtils.setFieldValue(relationParams.getFieldName(), models.get(i), list.get(i));
-                            }
-                        }
-                    }
-                });
+    private void setJoin(T model) {
+        for (JoinParam joinParam : joinParams) {
+            try {
+                Field modelField = model.getClass().getDeclaredField(joinParam.getOnLeft());
+                modelField.setAccessible(true);
+                Object leftValue = modelField.get(model);
+                String sql       = "SELECT * FROM " + AnimaCache.getTableName(joinParam.getJoinModel()) + " WHERE " + joinParam.getOnRight() + " = ?";
+                Field  field     = model.getClass().getDeclaredField(joinParam.getFieldName());
+                if (field.getType().equals(List.class)) {
+                    List<? extends Model> list = this.queryList(joinParam.getJoinModel(), sql, new Object[]{leftValue});
+                    AnimaUtils.setFieldValue(joinParam.getFieldName(), model, list);
+                }
+                if (field.getType().equals(joinParam.getJoinModel())) {
+                    Object joinObject = this.queryOne(joinParam.getJoinModel(), sql, new Object[]{leftValue});
+                    AnimaUtils.setFieldValue(joinParam.getFieldName(), model, joinObject);
+                }
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+                log.error("Set join error", e);
+            }
+        }
     }
 
     private void clean(Connection conn) {

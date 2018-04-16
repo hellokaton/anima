@@ -95,7 +95,6 @@ public class SelectTest extends BaseTest {
         users = select().from(User.class).where(User::getId).in(Arrays.asList(1, 2, 3)).all();
         Assert.assertNotNull(users);
         Assert.assertEquals(3, users.size());
-
     }
 
     @Test

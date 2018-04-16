@@ -1,9 +1,8 @@
 package io.github.biezhi.anima.model;
 
 import io.github.biezhi.anima.Model;
-import io.github.biezhi.anima.annotation.BelongsTo;
 import io.github.biezhi.anima.annotation.Column;
-import io.github.biezhi.anima.annotation.HasOne;
+import io.github.biezhi.anima.annotation.Ignore;
 import io.github.biezhi.anima.annotation.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -36,10 +35,10 @@ public class OrderInfo extends Model {
         this.createTime = LocalDateTime.now();
     }
 
-    @BelongsTo(fk = "uid")
+    @Ignore
     private User user;
 
-    @HasOne(fk = "order_id")
+    @Ignore
     private Address address;
 
 }

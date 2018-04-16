@@ -1,7 +1,7 @@
 package io.github.biezhi.anima.model;
 
 import io.github.biezhi.anima.Model;
-import io.github.biezhi.anima.annotation.HasMany;
+import io.github.biezhi.anima.annotation.Ignore;
 import io.github.biezhi.anima.annotation.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -23,7 +23,7 @@ public class UserDto extends Model {
 
     private Integer age;
 
-    @HasMany(fk = "uid")
+    @Ignore
     private List<OrderInfo> orders;
 
 }
