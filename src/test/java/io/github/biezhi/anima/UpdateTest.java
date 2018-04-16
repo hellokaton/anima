@@ -39,11 +39,13 @@ public class UpdateTest extends BaseTest {
     @Test
     public void testUpdate3() {
         new User().set("user_name", "jack").where("id", 2).update();
-    }
-
-    @Test
-    public void testUpdate4() {
         new User().set("user_name", "jack").updateById(3);
+
+        new User().set(User::getUserName, "jack").where(User::getId, 2).update();
+        new User().set(User::getUserName, "jack").updateById(3);
+
+        update().from(User.class).set(User::getUserName, "jack").where(User::getId, 2).execute();
+        update().from(User.class).set(User::getUserName, "jack").updateById(3);
     }
 
 }
