@@ -33,10 +33,35 @@ supports multiple relational mappings, and is a database manipulation tool.
 
 # Usage
 
+**Latest snapshot version**
+
+> If you want to prioritize new features or some BUG fixes you can use it, you need to specify the snapshot repository in `pom.xml`
+
+```xml
+<repository>
+    <id>snapshots-repo</id>
+    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    <releases>
+        <enabled>false</enabled>
+    </releases>
+    <snapshots>
+        <enabled>true</enabled>
+    </snapshots>
+</repository>
+
+<dependency>
+    <groupId>io.github.biezhi</groupId>
+    <artifactId>anima</artifactId>
+    <version>0.2.1-SNAPSHOT</version>
+</dependency>
+```
+
+Here's the `RELEASE` version.
+
 **As Gradle**
 
 ```java
-compile 'io.github.biezhi:anima:0.2.1'
+compile 'io.github.biezhi:anima:0.2.0'
 ```
 
 **As Maven**
@@ -45,7 +70,7 @@ compile 'io.github.biezhi:anima:0.2.1'
 <dependency>
     <groupId>io.github.biezhi</groupId>
     <artifactId>anima</artifactId>
-    <version>0.2.1</version>
+    <version>0.2.0</version>
 </dependency>
 ```
 
