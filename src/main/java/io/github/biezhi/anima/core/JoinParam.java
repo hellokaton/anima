@@ -2,6 +2,7 @@ package io.github.biezhi.anima.core;
 
 import io.github.biezhi.anima.Model;
 import io.github.biezhi.anima.core.functions.TypeFunction;
+import io.github.biezhi.anima.enums.OrderBy;
 import io.github.biezhi.anima.utils.AnimaUtils;
 import lombok.Data;
 
@@ -16,6 +17,7 @@ public class JoinParam {
     private String                 onLeft;
     private String                 onRight;
     private String                 fieldName;
+    private String                 orderBy;
 
     public JoinParam(Class<? extends Model> joinModel) {
         this.joinModel = joinModel;
@@ -35,4 +37,14 @@ public class JoinParam {
         return this;
     }
 
+    public <S extends Model, R> JoinParam order(TypeFunction<S, R> rightField, OrderBy orderBy) {
+        String columnName = AnimaUtils.getLambdaColumnName(rightField);
+        this.orderBy = columnName + " " + orderBy.name();
+        return this;
+    }
+
+    public JoinParam order(String orderBy) {
+        this.orderBy = orderBy;
+        return this;
+    }
 }

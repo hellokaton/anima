@@ -1427,6 +1427,9 @@ public class AnimaQuery<T extends Model> {
                 String sql       = "SELECT * FROM " + AnimaCache.getTableName(joinParam.getJoinModel()) + " WHERE " + joinParam.getOnRight() + " = ?";
                 Field  field     = model.getClass().getDeclaredField(joinParam.getFieldName());
                 if (field.getType().equals(List.class)) {
+                    if (AnimaUtils.isNotEmpty(joinParam.getOrderBy())) {
+                        sql += " ORDER BY " + joinParam.getOrderBy();
+                    }
                     List<? extends Model> list = this.queryList(joinParam.getJoinModel(), sql, new Object[]{leftValue});
                     AnimaUtils.setFieldValue(joinParam.getFieldName(), model, list);
                 }

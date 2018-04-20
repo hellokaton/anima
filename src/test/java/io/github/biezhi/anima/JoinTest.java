@@ -1,6 +1,7 @@
 package io.github.biezhi.anima;
 
 import io.github.biezhi.anima.core.Joins;
+import io.github.biezhi.anima.enums.OrderBy;
 import io.github.biezhi.anima.model.Address;
 import io.github.biezhi.anima.model.OrderInfo;
 import io.github.biezhi.anima.model.User;
@@ -66,4 +67,20 @@ public class JoinTest extends BaseTest {
         Assert.assertNotNull(userDto.getOrders());
     }
 
+    @Test
+    public void testOrderBy() {
+        // OneToMany
+        UserDto userDto = select().from(UserDto.class).join(
+                Joins.with(OrderInfo.class).as(UserDto::getOrders)
+                        .on(UserDto::getId, OrderInfo::getUid)
+                        .order(OrderInfo::getId, OrderBy.DESC)
+        ).byId(1);
+
+        userDto = select().from(UserDto.class).join(
+                Joins.with(OrderInfo.class).as(UserDto::getOrders)
+                        .on(UserDto::getId, OrderInfo::getUid)
+                        .order("id asc")
+        ).byId(1);
+
+    }
 }
