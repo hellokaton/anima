@@ -18,18 +18,23 @@ public interface Dialect {
 
     default String select(SQLParams sqlParams) {
         StringBuilder sql = new StringBuilder();
-        sql.append("SELECT");
-        if (AnimaUtils.isNotEmpty(sqlParams.getSelectColumns())) {
-            sql.append(' ').append(sqlParams.getSelectColumns()).append(' ');
-        } else if (AnimaUtils.isNotEmpty(sqlParams.getExcludedColumns())) {
-            sql.append(' ').append(AnimaUtils.buildColumns(sqlParams.getExcludedColumns(), sqlParams.getModelClass())).append(' ');
+        if (AnimaUtils.isNotEmpty(sqlParams.getCustomSQL())) {
+            sql.append(sqlParams.getCustomSQL());
         } else {
-            sql.append(" * ");
+            sql.append("SELECT");
+            if (AnimaUtils.isNotEmpty(sqlParams.getSelectColumns())) {
+                sql.append(' ').append(sqlParams.getSelectColumns()).append(' ');
+            } else if (AnimaUtils.isNotEmpty(sqlParams.getExcludedColumns())) {
+                sql.append(' ').append(AnimaUtils.buildColumns(sqlParams.getExcludedColumns(), sqlParams.getModelClass())).append(' ');
+            } else {
+                sql.append(" * ");
+            }
+            sql.append("FROM ").append(sqlParams.getTableName());
+            if (sqlParams.getConditionSQL().length() > 0) {
+                sql.append(" WHERE ").append(sqlParams.getConditionSQL().substring(5));
+            }
         }
-        sql.append("FROM ").append(sqlParams.getTableName());
-        if (sqlParams.getConditionSQL().length() > 0) {
-            sql.append(" WHERE ").append(sqlParams.getConditionSQL().substring(5));
-        }
+
         if (AnimaUtils.isNotEmpty(sqlParams.getOrderBy())) {
             sql.append(" ORDER BY ").append(sqlParams.getOrderBy());
         }

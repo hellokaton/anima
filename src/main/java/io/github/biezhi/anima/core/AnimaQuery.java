@@ -140,6 +140,21 @@ public class AnimaQuery<T extends Model> {
     }
 
     /**
+     * Excluded columns by lambda
+     *
+     * @param functions lambda columns
+     * @param <R>
+     * @return AnimaQuery
+     */
+    public <R> AnimaQuery<T> exclude(TypeFunction<T, R>... functions) {
+        String[] columnNames = Arrays.stream(functions)
+                .map(AnimaUtils::getLambdaColumnName)
+                .collect(Collectors.toList())
+                .toArray(new String[functions.length]);
+        return this.exclude(columnNames);
+    }
+
+    /**
      * Sets the query to specify the column.
      *
      * @param columns table column name
@@ -706,7 +721,7 @@ public class AnimaQuery<T extends Model> {
         if (this.orderBySQL.length() > 0) {
             this.orderBySQL.append(',');
         }
-        this.orderBySQL.append(' ').append(columnName).append(' ').append(orderBy.toString());
+        this.orderBySQL.append(columnName).append(' ').append(orderBy.toString());
         return this;
     }
 
@@ -887,7 +902,7 @@ public class AnimaQuery<T extends Model> {
         Connection conn     = getConn();
         try {
             long    count   = conn.createQuery(countSql).withParams(params).executeAndFetchFirst(Long.class);
-            String  pageSQL = this.buildPageSQL(pageRow);
+            String  pageSQL = this.buildPageSQL(sql, pageRow);
             List<T> list    = conn.createQuery(pageSQL).withParams(params).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeAndFetch(modelClass);
             this.setJoin(list);
 
@@ -1260,7 +1275,7 @@ public class AnimaQuery<T extends Model> {
      * @param pageRow page param
      * @return paging sql
      */
-    private String buildPageSQL(PageRow pageRow) {
+    private String buildPageSQL(String sql, PageRow pageRow) {
         SQLParams sqlParams = SQLParams.builder()
                 .modelClass(this.modelClass)
                 .selectColumns(this.selectColumns)
@@ -1268,6 +1283,7 @@ public class AnimaQuery<T extends Model> {
                 .pkName(this.primaryKeyColumn)
                 .conditionSQL(this.conditionSQL)
                 .excludedColumns(this.excludedColumns)
+                .customSQL(sql)
                 .orderBy(this.orderBySQL.toString())
                 .pageRow(pageRow)
                 .build();

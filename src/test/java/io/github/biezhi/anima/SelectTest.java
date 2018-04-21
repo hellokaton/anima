@@ -50,9 +50,6 @@ public class SelectTest extends BaseTest {
         Assert.assertNotNull(names);
         Assert.assertEquals(3, names.size());
 
-        Page<User> userPage = select().bySQL(User.class, "select * from users").page(1, 10);
-        Assert.assertNotNull(userPage);
-
     }
 
 
@@ -177,11 +174,19 @@ public class SelectTest extends BaseTest {
         Assert.assertEquals(2, userPage.getNextPage());
         Assert.assertTrue(userPage.isHasNextPage());
         Assert.assertFalse(userPage.isHasPrevPage());
+
+        select().from(User.class).where(User::getAge).gt(20).order(User::getId, OrderBy.DESC).page(2, 3);
     }
 
     @Test
     public void testIgnoreAndExclude() {
-        User age = select().from(User.class).exclude("age").one();
+        select().from(User.class).exclude("age").one();
+        select().from(User.class).exclude(User::getAge).one();
+    }
+
+    @Test
+    public void testPageBySQL() {
+        select().bySQL(User.class, "select * from users where age > ?", 10).page(2, 3);
 
     }
 

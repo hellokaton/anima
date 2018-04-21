@@ -47,4 +47,6 @@ public class SQLParams {
     private String                 orderBy;
     private boolean                isSQLLimit;
 
+    private String customSQL;
+
 }
