@@ -64,4 +64,6 @@ public class OtherTest extends BaseTest {
         Anima.execute("drop table if exists hello_world");
         Anima.execute("create table hello_world(int integer not null)");
     }
+
+
 }

@@ -48,6 +48,11 @@ import java.util.stream.Stream;
 public class AnimaQuery<T extends Model> {
 
     /**
+     * SQL 2 o objects for the current query.
+     */
+    private static Sql2o sql2o;
+
+    /**
      * Java Model, a table of corresponding databases.
      */
     private Class<T> modelClass;
@@ -1361,10 +1366,10 @@ public class AnimaQuery<T extends Model> {
      *
      * @return Connection
      */
-    private static Connection getConn() {
+    private Connection getConn() {
         Connection connection = connectionThreadLocal.get();
         if (null == connection) {
-            return getSql2o().open();
+            return this.getSql2o().open();
         }
         return connection;
     }
@@ -1374,7 +1379,7 @@ public class AnimaQuery<T extends Model> {
      */
     public static void beginTransaction() {
         if (null == connectionThreadLocal.get()) {
-            Connection connection = AnimaQuery.getSql2o().beginTransaction();
+            Connection connection = getSql2o().beginTransaction();
             connectionThreadLocal.set(connection);
         }
     }
@@ -1409,7 +1414,15 @@ public class AnimaQuery<T extends Model> {
         }
     }
 
+    public AnimaQuery<T> bindSQL2o(Sql2o sql2o) {
+        this.sql2o = sql2o;
+        return this;
+    }
+
     public static Sql2o getSql2o() {
+        if (AnimaQuery.sql2o != null) {
+            return AnimaQuery.sql2o;
+        }
         Sql2o sql2o = Anima.me().getSql2o();
         if (null == sql2o) {
             throw new AnimaException("SQL2O instance not is null.");
