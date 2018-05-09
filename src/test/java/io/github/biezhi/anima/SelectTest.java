@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static io.github.biezhi.anima.Anima.select;
@@ -198,6 +199,14 @@ public class SelectTest extends BaseTest {
                 .collect(Collectors.toList());
 
         Assert.assertNotNull(names);
+    }
+
+    @Test
+    public void testListMap() {
+        List<Map<String, Object>> maps = select().from(User.class).order("id desc").maps();
+        System.out.println(maps);
+        Assert.assertNotNull(maps);
+        Assert.assertEquals(8, maps.size());
     }
 
 }

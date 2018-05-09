@@ -726,7 +726,7 @@ public class AnimaQuery<T extends Model> {
         if (this.orderBySQL.length() > 0) {
             this.orderBySQL.append(',');
         }
-        this.orderBySQL.append(columnName).append(' ').append(orderBy.toString());
+        this.orderBySQL.append(' ').append(columnName).append(' ').append(orderBy.toString());
         return this;
     }
 
@@ -797,6 +797,17 @@ public class AnimaQuery<T extends Model> {
         List<T> models = this.queryList(modelClass, sql, paramValues);
         this.setJoin(models);
         return models;
+    }
+
+    /**
+     * query List<Map>
+     *
+     * @return List<Map>
+     */
+    public List<Map<String, Object>> maps() {
+        this.beforeCheck();
+        String sql = this.buildSelectSQL(true);
+        return this.queryListMap(sql, paramValues);
     }
 
     /**
@@ -1065,6 +1076,36 @@ public class AnimaQuery<T extends Model> {
      */
     public <S> List<S> queryList(Class<S> type, String sql, List<Object> params) {
         return this.queryList(type, sql, params.toArray());
+    }
+
+    /**
+     * Querying a List<Map>
+     *
+     * @param sql    sql statement
+     * @param params params
+     * @return List<Map>
+     */
+    public List<Map<String, Object>> queryListMap(String sql, Object[] params) {
+        Connection conn = getConn();
+        try {
+            return conn.createQuery(sql).withParams(params).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeAndFetchTable().asList();
+        } finally {
+            if (null == connectionThreadLocal.get() && null != conn) {
+                conn.close();
+            }
+            this.clean(null);
+        }
+    }
+
+    /**
+     * Querying a List<Map>
+     *
+     * @param sql    sql statement
+     * @param params params
+     * @return List<Map>
+     */
+    public List<Map<String, Object>> queryListMap(String sql, List<Object> params) {
+        return this.queryListMap(sql, params.toArray());
     }
 
     /**

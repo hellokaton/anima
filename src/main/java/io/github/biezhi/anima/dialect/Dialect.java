@@ -36,7 +36,7 @@ public interface Dialect {
         }
 
         if (AnimaUtils.isNotEmpty(sqlParams.getOrderBy())) {
-            sql.append(" ORDER BY ").append(sqlParams.getOrderBy());
+            sql.append(" ORDER BY").append(sqlParams.getOrderBy());
         }
         if (sqlParams.isSQLLimit()) {
             sql.append(" LIMIT ?");
