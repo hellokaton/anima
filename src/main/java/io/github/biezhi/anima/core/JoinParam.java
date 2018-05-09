@@ -30,7 +30,7 @@ public class JoinParam {
     }
 
     public <T, S extends Model, R> JoinParam on(TypeFunction<T, R> left, TypeFunction<S, R> right) {
-        String onLeft  = AnimaUtils.getLambdaColumnName(left);
+        String onLeft  = AnimaUtils.getLambdaFieldName(left);
         String onRight = AnimaUtils.getLambdaColumnName(right);
         this.setOnLeft(onLeft);
         this.setOnRight(onRight);

@@ -191,6 +191,26 @@ public class AnimaUtils {
         return null;
     }
 
+    public static String getLambdaFieldName(Serializable lambda) {
+        for (Class<?> cl = lambda.getClass(); cl != null; cl = cl.getSuperclass()) {
+            try {
+                Method m = cl.getDeclaredMethod("writeReplace");
+                m.setAccessible(true);
+                Object replacement = m.invoke(lambda);
+                if (!(replacement instanceof SerializedLambda)) {
+                    break; // custom interface implementation
+                }
+                SerializedLambda serializedLambda = (SerializedLambda) replacement;
+                return AnimaCache.getLambdaFieldName(serializedLambda);
+            } catch (NoSuchMethodException e) {
+                // do nothing
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                break;
+            }
+        }
+        return null;
+    }
+
     public static String methodToFieldName(String methodName) {
         return capitalize(methodName.replace("get", ""));
     }
