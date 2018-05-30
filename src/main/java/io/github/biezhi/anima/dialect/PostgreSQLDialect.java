@@ -16,7 +16,7 @@ public class PostgreSQLDialect implements Dialect {
         PageRow pageRow = sqlParams.getPageRow();
         int limit = pageRow.getPageSize();
         int offset = limit * (pageRow.getPageNum() - 1);
-        String limitSQL = " LIMIT " + offset + " OFFSET " + limit;
+        String limitSQL = " LIMIT " + limit + " OFFSET " + offset;
 
         StringBuilder sql = new StringBuilder();
         sql.append(select(sqlParams)).append(limitSQL);
