@@ -147,9 +147,7 @@ public class PojoMetadata {
     }
 
     public Getter getPropertyGetter(String propertyName) {
-
         Getter getter = getPropertyGetterIfExists(propertyName);
-
         if (getter != null) {
             return getter;
         } else {

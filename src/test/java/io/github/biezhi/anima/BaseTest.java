@@ -46,7 +46,8 @@ public class BaseTest {
         new Address(2L, "北京", "朝阳区").save();
 
         new Person("biezhi", Gender.MALE, VipLevel.VIP2).save();
-        new Person("rolse", Gender.FEMALE, VipLevel.VIP3).save();
+        new Person("rose", Gender.FEMALE, VipLevel.VIP3).save();
+        new Person("tom", Gender.MALE, VipLevel.VIP1).save();
     }
 
     protected static void h2() {
