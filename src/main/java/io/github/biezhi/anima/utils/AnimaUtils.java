@@ -45,7 +45,7 @@ public class AnimaUtils {
         return null != collection && !collection.isEmpty();
     }
 
-    public static boolean isEmpty(String value){
+    public static boolean isEmpty(String value) {
         return null == value || value.isEmpty();
     }
 
@@ -95,7 +95,21 @@ public class AnimaUtils {
             try {
                 Object value = field.get(model);
                 if (null != value) {
-                    columnValueList.add(value);
+                    if (value instanceof Enum) {
+                        EnumMapping enumMapping = field.getAnnotation(EnumMapping.class);
+                        if (null == enumMapping) {
+                            columnValueList.add(value.toString());
+                        } else {
+                            if (enumMapping.value().equals(EnumMapping.TO_STRING)) {
+                                columnValueList.add(value.toString());
+                            }
+                            if (enumMapping.value().equals(EnumMapping.ORDINAL)) {
+                                columnValueList.add(((Enum) value).ordinal());
+                            }
+                        }
+                    } else {
+                        columnValueList.add(value);
+                    }
                 } else if (allowNull) {
                     columnValueList.add(null);
                 }

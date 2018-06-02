@@ -1,7 +1,10 @@
 package io.github.biezhi.anima;
 
+import io.github.biezhi.anima.enums.Gender;
+import io.github.biezhi.anima.enums.VipLevel;
 import io.github.biezhi.anima.model.Address;
 import io.github.biezhi.anima.model.OrderInfo;
+import io.github.biezhi.anima.model.Person;
 import io.github.biezhi.anima.model.User;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.BeforeClass;
@@ -41,6 +44,9 @@ public class BaseTest {
 
         new Address(3L, "上海", "浦东新区").save();
         new Address(2L, "北京", "朝阳区").save();
+
+        new Person("biezhi", Gender.MALE, VipLevel.VIP2).save();
+        new Person("rolse", Gender.FEMALE, VipLevel.VIP3).save();
     }
 
     protected static void h2() {
@@ -64,6 +70,12 @@ public class BaseTest {
                 "`order_id` bigint(20) PRIMARY KEY," +
                 "`city` varchar(100) NOT NULL," +
                 "`street` varchar(200) NOT NULL" +
+                ");" +
+                "DROP TABLE IF EXISTS `persons`;\n" +
+                "CREATE TABLE `persons` (" +
+                "`name` varchar(50) PRIMARY KEY," +
+                "`sex` varchar(10) NOT NULL," +
+                "`vip_level` int(4) NOT NULL" +
                 ");";
 
         try (Connection con = sql2o.open()) {
