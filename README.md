@@ -52,7 +52,7 @@ supports multiple relational mappings, and is a database manipulation tool.
 <dependency>
     <groupId>io.github.biezhi</groupId>
     <artifactId>anima</artifactId>
-    <version>0.2.2-SNAPSHOT</version>
+    <version>0.2.3-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -61,7 +61,7 @@ Here's the `RELEASE` version.
 **As Gradle**
 
 ```java
-compile 'io.github.biezhi:anima:0.2.1'
+compile 'io.github.biezhi:anima:0.2.2'
 ```
 
 **As Maven**
@@ -70,7 +70,7 @@ compile 'io.github.biezhi:anima:0.2.1'
 <dependency>
     <groupId>io.github.biezhi</groupId>
     <artifactId>anima</artifactId>
-    <version>0.2.1</version>
+    <version>0.2.2</version>
 </dependency>
 ```
 
