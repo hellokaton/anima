@@ -127,34 +127,9 @@ public class AnimaUtils {
         return false;
     }
 
-    public static Object getPKFieldValue(Object target) {
+    public static Object getFieldValue(Field field, Object target) {
         try {
-            String  pkName = AnimaCache.getPKColumn(target.getClass());
-            Field[] fields = target.getClass().getDeclaredFields();
-            for (Field field : fields) {
-                if (field.getName().equals(pkName)) {
-                    field.setAccessible(true);
-                    return field.get(target);
-                }
-                Column column = field.getAnnotation(Column.class);
-                if (null != column && pkName.equals(column.name())) {
-                    field.setAccessible(true);
-                    return field.get(target);
-                }
-                if (pkName.equals(toColumnName(field.getName()))) {
-                    field.setAccessible(true);
-                    return field.get(target);
-                }
-            }
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    public static Object getFieldValue(String fieldName, Object target) {
-        try {
-            Field field = AnimaCache.getField(target.getClass(), fieldName);
+            field.setAccessible(true);
             return field.get(target);
         } catch (IllegalAccessException e) {
             e.printStackTrace();

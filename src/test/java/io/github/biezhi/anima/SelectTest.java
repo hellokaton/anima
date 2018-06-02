@@ -149,6 +149,15 @@ public class SelectTest extends BaseTest {
     }
 
     @Test
+    public void testModelWhere(){
+        User where = new User();
+        where.setId(8);
+
+        User one = select().from(User.class).where(where).one();
+        Assert.assertNotNull(one);
+    }
+
+    @Test
     public void testExclude() {
         User user = select().from(User.class).exclude("age").one();
         Assert.assertNotNull(user);

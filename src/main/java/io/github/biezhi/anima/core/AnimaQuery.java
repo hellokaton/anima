@@ -230,6 +230,29 @@ public class AnimaQuery<T extends Model> {
     }
 
     /**
+     * Set the where parameter according to model,
+     * and generate sql like where where age = ? and name = ?
+     *
+     * @param model
+     * @return AnimaQuery
+     */
+    public AnimaQuery<T> where(T model) {
+        Field[] declaredFields = model.getClass().getDeclaredFields();
+        for (Field declaredField : declaredFields) {
+            Object value = AnimaUtils.getFieldValue(declaredField, model);
+            if (null == value) {
+                continue;
+            }
+            if (declaredField.getType().equals(String.class) && AnimaUtils.isEmpty(value.toString())) {
+                continue;
+            }
+            String columnName = AnimaUtils.toColumnName(declaredField);
+            this.where(columnName, value);
+        }
+        return this;
+    }
+
+    /**
      * Equals statement
      *
      * @param value column value
