@@ -48,4 +48,12 @@ public class UpdateTest extends BaseTest {
         update().from(User.class).set(User::getUserName, "jack").updateById(3);
     }
 
+    @Test
+    public void testUpdate4() {
+        User user = new User();
+        user.setId(1);
+        user.setUserName("lili");
+        user.update();
+    }
+
 }

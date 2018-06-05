@@ -203,7 +203,7 @@ public class Anima {
             return Atomic.ok();
         } catch (Exception e) {
             boolean isRollback = false;
-            if (e.getClass().equals(me().rollbackException)) {
+            if (me().rollbackException.isInstance(e)) {
                 AnimaQuery.rollback();
                 isRollback = true;
             }

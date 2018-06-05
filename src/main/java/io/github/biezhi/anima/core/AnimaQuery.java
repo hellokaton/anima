@@ -1284,9 +1284,17 @@ public class AnimaQuery<T extends Model> {
      */
     public <S extends Model> int updateByModel(S model) {
         this.beforeCheck();
-        String       sql             = this.buildUpdateSQL(model, null);
+
+        Object primaryKey = AnimaUtils.getAndRemovePrimaryKey(model);
+
+        StringBuilder sql = new StringBuilder(this.buildUpdateSQL(model, null));
+
         List<Object> columnValueList = AnimaUtils.toColumnValues(model, false);
-        return this.execute(sql, columnValueList);
+        if (null != primaryKey) {
+            sql.append(" WHERE ").append(this.primaryKeyColumn).append(" = ?");
+            columnValueList.add(primaryKey);
+        }
+        return this.execute(sql.toString(), columnValueList);
     }
 
     private void setArguments(Object[] args) {

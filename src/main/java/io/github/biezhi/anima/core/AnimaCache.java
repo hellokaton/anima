@@ -20,11 +20,9 @@ import static io.github.biezhi.anima.utils.AnimaUtils.methodToFieldName;
  */
 public final class AnimaCache {
 
-    static final Map<Class<?>, Boolean>        CACHE_HAS_BELONGS_TO = new HashMap<>(8);
-    static final Map<Class<?>, Boolean>        CACHE_HAS_ONE        = new HashMap<>(8);
-    static final Map<Class<?>, Boolean>        CACHE_HAS_MANY       = new HashMap<>(8);
     static final Map<Class<?>, String>         CACHE_TABLE_NAME     = new HashMap<>(8);
-    static final Map<Class<?>, String>         CACHE_PK_NAME        = new HashMap<>(8);
+    static final Map<Class<?>, String>         CACHE_PK_COLUMN_NAME = new HashMap<>(8);
+    static final Map<Class<?>, String>         CACHE_PK_FIELD_NAME  = new HashMap<>(8);
     static final Map<SerializedLambda, String> CACHE_LAMBDA_NAME    = new HashMap<>(8);
     static final Map<SerializedLambda, String> CACHE_FIELD_NAME     = new HashMap<>(8);
     static final Map<String, Field>            CACHE_MODEL_FIELD    = new HashMap<>(8);
@@ -47,14 +45,25 @@ public final class AnimaCache {
     }
 
     public static String getPKColumn(Class<?> modelClass) {
-        String pkColumn = CACHE_PK_NAME.get(modelClass);
+        String pkColumn = CACHE_PK_COLUMN_NAME.get(modelClass);
         if (null != pkColumn) {
             return pkColumn;
         }
         Table table = modelClass.getAnnotation(Table.class);
         pkColumn = null != table ? table.pk() : "id";
-        CACHE_PK_NAME.put(modelClass, pkColumn);
+        CACHE_PK_COLUMN_NAME.put(modelClass, pkColumn);
         return pkColumn;
+    }
+
+    public static String getPKField(Class<?> modelClass) {
+        String pkField = CACHE_PK_FIELD_NAME.get(modelClass);
+        if (null != pkField) {
+            return pkField;
+        }
+        String pkColumn = AnimaCache.getPKColumn(modelClass);
+        pkField = AnimaUtils.toFieldName(pkColumn);
+        CACHE_PK_FIELD_NAME.put(modelClass, pkField);
+        return pkField;
     }
 
     public static String getLambdaColumnName(SerializedLambda serializedLambda) {

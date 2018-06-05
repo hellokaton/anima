@@ -16,9 +16,13 @@
 package io.github.biezhi.anima.utils;
 
 import io.github.biezhi.anima.Model;
-import io.github.biezhi.anima.annotation.*;
+import io.github.biezhi.anima.annotation.Column;
+import io.github.biezhi.anima.annotation.EnumMapping;
+import io.github.biezhi.anima.annotation.Ignore;
 import io.github.biezhi.anima.core.AnimaCache;
 import io.github.biezhi.anima.exception.AnimaException;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.lang.invoke.SerializedLambda;
@@ -32,10 +36,8 @@ import java.util.List;
 /**
  * Utility class for composing SQL statements
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AnimaUtils {
-
-    private AnimaUtils() {
-    }
 
     public static boolean isNotEmpty(String value) {
         return null != value && !value.isEmpty();
@@ -66,6 +68,19 @@ public class AnimaUtils {
             return column.name();
         }
         return toColumnName(field.getName());
+    }
+
+    /**
+     * eg: user_id -> userId
+     */
+    public static String toFieldName(String columnName) {
+        String[]     partOfNames = columnName.split("_");
+        StringBuffer sb          = new StringBuffer(partOfNames[0]);
+        for (int i = 1; i < partOfNames.length; i++) {
+            sb.append(partOfNames[i].substring(0, 1).toUpperCase());
+            sb.append(partOfNames[i].substring(1));
+        }
+        return sb.toString();
     }
 
     public static String toColumnName(String propertyName) {
@@ -206,6 +221,21 @@ public class AnimaUtils {
 
     public static String capitalize(String input) {
         return input.substring(0, 1).toLowerCase() + input.substring(1, input.length());
+    }
+
+    public static <S extends Model> Object getAndRemovePrimaryKey(S model) {
+        try {
+            String fieldName = AnimaCache.getPKField(model.getClass());
+            Field  field     = model.getClass().getDeclaredField(fieldName);
+            field.setAccessible(true);
+            Object value = field.get(model);
+            if (null != value) {
+                field.set(model, null);
+            }
+            return value;
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+        }
+        return null;
     }
 
 }

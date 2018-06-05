@@ -3,10 +3,7 @@ package io.github.biezhi.anima;
 import io.github.biezhi.anima.model.User;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import org.sql2o.Connection;
-import org.sql2o.Sql2o;
 import org.sql2o.Sql2oException;
 
 /**
@@ -17,41 +14,6 @@ import org.sql2o.Sql2oException;
  */
 @Slf4j
 public class ExceptionTest extends BaseTest {
-
-    @BeforeClass
-    public static void before() {
-        h2();
-        initData();
-        log.info("============== Start Test Code ==============");
-    }
-
-    protected static void h2() {
-        Sql2o sql2o = Anima.open("jdbc:h2:file:~/demo;FILE_LOCK=FS;PAGE_SIZE=1024;CACHE_SIZE=8192", "sa", "").rollbackException(CustomException.class).getSql2o();
-
-        String sql = "DROP TABLE IF EXISTS `users`;\n" +
-                "CREATE TABLE `users` (" +
-                "`id` IDENTITY PRIMARY KEY, " +
-                "`user_name` varchar(50) NOT NULL, " +
-                "`age` int(11)," +
-                ");" +
-                "DROP TABLE IF EXISTS `order_info`;\n" +
-                "CREATE TABLE `order_info` (" +
-                "`id` IDENTITY PRIMARY KEY," +
-                "`uid` int(11) NOT NULL," +
-                "`productname` varchar(100) NOT NULL," +
-                "`create_time` datetime NOT NULL" +
-                ");" +
-                "DROP TABLE IF EXISTS `addresses`;\n" +
-                "CREATE TABLE `addresses` (" +
-                "`order_id` bigint(20) PRIMARY KEY," +
-                "`city` varchar(100) NOT NULL," +
-                "`street` varchar(200) NOT NULL" +
-                ");";
-
-        try (Connection con = sql2o.open()) {
-            con.createQuery(sql).executeUpdate();
-        }
-    }
 
     @Test
     public void testCustomRollbackException() {
@@ -69,7 +31,7 @@ public class ExceptionTest extends BaseTest {
         }).catchException(e -> {
         }).isRollback();
 
-        Assert.assertEquals(false, isRollback);
+        Assert.assertEquals(true, isRollback);
     }
 
     @Test(expected = Sql2oException.class)
@@ -84,7 +46,7 @@ public class ExceptionTest extends BaseTest {
 
     static class CustomException extends RuntimeException {
 
-		private static final long serialVersionUID = 6329605066783987521L;
+        private static final long serialVersionUID = 6329605066783987521L;
 
     }
 }
