@@ -238,4 +238,12 @@ public class AnimaUtils {
         return null;
     }
 
+    public static <T> T[] toArray(List<T> list) {
+        T[] toR = (T[]) java.lang.reflect.Array.newInstance(list.get(0).getClass(), list.size());
+        for (int i = 0; i < list.size(); i++) {
+            toR[i] = list.get(i);
+        }
+        return toR;
+    }
+
 }

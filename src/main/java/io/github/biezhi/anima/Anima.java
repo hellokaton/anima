@@ -366,7 +366,7 @@ public class Anima {
      * @param <S>
      */
     public static <T extends Model, S extends Serializable> void deleteBatch(Class<T> model, List<S> idList) {
-        deleteBatch(model, idList.toArray());
+        deleteBatch(model, AnimaUtils.toArray(idList));
     }
 
     /**
