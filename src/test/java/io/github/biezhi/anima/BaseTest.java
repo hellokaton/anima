@@ -1,5 +1,6 @@
 package io.github.biezhi.anima;
 
+import com.zaxxer.hikari.HikariDataSource;
 import io.github.biezhi.anima.enums.Gender;
 import io.github.biezhi.anima.enums.VipLevel;
 import io.github.biezhi.anima.model.Address;
@@ -10,6 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.BeforeClass;
 import org.sql2o.Connection;
 import org.sql2o.Sql2o;
+
+import static io.github.biezhi.anima.Anima.delete;
 
 /**
  * @author biezhi
@@ -100,6 +103,24 @@ public class BaseTest {
 
     protected static void mysql() {
         Anima.open("jdbc:mysql://127.0.0.1:3306/demo?useUnicode=true&characterEncoding=utf-8&useSSL=false", "root", "123456");
+    }
+
+    protected static void mysql8() {
+        //CREATE TABLE `demo`.`无标题`  (
+        //  `id` int(10) NOT NULL AUTO_INCREMENT,
+        //  `user_name` varchar(50) NOT NULL,
+        //  `age` tinyint(2) NULL DEFAULT NULL,
+        //  PRIMARY KEY (`id`) USING BTREE
+        //) ENGINE = InnoDB CHARACTER ROW_FORMAT = Dynamic;
+
+//        Anima.open("jdbc:mysql://127.0.0.1:3317/demo?useUnicode=true&characterEncoding=utf-8&useSSL=false", "root", "123456");
+
+        HikariDataSource ds = new HikariDataSource();
+        ds.setJdbcUrl("jdbc:mysql://localhost:3317/demo");
+        ds.setUsername("root");
+        ds.setPassword("123456");
+        Anima.open(ds);
+        delete().from(User.class).execute();
     }
 
 }
