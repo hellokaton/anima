@@ -18,6 +18,7 @@ package io.github.biezhi.anima.page;
 import lombok.Data;
 
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -42,17 +43,17 @@ public class Page<T> {
     /**
      * next pageNum number
      */
-    private int  nextPage   = 1;
+    private int nextPage = 1;
 
     /**
      * total pageNum count
      */
-    private int  totalPages = 1;
+    private int totalPages = 1;
 
     /**
      * total row count
      */
-    private long totalRows  = 0L;
+    private long totalRows = 0L;
 
     /**
      * row list
@@ -93,6 +94,16 @@ public class Page<T> {
         Page<R> page = new Page<>(this.totalRows, this.pageNum, this.limit);
         page.setRows(rows.stream().map(mapper).collect(Collectors.toList()));
         return page;
+    }
+
+    public Page<T> peek(Consumer<T> consumer) {
+        this.rows = rows.stream().peek(consumer).collect(Collectors.toList());
+        return this;
+    }
+
+    public Page<T> navPages(int navPages) {
+        this.init(this.totalRows, this.pageNum, this.limit);
+        return this;
     }
 
     public Page() {
