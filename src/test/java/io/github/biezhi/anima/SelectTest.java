@@ -107,6 +107,20 @@ public class SelectTest extends BaseTest {
         Assert.assertNotNull(user);
         Assert.assertNotNull(user.getUserName());
         Assert.assertNull(user.getId());
+
+        user = select("user_name, age").from(User.class).order("id desc").one();
+        Assert.assertNotNull(user);
+        Assert.assertNotNull(user.getUserName());
+        Assert.assertNotNull(user.getAge());
+
+        user = select(User::getUserName).from(User.class).order("id desc").one();
+        Assert.assertNotNull(user);
+        Assert.assertNotNull(user.getUserName());
+
+        user = select(User::getUserName, User::getAge).from(User.class).order("id desc").one();
+        Assert.assertNotNull(user);
+        Assert.assertNotNull(user.getUserName());
+        Assert.assertNotNull(user.getAge());
     }
 
     @Test
