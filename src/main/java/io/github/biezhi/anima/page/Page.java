@@ -102,7 +102,8 @@ public class Page<T> {
     }
 
     public Page<T> navPages(int navPages) {
-        this.init(this.totalRows, this.pageNum, this.limit);
+        // calculation of navigation pageNum after basic parameter setting
+        this.calcNavigatePageNumbers();
         return this;
     }
 
