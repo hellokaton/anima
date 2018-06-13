@@ -6,7 +6,7 @@ import io.github.biezhi.anima.page.PageRow;
 /**
  * SqlServer dialect
  *
- * @author biezhi
+ * @author biezhi,darren
  * @date 2018/3/18
  */
 public class SqlServerDialect implements Dialect {
@@ -20,17 +20,16 @@ public class SqlServerDialect implements Dialect {
         int end = pageNum * limit;
         if (end <= 0)
             end = limit;
-        int begin = (pageNum - 1) * limit;
-        if (begin < 0)
-            begin = 0;
+        int begin = (pageNum - 1) * limit + 1;
+        if (begin < 1)
+            begin = 1;
 
         StringBuilder sql = new StringBuilder();
-        sql.append("SELECT * FROM ( SELECT row_number() over (ORDER BY tempcolumn) temprownumber, * FROM ( SELECT top ")
-                .append(end)
-                .append(" tempcolumn=0,")
-                .append(select(sqlParams))
-                .append(")vip)mvp where temprownumber>")
-                .append(begin);
+
+        sql.append("with query as ( select inner_query.*, row_number() over (order by current_timestamp) as temprownumber from ( ");
+        sql.append(select(sqlParams).replaceFirst("(?i)select(\\s+distinct\\s+)?", "$0 top("+end+")"));
+        sql.append(" ) inner_query ) select * from query where temprownumber between ");
+        sql.append(begin).append(" and ").append(end);
         return sql.toString();
     }
 
