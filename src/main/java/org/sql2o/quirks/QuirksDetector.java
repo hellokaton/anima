@@ -10,18 +10,27 @@
 
 package org.sql2o.quirks;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ServiceLoader;
 
 /**
  * Automatically detects which quirks implementation to use. Falls back on NoQuirks.
  */
-public class QuirksDetector{
-    static final ServiceLoader<QuirksProvider> providers = ServiceLoader.load(QuirksProvider.class);
+public class QuirksDetector {
+
+    static final List<QuirksProvider> providers = new ArrayList<>();
+
+    static {
+        providers.add(new PostgresQuirksProvider());
+        providers.add(new OracleQuirksProvider());
+        providers.add(new Db2QuirksProvider());
+    }
 
     public static Quirks forURL(String jdbcUrl) {
 
-        for (QuirksProvider quirksProvider : ServiceLoader.load(QuirksProvider.class)) {
-            if (quirksProvider.isUsableForUrl(jdbcUrl)){
+        for (QuirksProvider quirksProvider : providers) {
+            if (quirksProvider.isUsableForUrl(jdbcUrl)) {
                 return quirksProvider.provide();
             }
         }
@@ -35,7 +44,7 @@ public class QuirksDetector{
                 jdbcObject.getClass().getCanonicalName();
 
         for (QuirksProvider quirksProvider : ServiceLoader.load(QuirksProvider.class)) {
-            if (quirksProvider.isUsableForClass(jdbcObjectClassName)){
+            if (quirksProvider.isUsableForClass(jdbcObjectClassName)) {
                 return quirksProvider.provide();
             }
         }
