@@ -223,6 +223,13 @@ public class AnimaUtils {
         return input.substring(0, 1).toLowerCase() + input.substring(1, input.length());
     }
 
+    /**
+     * Return the primary key of the model and set it to null
+     *
+     * @param model db model
+     * @param <S>   model generic type
+     * @return primary key value
+     */
     public static <S extends Model> Object getAndRemovePrimaryKey(S model) {
         try {
             String fieldName = AnimaCache.getPKField(model.getClass());
@@ -238,6 +245,13 @@ public class AnimaUtils {
         return null;
     }
 
+    /**
+     * Convert a List to a generic array
+     *
+     * @param list list collection
+     * @param <T>  generic
+     * @return array
+     */
     public static <T> T[] toArray(List<T> list) {
         T[] toR = (T[]) java.lang.reflect.Array.newInstance(list.get(0).getClass(), list.size());
         for (int i = 0; i < list.size(); i++) {
