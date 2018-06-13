@@ -1,18 +1,5 @@
 package io.github.biezhi.anima.oracle;
 
-import io.github.biezhi.anima.Anima;
-import io.github.biezhi.anima.dialect.OracleDialect;
-import io.github.biezhi.anima.model.ZhuanJia;
-import io.github.biezhi.anima.page.Page;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.sql.Driver;
-import java.sql.DriverManager;
-
-import static io.github.biezhi.anima.Anima.select;
-
 /**
  * @author biezhi
  * @date 2018/6/13
