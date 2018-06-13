@@ -940,13 +940,14 @@ public class AnimaQuery<T extends Model> {
         String     countSql = "SELECT COUNT(*) FROM (" + sql + ") tmp";
         Connection conn     = getConn();
         try {
-            long    count   = conn.createQuery(countSql).withParams(params).executeAndFetchFirst(Long.class);
-            String  pageSQL = this.buildPageSQL(sql, pageRow);
-            List<T> list    = conn.createQuery(pageSQL).withParams(params).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeAndFetch(modelClass);
-            this.setJoin(list);
-
+            long    count    = conn.createQuery(countSql).withParams(params).executeAndFetchFirst(Long.class);
             Page<T> pageBean = new Page<>(count, pageRow.getPageNum(), pageRow.getPageSize());
-            pageBean.setRows(list);
+            if (count > 0) {
+                String  pageSQL = this.buildPageSQL(sql, pageRow);
+                List<T> list    = conn.createQuery(pageSQL).withParams(params).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeAndFetch(modelClass);
+                this.setJoin(list);
+                pageBean.setRows(list);
+            }
             return pageBean;
         } finally {
             if (null == connectionThreadLocal.get() && null != conn) {
