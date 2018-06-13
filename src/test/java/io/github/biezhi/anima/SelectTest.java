@@ -199,6 +199,8 @@ public class SelectTest extends BaseTest {
         Assert.assertTrue(userPage.isHasNextPage());
         Assert.assertFalse(userPage.isHasPrevPage());
 
+        userPage = select().bySQL(User.class, "select * from users").page(1, 3);
+
         select().from(User.class).where(User::getAge).gt(20).order(User::getId, OrderBy.DESC).page(2, 3);
     }
 

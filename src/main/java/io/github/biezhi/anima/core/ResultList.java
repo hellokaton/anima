@@ -43,16 +43,16 @@ public class ResultList<T> {
     }
 
     public T one() {
-        return new AnimaQuery<>().queryOne(type, sql, params);
+        return new AnimaQuery<>().useSQL().queryOne(type, sql, params);
     }
 
     public List<T> all() {
-        return new AnimaQuery<>().queryList(type, sql, params);
+        return new AnimaQuery<>().useSQL().queryList(type, sql, params);
     }
 
     public <S extends Model> Page<S> page(PageRow pageRow) {
         Class<S> modelType = (Class<S>) type;
-        return new AnimaQuery<>(modelType).page(sql, params, pageRow);
+        return new AnimaQuery<>(modelType).useSQL().page(sql, params, pageRow);
     }
 
     public <S extends Model> Page<S> page(int page, int limit) {

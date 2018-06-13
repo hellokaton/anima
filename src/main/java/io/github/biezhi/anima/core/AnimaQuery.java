@@ -94,6 +94,11 @@ public class AnimaQuery<T extends Model> {
     private boolean isSQLLimit;
 
     /**
+     * Is this query a custom SQL statement
+     */
+    private boolean useSQL;
+
+    /**
      * Specify a few columns, such as “uid, name, age”
      */
     private String selectColumns;
@@ -937,9 +942,9 @@ public class AnimaQuery<T extends Model> {
      */
     public Page<T> page(String sql, Object[] params, PageRow pageRow) {
         this.beforeCheck();
-        String     countSql = "SELECT COUNT(*) FROM (" + sql + ") tmp";
-        Connection conn     = getConn();
+        Connection conn = getConn();
         try {
+            String  countSql = useSQL ? "SELECT COUNT(*) FROM (" + sql + ") tmp" : buildCountSQL(sql);
             long    count    = conn.createQuery(countSql).withParams(params).executeAndFetchFirst(Long.class);
             Page<T> pageBean = new Page<>(count, pageRow.getPageNum(), pageRow.getPageSize());
             if (count > 0) {
@@ -955,6 +960,10 @@ public class AnimaQuery<T extends Model> {
             }
             this.clean(null);
         }
+    }
+
+    private String buildCountSQL(String sql) {
+        return "SELECT COUNT(*) " + sql.substring(sql.indexOf("FROM"));
     }
 
     /**
@@ -1423,6 +1432,11 @@ public class AnimaQuery<T extends Model> {
                 .conditionSQL(this.conditionSQL)
                 .build();
         return Anima.me().getDialect().delete(sqlParams);
+    }
+
+    public AnimaQuery<T> useSQL() {
+        this.useSQL = true;
+        return this;
     }
 
     /**

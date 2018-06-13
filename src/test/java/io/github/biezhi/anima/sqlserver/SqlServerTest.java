@@ -20,7 +20,7 @@ import static io.github.biezhi.anima.Anima.select;
  */
 public class SqlServerTest {
 
-    @Before
+//    @Before
     public void before() {
         try {
             Class oracleDriverClass = OracleTest.class.getClassLoader().loadClass("com.microsoft.sqlserver.jdbc.SQLServerDriver");
@@ -32,7 +32,7 @@ public class SqlServerTest {
         Anima.open("jdbc:sqlserver://192.168.123.114:1433;databaseName=dev", "sa", "Abcd1234").dialect(new SqlServer2012Dialect());
     }
 
-    @Test
+//    @Test
     public void testPage(){
         Page<User> page = select().from(User.class).where(User::getAge).gte(3).page(2, 10);
         System.out.println(page.getRows());
