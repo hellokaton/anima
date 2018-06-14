@@ -3,6 +3,8 @@ package io.github.biezhi.anima.core;
 import com.blade.reflectasm.MethodAccess;
 import io.github.biezhi.anima.Anima;
 import io.github.biezhi.anima.annotation.Column;
+import io.github.biezhi.anima.annotation.EnumMapping;
+import io.github.biezhi.anima.annotation.Ignore;
 import io.github.biezhi.anima.annotation.Table;
 import io.github.biezhi.anima.exception.AnimaException;
 import io.github.biezhi.anima.utils.AnimaUtils;
@@ -11,7 +13,10 @@ import io.github.biezhi.anima.utils.English;
 import java.lang.invoke.SerializedLambda;
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static io.github.biezhi.anima.utils.AnimaUtils.methodToFieldName;
 
@@ -33,6 +38,17 @@ public final class AnimaCache {
     private static final Map<String, String>      GETTER_METHOD_NAME = new HashMap<>();
     private static final Map<String, String>      SETTER_METHOD_NAME = new HashMap<>();
     private static final Map<String, String>      FIELD_COLUMN_NAME  = new HashMap<>();
+
+    private static final Map<Class, List<Field>> MODEL_AVAILABLE_FIELDS = new HashMap<>();
+
+    /**
+     * 可用
+     * @param clazz
+     * @return
+     */
+    public static List<Field> getModelFields(Class clazz) {
+        return MODEL_AVAILABLE_FIELDS.computeIfAbsent(clazz, model -> Stream.of(model.getDeclaredFields()).filter(field -> !isIgnore(field)).collect(Collectors.toList()));
+    }
 
     /**
      * User -> users
@@ -119,6 +135,12 @@ public final class AnimaCache {
         String fieldName  = methodToFieldName(methodName);
         CACHE_FIELD_NAME.put(serializedLambda, fieldName);
         return fieldName;
+    }
+
+    public static boolean isIgnore(Field field) {
+        if ("serialVersionUID".equals(field.getName())) return true;
+        if (null != field.getAnnotation(Ignore.class)) return true;
+        return false;
     }
 
 }

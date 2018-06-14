@@ -184,13 +184,14 @@ public class Query implements AutoCloseable {
         }
 
         // parameters assignation to query
-        paramIndexValues.forEach((index, value) -> {
+        for (Map.Entry<Integer, Object> entry : paramIndexValues.entrySet()) {
             try {
-                getQuirks().setParameter(preparedStatement, index, value);
+                getQuirks().setParameter(preparedStatement, entry.getKey(), entry.getValue());
             } catch (SQLException e) {
-                throw new RuntimeException(String.format("Error adding parameter '%s' - %s", index, e.getMessage()), e);
+                throw new RuntimeException(String.format("Error adding parameter '%s' - %s", entry.getKey(), e.getMessage()), e);
             }
-        });
+        }
+
         paramIndexValues.clear();
         return preparedStatement;
     }

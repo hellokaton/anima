@@ -8,7 +8,6 @@ import io.github.biezhi.anima.utils.AnimaUtils;
 import java.lang.reflect.Field;
 
 import static io.github.biezhi.anima.core.AnimaCache.getGetterName;
-import static io.github.biezhi.anima.utils.AnimaUtils.isIgnore;
 
 /**
  * Database Dialect
@@ -62,10 +61,7 @@ public interface Dialect {
         StringBuilder columnNames = new StringBuilder();
         StringBuilder placeholder = new StringBuilder();
 
-        for (Field field : sqlParams.getModelClass().getDeclaredFields()) {
-            if (isIgnore(field)) {
-                continue;
-            }
+        for (Field field : AnimaCache.getModelFields(sqlParams.getModelClass())) {
             columnNames.append(",").append(AnimaCache.getColumnName(field));
             placeholder.append(",?");
         }
@@ -84,11 +80,8 @@ public interface Dialect {
             sqlParams.getUpdateColumns().forEach((key, value) -> setSQL.append(key).append(" = ?, "));
         } else {
             if (null != sqlParams.getModel()) {
-                for (Field field : sqlParams.getModelClass().getDeclaredFields()) {
+                for (Field field : AnimaCache.getModelFields(sqlParams.getModelClass())) {
                     try {
-                        if (isIgnore(field)) {
-                            continue;
-                        }
                         Object value = AnimaUtils.invokeMethod(sqlParams.getModel(), getGetterName(field.getName()));
                         if (null == value) {
                             continue;
@@ -116,10 +109,7 @@ public interface Dialect {
         } else {
             if (null != sqlParams.getModel()) {
                 StringBuilder columnNames = new StringBuilder();
-                for (Field field : sqlParams.getModelClass().getDeclaredFields()) {
-                    if (isIgnore(field)) {
-                        continue;
-                    }
+                for (Field field : AnimaCache.getModelFields(sqlParams.getModelClass())) {
                     try {
                         Object value = AnimaUtils.invokeMethod(sqlParams.getModel(), getGetterName(field.getName()));
                         if (null == value) {

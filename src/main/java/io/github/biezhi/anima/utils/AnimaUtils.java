@@ -34,6 +34,7 @@ import java.util.Collection;
 import java.util.List;
 
 import static io.github.biezhi.anima.core.AnimaCache.METHOD_ACCESS_MAP;
+import static io.github.biezhi.anima.core.AnimaCache.isIgnore;
 
 /**
  * Utility class for composing SQL statements
@@ -91,10 +92,7 @@ public class AnimaUtils {
 
     public static <T extends Model> List<Object> toColumnValues(T model, boolean allowNull) {
         List<Object> columnValueList = new ArrayList<>();
-        for (Field field : model.getClass().getDeclaredFields()) {
-            if (isIgnore(field)) {
-                continue;
-            }
+        for (Field field : AnimaCache.getModelFields(model.getClass())) {
             try {
                 Object value = invokeMethod(model, AnimaCache.getGetterName(field.getName()));
                 if (null != value) {
@@ -124,9 +122,8 @@ public class AnimaUtils {
     }
 
     public static <T extends Model> String buildColumns(List<String> excludedColumns, Class<T> modelClass) {
-        StringBuilder sql            = new StringBuilder();
-        Field[]       declaredFields = modelClass.getDeclaredFields();
-        for (Field field : declaredFields) {
+        StringBuilder sql = new StringBuilder();
+        for (Field field : AnimaCache.getModelFields(modelClass)) {
             String columnName = AnimaCache.getColumnName(field);
             if (!isIgnore(field) && !excludedColumns.contains(columnName)) {
                 sql.append(columnName).append(',');
@@ -136,12 +133,6 @@ public class AnimaUtils {
             return sql.substring(0, sql.length() - 1);
         }
         return "*";
-    }
-
-    public static boolean isIgnore(Field field) {
-        if ("serialVersionUID".equals(field.getName())) return true;
-        if (null != field.getAnnotation(Ignore.class)) return true;
-        return false;
     }
 
     public static Object invokeMethod(Object target, String methodName, Object... args) {

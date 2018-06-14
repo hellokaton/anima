@@ -32,13 +32,15 @@ public class UpdateTest extends BaseTest {
         user.setUserName("jack");
         user.update();
 
+        Long start = System.currentTimeMillis();
         for (int i = 0; i < 100000; i++) {
             user = new User();
             user.setUserName("jack");
             user.updateById(1);
         }
-        System.out.println("OK");
-        while (true){
+        System.out.println("OK: " + (System.currentTimeMillis() - start) + "ms");
+
+        while (true) {
             try {
                 TimeUnit.SECONDS.sleep(2);
             } catch (InterruptedException e) {
