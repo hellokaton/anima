@@ -1,9 +1,12 @@
 package io.github.biezhi.anima.core;
 
+import com.blade.reflectasm.MethodAccess;
 import io.github.biezhi.anima.Anima;
+import io.github.biezhi.anima.annotation.Column;
 import io.github.biezhi.anima.annotation.Table;
 import io.github.biezhi.anima.exception.AnimaException;
 import io.github.biezhi.anima.utils.AnimaUtils;
+import io.github.biezhi.anima.utils.English;
 
 import java.lang.invoke.SerializedLambda;
 import java.lang.reflect.Field;
@@ -25,23 +28,50 @@ public final class AnimaCache {
     static final Map<Class<?>, String>         CACHE_PK_FIELD_NAME  = new HashMap<>(8);
     static final Map<SerializedLambda, String> CACHE_LAMBDA_NAME    = new HashMap<>(8);
     static final Map<SerializedLambda, String> CACHE_FIELD_NAME     = new HashMap<>(8);
-    static final Map<String, Field>            CACHE_MODEL_FIELD    = new HashMap<>(8);
 
+    public static final  Map<Class, MethodAccess> METHOD_ACCESS_MAP  = new HashMap<>();
+    private static final Map<String, String>      GETTER_METHOD_NAME = new HashMap<>();
+    private static final Map<String, String>      SETTER_METHOD_NAME = new HashMap<>();
+    private static final Map<String, String>      FIELD_COLUMN_NAME  = new HashMap<>();
+
+    /**
+     * User -> users
+     * User -> t_users
+     *
+     * @param className
+     * @param prefix
+     * @return
+     */
+    public static String getTableName(String className, String prefix) {
+        boolean hasPrefix = prefix != null && prefix.trim().length() > 0;
+        return hasPrefix ? English.plural(prefix + "_" + AnimaUtils.toUnderline(className), 2) : English.plural(AnimaUtils.toUnderline(className), 2);
+    }
+
+    public static String getColumnName(Field field) {
+        Column column = field.getAnnotation(Column.class);
+        if (null != column) {
+            return column.name();
+        }
+        String key = field.getDeclaringClass().getSimpleName() + "_" + field.getName();
+        return FIELD_COLUMN_NAME.computeIfAbsent(key, c -> AnimaUtils.toUnderline(field.getName()));
+    }
+
+    public static String getGetterName(String fieldName) {
+        return GETTER_METHOD_NAME.computeIfAbsent(fieldName, name -> "get" + Character.toUpperCase(name.charAt(0)) + name.substring(1));
+    }
+
+    public static String getSetterName(String fieldName) {
+        return SETTER_METHOD_NAME.computeIfAbsent(fieldName, name -> "set" + Character.toUpperCase(name.charAt(0)) + name.substring(1));
+    }
 
     public static String getTableName(Class<?> modelClass) {
-        String tableName = CACHE_TABLE_NAME.get(modelClass);
-        if (null != tableName) {
-            return tableName;
-        }
-        Table table = modelClass.getAnnotation(Table.class);
-        if (null != table && AnimaUtils.isNotEmpty(table.name())) {
-            tableName = table.name();
-            CACHE_TABLE_NAME.put(modelClass, tableName);
-            return tableName;
-        }
-        tableName = AnimaUtils.toTableName(modelClass.getSimpleName(), Anima.me().getTablePrefix());
-        CACHE_TABLE_NAME.put(modelClass, tableName);
-        return tableName;
+        return CACHE_TABLE_NAME.computeIfAbsent(modelClass, type -> {
+            Table table = type.getAnnotation(Table.class);
+            if (null != table && AnimaUtils.isNotEmpty(table.name())) {
+                return table.name();
+            }
+            return getTableName(type.getSimpleName(), Anima.me().getTablePrefix());
+        });
     }
 
     public static String getPKColumn(Class<?> modelClass) {
@@ -61,27 +91,23 @@ public final class AnimaCache {
             return pkField;
         }
         String pkColumn = AnimaCache.getPKColumn(modelClass);
-        pkField = AnimaUtils.toFieldName(pkColumn);
+        pkField = AnimaUtils.toCamelName(pkColumn);
         CACHE_PK_FIELD_NAME.put(modelClass, pkField);
         return pkField;
     }
 
     public static String getLambdaColumnName(SerializedLambda serializedLambda) {
-        String name = CACHE_LAMBDA_NAME.get(serializedLambda);
-        if (null != name) {
-            return name;
-        }
-        String className  = serializedLambda.getImplClass().replace("/", ".");
-        String methodName = serializedLambda.getImplMethodName();
-        String fieldName  = methodToFieldName(methodName);
-        try {
-            Field field = Class.forName(className).getDeclaredField(fieldName);
-            name = AnimaUtils.toColumnName(field);
-            CACHE_LAMBDA_NAME.put(serializedLambda, name);
-            return name;
-        } catch (NoSuchFieldException | ClassNotFoundException e) {
-            throw new AnimaException(e);
-        }
+        return CACHE_LAMBDA_NAME.computeIfAbsent(serializedLambda, lambda -> {
+            String className  = serializedLambda.getImplClass().replace("/", ".");
+            String methodName = serializedLambda.getImplMethodName();
+            String fieldName  = methodToFieldName(methodName);
+            try {
+                Field field = Class.forName(className).getDeclaredField(fieldName);
+                return getColumnName(field);
+            } catch (NoSuchFieldException | ClassNotFoundException e) {
+                throw new AnimaException(e);
+            }
+        });
     }
 
     public static String getLambdaFieldName(SerializedLambda serializedLambda) {
@@ -95,19 +121,4 @@ public final class AnimaCache {
         return fieldName;
     }
 
-    public static Field getField(Class<?> clazz, String fieldName) {
-        String key   = clazz.getName() + ":" + fieldName;
-        Field  field = CACHE_MODEL_FIELD.get(key);
-        if (null != field) {
-            return field;
-        }
-        try {
-            field = clazz.getDeclaredField(fieldName);
-            field.setAccessible(true);
-            CACHE_MODEL_FIELD.put(key, field);
-            return field;
-        } catch (Exception e) {
-            throw new AnimaException(e);
-        }
-    }
 }

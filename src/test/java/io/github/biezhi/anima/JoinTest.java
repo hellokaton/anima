@@ -9,6 +9,8 @@ import io.github.biezhi.anima.model.UserDto;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.List;
+
 import static io.github.biezhi.anima.Anima.select;
 
 /**
@@ -57,16 +59,17 @@ public class JoinTest extends BaseTest {
 
         Assert.assertNotNull(orderInfo);
         Assert.assertNotNull(orderInfo.getUser());
-
-        // OneToMany
-        UserDto userDto = select().from(UserDto.class).join(
-                Joins.with(OrderInfo.class).as(UserDto::getOrders)
-                        .on(UserDto::getId, OrderInfo::getUid)
-        ).byId(1);
-        Assert.assertNotNull(userDto);
-        Assert.assertNotNull(userDto.getOrders());
     }
 
+    @Test
+    public void testOneToMany(){
+        List<UserDto> userDto = select().from(UserDto.class).join(
+                Joins.with(OrderInfo.class).as(UserDto::getOrders)
+                        .on(UserDto::getId, OrderInfo::getUid)
+        ).all();
+        Assert.assertNotNull(userDto);
+        Assert.assertNotNull(userDto.get(0).getOrders());
+    }
     @Test
     public void testOrderBy() {
         // OneToMany

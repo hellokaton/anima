@@ -38,6 +38,9 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static io.github.biezhi.anima.core.AnimaCache.getGetterName;
+import static io.github.biezhi.anima.core.AnimaCache.getSetterName;
+
 /**
  * Operational database core class
  *
@@ -244,14 +247,15 @@ public class AnimaQuery<T extends Model> {
     public AnimaQuery<T> where(T model) {
         Field[] declaredFields = model.getClass().getDeclaredFields();
         for (Field declaredField : declaredFields) {
-            Object value = AnimaUtils.getFieldValue(declaredField, model);
+
+            Object value = AnimaUtils.invokeMethod(model, getGetterName(declaredField.getName()));
             if (null == value) {
                 continue;
             }
             if (declaredField.getType().equals(String.class) && AnimaUtils.isEmpty(value.toString())) {
                 continue;
             }
-            String columnName = AnimaUtils.toColumnName(declaredField);
+            String columnName = AnimaCache.getColumnName(declaredField);
             this.where(columnName, value);
         }
         return this;
@@ -1537,23 +1541,22 @@ public class AnimaQuery<T extends Model> {
     private void setJoin(T model) {
         for (JoinParam joinParam : joinParams) {
             try {
-                Field modelField = model.getClass().getDeclaredField(joinParam.getOnLeft());
-                modelField.setAccessible(true);
-                Object leftValue = modelField.get(model);
-                String sql       = "SELECT * FROM " + AnimaCache.getTableName(joinParam.getJoinModel()) + " WHERE " + joinParam.getOnRight() + " = ?";
-                Field  field     = model.getClass().getDeclaredField(joinParam.getFieldName());
+                Object leftValue = AnimaUtils.invokeMethod(model, getGetterName(joinParam.getOnLeft()));
+
+                String sql   = "SELECT * FROM " + AnimaCache.getTableName(joinParam.getJoinModel()) + " WHERE " + joinParam.getOnRight() + " = ?";
+                Field  field = model.getClass().getDeclaredField(joinParam.getFieldName());
                 if (field.getType().equals(List.class)) {
                     if (AnimaUtils.isNotEmpty(joinParam.getOrderBy())) {
                         sql += " ORDER BY " + joinParam.getOrderBy();
                     }
                     List<? extends Model> list = this.queryList(joinParam.getJoinModel(), sql, new Object[]{leftValue});
-                    AnimaUtils.setFieldValue(joinParam.getFieldName(), model, list);
+                    AnimaUtils.invokeMethod(model, getSetterName(joinParam.getFieldName()), list);
                 }
                 if (field.getType().equals(joinParam.getJoinModel())) {
                     Object joinObject = this.queryOne(joinParam.getJoinModel(), sql, new Object[]{leftValue});
-                    AnimaUtils.setFieldValue(joinParam.getFieldName(), model, joinObject);
+                    AnimaUtils.invokeMethod(model, getSetterName(joinParam.getFieldName()), joinObject);
                 }
-            } catch (NoSuchFieldException | IllegalAccessException e) {
+            } catch (NoSuchFieldException e) {
                 log.error("Set join error", e);
             }
         }

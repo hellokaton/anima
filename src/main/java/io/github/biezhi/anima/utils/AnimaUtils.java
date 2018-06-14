@@ -15,8 +15,8 @@
  */
 package io.github.biezhi.anima.utils;
 
+import com.blade.reflectasm.MethodAccess;
 import io.github.biezhi.anima.Model;
-import io.github.biezhi.anima.annotation.Column;
 import io.github.biezhi.anima.annotation.EnumMapping;
 import io.github.biezhi.anima.annotation.Ignore;
 import io.github.biezhi.anima.core.AnimaCache;
@@ -32,6 +32,8 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import static io.github.biezhi.anima.core.AnimaCache.METHOD_ACCESS_MAP;
 
 /**
  * Utility class for composing SQL statements
@@ -52,29 +54,13 @@ public class AnimaUtils {
     }
 
     /**
-     * User -> user | prefix_user
-     */
-    public static String toTableName(String className, String prefix) {
-        boolean hasPrefix = prefix != null && prefix.trim().length() > 0;
-        return hasPrefix ? English.plural(prefix + "_" + toColumnName(className), 2) : English.plural(toColumnName(className), 2);
-    }
-
-    /**
-     * eg: userId -> user_id
-     */
-    public static String toColumnName(Field field) {
-        Column column = field.getAnnotation(Column.class);
-        if (null != column) {
-            return column.name();
-        }
-        return toColumnName(field.getName());
-    }
-
-    /**
      * eg: user_id -> userId
+     *
+     * @param value
+     * @return
      */
-    public static String toFieldName(String columnName) {
-        String[]     partOfNames = columnName.split("_");
+    public static String toCamelName(String value) {
+        String[]     partOfNames = value.split("_");
         StringBuffer sb          = new StringBuffer(partOfNames[0]);
         for (int i = 1; i < partOfNames.length; i++) {
             sb.append(partOfNames[i].substring(0, 1).toUpperCase());
@@ -83,12 +69,15 @@ public class AnimaUtils {
         return sb.toString();
     }
 
-    public static String toColumnName(String propertyName) {
+    /**
+     * eg: userId -> user_id
+     */
+    public static String toUnderline(String value) {
         StringBuilder result = new StringBuilder();
-        if (propertyName != null && propertyName.length() > 0) {
-            result.append(propertyName.substring(0, 1).toLowerCase());
-            for (int i = 1; i < propertyName.length(); i++) {
-                String s = propertyName.substring(i, i + 1);
+        if (value != null && value.length() > 0) {
+            result.append(value.substring(0, 1).toLowerCase());
+            for (int i = 1; i < value.length(); i++) {
+                String s = value.substring(i, i + 1);
                 if (s.equals(s.toUpperCase())) {
                     result.append("_");
                     result.append(s.toLowerCase());
@@ -106,9 +95,8 @@ public class AnimaUtils {
             if (isIgnore(field)) {
                 continue;
             }
-            field.setAccessible(true);
             try {
-                Object value = field.get(model);
+                Object value = invokeMethod(model, AnimaCache.getGetterName(field.getName()));
                 if (null != value) {
                     if (value instanceof Enum) {
                         EnumMapping enumMapping = field.getAnnotation(EnumMapping.class);
@@ -128,7 +116,7 @@ public class AnimaUtils {
                 } else if (allowNull) {
                     columnValueList.add(null);
                 }
-            } catch (IllegalArgumentException | IllegalAccessException e) {
+            } catch (IllegalArgumentException e) {
                 throw new AnimaException("illegal argument or Access:", e);
             }
         }
@@ -139,7 +127,7 @@ public class AnimaUtils {
         StringBuilder sql            = new StringBuilder();
         Field[]       declaredFields = modelClass.getDeclaredFields();
         for (Field field : declaredFields) {
-            String columnName = toColumnName(field.getName());
+            String columnName = AnimaCache.getColumnName(field);
             if (!isIgnore(field) && !excludedColumns.contains(columnName)) {
                 sql.append(columnName).append(',');
             }
@@ -156,23 +144,9 @@ public class AnimaUtils {
         return false;
     }
 
-    public static Object getFieldValue(Field field, Object target) {
-        try {
-            field.setAccessible(true);
-            return field.get(target);
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    public static void setFieldValue(String fieldName, Object target, Object value) {
-        try {
-            Field field = AnimaCache.getField(target.getClass(), fieldName);
-            field.set(target, value);
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
+    public static Object invokeMethod(Object target, String methodName, Object... args) {
+        MethodAccess methodAccess = METHOD_ACCESS_MAP.computeIfAbsent(target.getClass(), MethodAccess::get);
+        return methodAccess.invoke(target, methodName, args);
     }
 
     public static String getLambdaColumnName(Serializable lambda) {
@@ -231,18 +205,12 @@ public class AnimaUtils {
      * @return primary key value
      */
     public static <S extends Model> Object getAndRemovePrimaryKey(S model) {
-        try {
-            String fieldName = AnimaCache.getPKField(model.getClass());
-            Field  field     = model.getClass().getDeclaredField(fieldName);
-            field.setAccessible(true);
-            Object value = field.get(model);
-            if (null != value) {
-                field.set(model, null);
-            }
-            return value;
-        } catch (NoSuchFieldException | IllegalAccessException e) {
+        String fieldName = AnimaCache.getPKField(model.getClass());
+        Object value     = invokeMethod(model, AnimaCache.getGetterName(fieldName));
+        if (null != value) {
+            invokeMethod(model, AnimaCache.getSetterName(fieldName), null);
         }
-        return null;
+        return value;
     }
 
     /**

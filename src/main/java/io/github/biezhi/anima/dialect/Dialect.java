@@ -1,11 +1,13 @@
 package io.github.biezhi.anima.dialect;
 
+import io.github.biezhi.anima.core.AnimaCache;
 import io.github.biezhi.anima.core.SQLParams;
 import io.github.biezhi.anima.exception.AnimaException;
 import io.github.biezhi.anima.utils.AnimaUtils;
 
 import java.lang.reflect.Field;
 
+import static io.github.biezhi.anima.core.AnimaCache.getGetterName;
 import static io.github.biezhi.anima.utils.AnimaUtils.isIgnore;
 
 /**
@@ -64,7 +66,7 @@ public interface Dialect {
             if (isIgnore(field)) {
                 continue;
             }
-            columnNames.append(",").append(AnimaUtils.toColumnName(field));
+            columnNames.append(",").append(AnimaCache.getColumnName(field));
             placeholder.append(",?");
         }
         sql.append("(").append(columnNames.substring(1)).append(")").append(" VALUES (")
@@ -87,13 +89,12 @@ public interface Dialect {
                         if (isIgnore(field)) {
                             continue;
                         }
-                        field.setAccessible(true);
-                        Object value = field.get(sqlParams.getModel());
+                        Object value = AnimaUtils.invokeMethod(sqlParams.getModel(), getGetterName(field.getName()));
                         if (null == value) {
                             continue;
                         }
-                        setSQL.append(AnimaUtils.toColumnName(field.getName())).append(" = ?, ");
-                    } catch (IllegalArgumentException | IllegalAccessException e) {
+                        setSQL.append(AnimaCache.getColumnName(field)).append(" = ?, ");
+                    } catch (IllegalArgumentException e) {
                         throw new AnimaException("illegal argument or Access:", e);
                     }
                 }
@@ -120,13 +121,12 @@ public interface Dialect {
                         continue;
                     }
                     try {
-                        field.setAccessible(true);
-                        Object value = field.get(sqlParams.getModel());
+                        Object value = AnimaUtils.invokeMethod(sqlParams.getModel(), getGetterName(field.getName()));
                         if (null == value) {
                             continue;
                         }
-                        columnNames.append(AnimaUtils.toColumnName(field.getName())).append(" = ? and ");
-                    } catch (IllegalArgumentException | IllegalAccessException e) {
+                        columnNames.append(AnimaCache.getColumnName(field)).append(" = ? and ");
+                    } catch (IllegalArgumentException e) {
                         throw new AnimaException("illegal argument or Access:", e);
                     }
                 }

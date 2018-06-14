@@ -54,7 +54,14 @@ public class BaseTest {
     }
 
     protected static void h2() {
-        Sql2o sql2o = Anima.open("jdbc:h2:file:~/demo;FILE_LOCK=FS;PAGE_SIZE=1024;CACHE_SIZE=8192", "sa", "").getSql2o();
+
+        HikariDataSource ds = new HikariDataSource();
+        ds.setJdbcUrl("jdbc:h2:file:~/demo;FILE_LOCK=FS;PAGE_SIZE=1024;CACHE_SIZE=8192");
+        ds.setUsername("sa");
+        ds.setPassword("");
+
+        Sql2o sql2o = Anima.open(ds).getSql2o();
+//        Sql2o sql2o = Anima.open("jdbc:h2:file:~/demo;FILE_LOCK=FS;PAGE_SIZE=1024;CACHE_SIZE=8192", "sa", "").getSql2o();
 
         String sql = "DROP TABLE IF EXISTS `users`;\n" +
                 "CREATE TABLE `users` (" +

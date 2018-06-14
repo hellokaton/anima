@@ -4,6 +4,8 @@ import io.github.biezhi.anima.model.User;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.concurrent.TimeUnit;
+
 import static io.github.biezhi.anima.Anima.update;
 
 /**
@@ -30,10 +32,20 @@ public class UpdateTest extends BaseTest {
         user.setUserName("jack");
         user.update();
 
-        user = new User();
-        user.setUserName("jack");
-        int result = user.updateById(1);
-        Assert.assertEquals(1, result);
+        for (int i = 0; i < 100000; i++) {
+            user = new User();
+            user.setUserName("jack");
+            user.updateById(1);
+        }
+        System.out.println("OK");
+        while (true){
+            try {
+                TimeUnit.SECONDS.sleep(2);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+//        Assert.assertEquals(1, result);
     }
 
     @Test
