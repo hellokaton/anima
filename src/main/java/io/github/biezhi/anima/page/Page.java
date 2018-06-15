@@ -92,18 +92,22 @@ public class Page<T> {
 
     public <R> Page<R> map(Function<? super T, ? extends R> mapper) {
         Page<R> page = new Page<>(this.totalRows, this.pageNum, this.limit);
-        page.setRows(rows.stream().map(mapper).collect(Collectors.toList()));
+        if (null != rows) {
+            page.setRows(rows.stream().map(mapper).collect(Collectors.toList()));
+        }
         return page;
     }
 
     public Page<T> peek(Consumer<T> consumer) {
-        this.rows = rows.stream().peek(consumer).collect(Collectors.toList());
+        if (null != rows) {
+            this.rows = rows.stream().peek(consumer).collect(Collectors.toList());
+        }
         return this;
     }
 
     public Page<T> navPages(int navPages) {
         // calculation of navigation pageNum after basic parameter setting
-        this.calcNavigatePageNumbers();
+        this.calcNavigatePageNumbers(navPages);
         return this;
     }
 
@@ -130,13 +134,13 @@ public class Page<T> {
         }
 
         // calculation of navigation pageNum after basic parameter setting
-        this.calcNavigatePageNumbers();
+        this.calcNavigatePageNumbers(this.navPages);
 
         // and the determination of pageNum boundaries
         judgePageBoudary();
     }
 
-    private void calcNavigatePageNumbers() {
+    private void calcNavigatePageNumbers(int navPages) {
         // when the total number of pages is less than or equal to the number of navigation pages
         if (this.totalPages <= navPages) {
             navPageNums = new int[totalPages];
