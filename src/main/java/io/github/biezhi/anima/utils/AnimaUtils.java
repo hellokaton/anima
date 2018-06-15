@@ -137,7 +137,7 @@ public class AnimaUtils {
 
     public static Object invokeMethod(Object target, String methodName, Object... args) {
         MethodAccess methodAccess = METHOD_ACCESS_MAP.computeIfAbsent(target.getClass(), MethodAccess::get);
-        return methodAccess.invoke(target, methodName, args);
+        return methodAccess.invokeWithCache(target, methodName, args);
     }
 
     public static String getLambdaColumnName(Serializable lambda) {
