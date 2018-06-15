@@ -248,7 +248,7 @@ public class AnimaQuery<T extends Model> {
         Field[] declaredFields = model.getClass().getDeclaredFields();
         for (Field declaredField : declaredFields) {
 
-            Object value = AnimaUtils.invokeMethod(model, getGetterName(declaredField.getName()));
+            Object value = AnimaUtils.invokeMethod(model, getGetterName(declaredField.getName()), AnimaUtils.EMPTY_ARG);
             if (null == value) {
                 continue;
             }
@@ -1541,7 +1541,7 @@ public class AnimaQuery<T extends Model> {
     private void setJoin(T model) {
         for (JoinParam joinParam : joinParams) {
             try {
-                Object leftValue = AnimaUtils.invokeMethod(model, getGetterName(joinParam.getOnLeft()));
+                Object leftValue = AnimaUtils.invokeMethod(model, getGetterName(joinParam.getOnLeft()), AnimaUtils.EMPTY_ARG);
 
                 String sql   = "SELECT * FROM " + AnimaCache.getTableName(joinParam.getJoinModel()) + " WHERE " + joinParam.getOnRight() + " = ?";
                 Field  field = model.getClass().getDeclaredField(joinParam.getFieldName());
@@ -1550,11 +1550,11 @@ public class AnimaQuery<T extends Model> {
                         sql += " ORDER BY " + joinParam.getOrderBy();
                     }
                     List<? extends Model> list = this.queryList(joinParam.getJoinModel(), sql, new Object[]{leftValue});
-                    AnimaUtils.invokeMethod(model, getSetterName(joinParam.getFieldName()), list);
+                    AnimaUtils.invokeMethod(model, getSetterName(joinParam.getFieldName()), new Object[]{list});
                 }
                 if (field.getType().equals(joinParam.getJoinModel())) {
                     Object joinObject = this.queryOne(joinParam.getJoinModel(), sql, new Object[]{leftValue});
-                    AnimaUtils.invokeMethod(model, getSetterName(joinParam.getFieldName()), joinObject);
+                    AnimaUtils.invokeMethod(model, getSetterName(joinParam.getFieldName()), new Object[]{joinObject});
                 }
             } catch (NoSuchFieldException e) {
                 log.error("Set join error", e);

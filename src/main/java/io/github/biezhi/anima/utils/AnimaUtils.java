@@ -30,6 +30,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -41,6 +42,9 @@ import static io.github.biezhi.anima.core.AnimaCache.isIgnore;
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AnimaUtils {
+
+    public static final Object[] EMPTY_ARG = new Object[]{};
+    public static final Object[] NULL_ARG  = new Object[]{null};
 
     public static boolean isNotEmpty(String value) {
         return null != value && !value.isEmpty();
@@ -94,7 +98,7 @@ public class AnimaUtils {
         List<Object> columnValueList = new ArrayList<>();
         for (Field field : AnimaCache.getModelFields(model.getClass())) {
             try {
-                Object value = invokeMethod(model, AnimaCache.getGetterName(field.getName()));
+                Object value = invokeMethod(model, AnimaCache.getGetterName(field.getName()), EMPTY_ARG);
                 if (null != value) {
                     if (value instanceof Enum) {
                         EnumMapping enumMapping = field.getAnnotation(EnumMapping.class);
@@ -135,8 +139,11 @@ public class AnimaUtils {
         return "*";
     }
 
-    public static Object invokeMethod(Object target, String methodName, Object... args) {
-        MethodAccess methodAccess = METHOD_ACCESS_MAP.computeIfAbsent(target.getClass(), MethodAccess::get);
+    public static Object invokeMethod(Object target, String methodName, Object[] args) {
+        MethodAccess methodAccess = METHOD_ACCESS_MAP.computeIfAbsent(target.getClass(), type -> {
+            List<Method> methods = Arrays.asList(type.getDeclaredMethods());
+            return MethodAccess.get(type, methods);
+        });
         return methodAccess.invokeWithCache(target, methodName, args);
     }
 
@@ -197,9 +204,9 @@ public class AnimaUtils {
      */
     public static <S extends Model> Object getAndRemovePrimaryKey(S model) {
         String fieldName = AnimaCache.getPKField(model.getClass());
-        Object value     = invokeMethod(model, AnimaCache.getGetterName(fieldName));
+        Object value     = invokeMethod(model, AnimaCache.getGetterName(fieldName), EMPTY_ARG);
         if (null != value) {
-            invokeMethod(model, AnimaCache.getSetterName(fieldName), null);
+            invokeMethod(model, AnimaCache.getSetterName(fieldName), NULL_ARG);
         }
         return value;
     }

@@ -82,7 +82,7 @@ public interface Dialect {
             if (null != sqlParams.getModel()) {
                 for (Field field : AnimaCache.getModelFields(sqlParams.getModelClass())) {
                     try {
-                        Object value = AnimaUtils.invokeMethod(sqlParams.getModel(), getGetterName(field.getName()));
+                        Object value = AnimaUtils.invokeMethod(sqlParams.getModel(), getGetterName(field.getName()), AnimaUtils.EMPTY_ARG);
                         if (null == value) {
                             continue;
                         }
@@ -111,7 +111,7 @@ public interface Dialect {
                 StringBuilder columnNames = new StringBuilder();
                 for (Field field : AnimaCache.getModelFields(sqlParams.getModelClass())) {
                     try {
-                        Object value = AnimaUtils.invokeMethod(sqlParams.getModel(), getGetterName(field.getName()));
+                        Object value = AnimaUtils.invokeMethod(sqlParams.getModel(), getGetterName(field.getName()), AnimaUtils.EMPTY_ARG);
                         if (null == value) {
                             continue;
                         }
