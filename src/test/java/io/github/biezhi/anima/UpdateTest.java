@@ -40,13 +40,13 @@ public class UpdateTest extends BaseTest {
         }
         System.out.println("OK: " + (System.currentTimeMillis() - start) + "ms");
 
-        while (true) {
-            try {
-                TimeUnit.SECONDS.sleep(2);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+//        while (true) {
+//            try {
+//                TimeUnit.SECONDS.sleep(2);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//        }
 //        Assert.assertEquals(1, result);
     }
 
