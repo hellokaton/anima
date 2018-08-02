@@ -70,7 +70,7 @@ compile 'io.github.biezhi:anima:0.2.3'
 <dependency>
     <groupId>io.github.biezhi</groupId>
     <artifactId>anima</artifactId>
-    <version>0.2.2</version>
+    <version>0.2.3</version>
 </dependency>
 ```
 
