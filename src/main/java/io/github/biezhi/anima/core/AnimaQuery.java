@@ -38,6 +38,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static io.github.biezhi.anima.core.AnimaCache.computeModelColumnMappings;
 import static io.github.biezhi.anima.core.AnimaCache.getGetterName;
 import static io.github.biezhi.anima.core.AnimaCache.getSetterName;
 
@@ -959,9 +960,7 @@ public class AnimaQuery<T extends Model> {
             }
             return pageBean;
         } finally {
-            if (null == connectionThreadLocal.get() && null != conn) {
-                conn.close();
-            }
+            this.closeConn(conn);
             this.clean(null);
         }
     }
@@ -1057,9 +1056,7 @@ public class AnimaQuery<T extends Model> {
         try {
             return conn.createQuery(sql).withParams(params).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeAndFetchFirst(type);
         } finally {
-            if (null == connectionThreadLocal.get() && null != conn) {
-                conn.close();
-            }
+            this.closeConn(conn);
             this.clean(null);
         }
     }
@@ -1093,11 +1090,13 @@ public class AnimaQuery<T extends Model> {
     public <S> List<S> queryList(Class<S> type, String sql, Object[] params) {
         Connection conn = getConn();
         try {
-            return conn.createQuery(sql).withParams(params).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeAndFetch(type);
+            return conn.createQuery(sql)
+                    .withParams(params)
+                    .setColumnMappings(computeModelColumnMappings(type))
+                    .throwOnMappingFailure(false)
+                    .executeAndFetch(type);
         } finally {
-            if (null == connectionThreadLocal.get() && null != conn) {
-                conn.close();
-            }
+            this.closeConn(conn);
             this.clean(null);
         }
     }
@@ -1125,11 +1124,14 @@ public class AnimaQuery<T extends Model> {
     public List<Map<String, Object>> queryListMap(String sql, Object[] params) {
         Connection conn = getConn();
         try {
-            return conn.createQuery(sql).withParams(params).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeAndFetchTable().asList();
+            return conn.createQuery(sql)
+                    .withParams(params)
+                    .setAutoDeriveColumnNames(true)
+                    .throwOnMappingFailure(false)
+                    .executeAndFetchTable()
+                    .asList();
         } finally {
-            if (null == connectionThreadLocal.get() && null != conn) {
-                conn.close();
-            }
+            this.closeConn(conn);
             this.clean(null);
         }
     }
@@ -1173,9 +1175,7 @@ public class AnimaQuery<T extends Model> {
         try {
             return conn.createQuery(sql).withParams(params).executeUpdate().getResult();
         } finally {
-            if (null == connectionThreadLocal.get() && null != conn) {
-                conn.close();
-            }
+            this.closeConn(conn);
             this.clean(conn);
         }
     }
@@ -1203,11 +1203,12 @@ public class AnimaQuery<T extends Model> {
         List<Object> columnValueList = AnimaUtils.toColumnValues(model, true);
         Connection   conn            = getConn();
         try {
-            return new ResultKey(conn.createQuery(sql).withParams(columnValueList).executeUpdate().getKey());
+            return new ResultKey(conn.createQuery(sql)
+                    .withParams(columnValueList)
+                    .executeUpdate()
+                    .getKey());
         } finally {
-            if (null == connectionThreadLocal.get() && null != conn) {
-                conn.close();
-            }
+            this.closeConn(conn);
             this.clean(conn);
         }
     }
@@ -1559,6 +1560,12 @@ public class AnimaQuery<T extends Model> {
             } catch (NoSuchFieldException e) {
                 log.error("Set join error", e);
             }
+        }
+    }
+
+    private void closeConn(Connection connection) {
+        if (null == connectionThreadLocal.get() && null != connection) {
+            connection.close();
         }
     }
 

@@ -61,7 +61,7 @@ public interface Dialect {
         StringBuilder columnNames = new StringBuilder();
         StringBuilder placeholder = new StringBuilder();
 
-        for (Field field : AnimaCache.getModelFields(sqlParams.getModelClass())) {
+        for (Field field : AnimaCache.computeModelFields(sqlParams.getModelClass())) {
             columnNames.append(",").append(AnimaCache.getColumnName(field));
             placeholder.append(",?");
         }
@@ -80,7 +80,7 @@ public interface Dialect {
             sqlParams.getUpdateColumns().forEach((key, value) -> setSQL.append(key).append(" = ?, "));
         } else {
             if (null != sqlParams.getModel()) {
-                for (Field field : AnimaCache.getModelFields(sqlParams.getModelClass())) {
+                for (Field field : AnimaCache.computeModelFields(sqlParams.getModelClass())) {
                     try {
                         Object value = AnimaUtils.invokeMethod(sqlParams.getModel(), getGetterName(field.getName()), AnimaUtils.EMPTY_ARG);
                         if (null == value) {
@@ -109,7 +109,7 @@ public interface Dialect {
         } else {
             if (null != sqlParams.getModel()) {
                 StringBuilder columnNames = new StringBuilder();
-                for (Field field : AnimaCache.getModelFields(sqlParams.getModelClass())) {
+                for (Field field : AnimaCache.computeModelFields(sqlParams.getModelClass())) {
                     try {
                         Object value = AnimaUtils.invokeMethod(sqlParams.getModel(), getGetterName(field.getName()), AnimaUtils.EMPTY_ARG);
                         if (null == value) {

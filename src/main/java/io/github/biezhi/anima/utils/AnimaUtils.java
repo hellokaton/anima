@@ -18,7 +18,6 @@ package io.github.biezhi.anima.utils;
 import com.blade.reflectasm.MethodAccess;
 import io.github.biezhi.anima.Model;
 import io.github.biezhi.anima.annotation.EnumMapping;
-import io.github.biezhi.anima.annotation.Ignore;
 import io.github.biezhi.anima.core.AnimaCache;
 import io.github.biezhi.anima.exception.AnimaException;
 import lombok.AccessLevel;
@@ -96,7 +95,7 @@ public class AnimaUtils {
 
     public static <T extends Model> List<Object> toColumnValues(T model, boolean allowNull) {
         List<Object> columnValueList = new ArrayList<>();
-        for (Field field : AnimaCache.getModelFields(model.getClass())) {
+        for (Field field : AnimaCache.computeModelFields(model.getClass())) {
             try {
                 Object value = invokeMethod(model, AnimaCache.getGetterName(field.getName()), EMPTY_ARG);
                 if (null != value) {
@@ -127,7 +126,7 @@ public class AnimaUtils {
 
     public static <T extends Model> String buildColumns(List<String> excludedColumns, Class<T> modelClass) {
         StringBuilder sql = new StringBuilder();
-        for (Field field : AnimaCache.getModelFields(modelClass)) {
+        for (Field field : AnimaCache.computeModelFields(modelClass)) {
             String columnName = AnimaCache.getColumnName(field);
             if (!isIgnore(field) && !excludedColumns.contains(columnName)) {
                 sql.append(columnName).append(',');

@@ -3,7 +3,6 @@ package io.github.biezhi.anima.core;
 import com.blade.reflectasm.MethodAccess;
 import io.github.biezhi.anima.Anima;
 import io.github.biezhi.anima.annotation.Column;
-import io.github.biezhi.anima.annotation.EnumMapping;
 import io.github.biezhi.anima.annotation.Ignore;
 import io.github.biezhi.anima.annotation.Table;
 import io.github.biezhi.anima.exception.AnimaException;
@@ -15,10 +14,11 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.github.biezhi.anima.utils.AnimaUtils.methodToFieldName;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 
 /**
  * Anima Cache
@@ -28,11 +28,12 @@ import static io.github.biezhi.anima.utils.AnimaUtils.methodToFieldName;
  */
 public final class AnimaCache {
 
-    static final Map<Class<?>, String>         CACHE_TABLE_NAME     = new HashMap<>(8);
-    static final Map<Class<?>, String>         CACHE_PK_COLUMN_NAME = new HashMap<>(8);
-    static final Map<Class<?>, String>         CACHE_PK_FIELD_NAME  = new HashMap<>(8);
-    static final Map<SerializedLambda, String> CACHE_LAMBDA_NAME    = new HashMap<>(8);
-    static final Map<SerializedLambda, String> CACHE_FIELD_NAME     = new HashMap<>(8);
+    static final Map<Class<?>, String>              CACHE_TABLE_NAME      = new HashMap<>(8);
+    static final Map<Class<?>, String>              CACHE_PK_COLUMN_NAME  = new HashMap<>(8);
+    static final Map<Class<?>, String>              CACHE_PK_FIELD_NAME   = new HashMap<>(8);
+    static final Map<Class<?>, Map<String, String>> MODEL_COLUMN_MAPPINGS = new HashMap<>(8);
+    static final Map<SerializedLambda, String>      CACHE_LAMBDA_NAME     = new HashMap<>(8);
+    static final Map<SerializedLambda, String>      CACHE_FIELD_NAME      = new HashMap<>(8);
 
     public static final  Map<Class, MethodAccess> METHOD_ACCESS_MAP  = new HashMap<>();
     private static final Map<String, String>      GETTER_METHOD_NAME = new HashMap<>();
@@ -42,12 +43,26 @@ public final class AnimaCache {
     private static final Map<Class, List<Field>> MODEL_AVAILABLE_FIELDS = new HashMap<>();
 
     /**
-     * 可用
-     * @param clazz
-     * @return
+     * Get the column mapping based on the model Class type
+     * <p>
+     * Generated and stored in the Map when no column mapping exists
+     *
+     * @param modelType model class type
+     * @return model column mapping
      */
-    public static List<Field> getModelFields(Class clazz) {
-        return MODEL_AVAILABLE_FIELDS.computeIfAbsent(clazz, model -> Stream.of(model.getDeclaredFields()).filter(field -> !isIgnore(field)).collect(Collectors.toList()));
+    public static Map<String, String> computeModelColumnMappings(Class<?> modelType) {
+        return MODEL_COLUMN_MAPPINGS.computeIfAbsent(modelType, model -> {
+            List<Field> fields = computeModelFields(model);
+            return fields.stream()
+                    .collect(toMap(AnimaCache::getColumnName, Field::getName));
+        });
+    }
+
+    public static List<Field> computeModelFields(Class clazz) {
+        return MODEL_AVAILABLE_FIELDS.computeIfAbsent(clazz, model ->
+                Stream.of(model.getDeclaredFields())
+                        .filter(field -> !isIgnore(field))
+                        .collect(toList()));
     }
 
     /**
@@ -64,12 +79,16 @@ public final class AnimaCache {
     }
 
     public static String getColumnName(Field field) {
-        Column column = field.getAnnotation(Column.class);
-        if (null != column) {
-            return column.name();
-        }
-        String key = field.getDeclaringClass().getSimpleName() + "_" + field.getName();
-        return FIELD_COLUMN_NAME.computeIfAbsent(key, c -> AnimaUtils.toUnderline(field.getName()));
+        String fieldName = field.getName();
+        String key       = field.getDeclaringClass().getSimpleName() + "_" + fieldName;
+
+        return FIELD_COLUMN_NAME.computeIfAbsent(key, f -> {
+            Column column = field.getAnnotation(Column.class);
+            if (null != column) {
+                return column.name();
+            }
+            return AnimaUtils.toUnderline(fieldName);
+        });
     }
 
     public static String getGetterName(String fieldName) {
