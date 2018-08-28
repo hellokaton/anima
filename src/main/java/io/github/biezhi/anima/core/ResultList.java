@@ -20,6 +20,7 @@ import io.github.biezhi.anima.page.Page;
 import io.github.biezhi.anima.page.PageRow;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * ResultList
@@ -48,6 +49,10 @@ public class ResultList<T> {
 
     public List<T> all() {
         return new AnimaQuery<>().useSQL().queryList(type, sql, params);
+    }
+
+    public List<Map<String, Object>> maps(){
+        return new AnimaQuery<>().useSQL().queryListMap(sql, params);
     }
 
     public <S extends Model> Page<S> page(PageRow pageRow) {

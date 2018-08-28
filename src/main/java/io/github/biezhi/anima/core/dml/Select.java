@@ -20,6 +20,8 @@ import io.github.biezhi.anima.core.AnimaQuery;
 import io.github.biezhi.anima.core.ResultList;
 import lombok.NoArgsConstructor;
 
+import java.util.Map;
+
 /**
  * Select From
  *
@@ -41,6 +43,10 @@ public class Select {
 
     public <T> ResultList<T> bySQL(Class<T> type, String sql, Object... params) {
         return new ResultList<>(type, sql, params);
+    }
+
+    public <T extends Map<String, Object>> ResultList<T> bySQL(String sql, Object... params) {
+        return new ResultList<>(null, sql, params);
     }
 
 }

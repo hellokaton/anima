@@ -232,6 +232,11 @@ public class SelectTest extends BaseTest {
         System.out.println(maps);
         Assert.assertNotNull(maps);
         Assert.assertEquals(8, maps.size());
+
+        maps = select().bySQL("select * from users order by id desc").maps();
+        System.out.println(maps);
+        Assert.assertNotNull(maps);
+        Assert.assertEquals(8, maps.size());
     }
 
 }
