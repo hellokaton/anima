@@ -15,6 +15,8 @@
  */
 package io.github.biezhi.anima.core;
 
+import java.math.BigInteger;
+
 /**
  * Result Key
  * <p>
@@ -35,11 +37,19 @@ public class ResultKey {
         if (key instanceof Long) {
             return asLong().intValue();
         }
+        if (key instanceof BigInteger) {
+            return asBigInteger().intValue();
+        }
         return (Integer) key;
     }
 
+
     public Long asLong() {
         return (Long) key;
+    }
+
+    public BigInteger asBigInteger() {
+        return (BigInteger) key;
     }
 
     public String asString() {
