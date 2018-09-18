@@ -2,7 +2,6 @@ package io.github.biezhi.anima.model;
 
 import io.github.biezhi.anima.Model;
 import io.github.biezhi.anima.annotation.Column;
-import io.github.biezhi.anima.annotation.EnumMapping;
 import io.github.biezhi.anima.enums.Gender;
 import io.github.biezhi.anima.enums.VipLevel;
 import lombok.AllArgsConstructor;
@@ -23,7 +22,6 @@ public class Person extends Model {
     @Column(name = "sex")
     private Gender gender;
 
-    @EnumMapping(EnumMapping.ORDINAL)
     private VipLevel vipLevel;
 
 }

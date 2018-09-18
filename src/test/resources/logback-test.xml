@@ -8,9 +8,9 @@
 		</encoder>
 	</appender>
 
-	<logger name="org.sql2o" level="debug"/>
+	<logger name="org.sql2o" code="debug"/>
 
-	<root level="INFO">
+	<root code="INFO">
 		<appender-ref ref="STDOUT" />
 	</root>
 
