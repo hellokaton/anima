@@ -292,10 +292,13 @@ public class Anima {
     }
 
     public Anima addConverter(Converter<?>... converters) {
+        if (null == converters || converters.length == 0) {
+            throw new AnimaException("converters not be null.");
+        }
         for (Converter<?> converter : converters) {
-            Type[]   types        = converter.getClass().getGenericInterfaces();
-            Type[]   params       = ((ParameterizedType) types[0]).getActualTypeArguments();
-            Class<?> type = (Class) params[0];
+            Type[]   types  = converter.getClass().getGenericInterfaces();
+            Type[]   params = ((ParameterizedType) types[0]).getActualTypeArguments();
+            Class<?> type   = (Class) params[0];
             sql2o.getQuirks().addConverter(type, converter);
         }
         return this;
