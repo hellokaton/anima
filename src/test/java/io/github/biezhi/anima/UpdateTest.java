@@ -33,7 +33,7 @@ public class UpdateTest extends BaseTest {
         user.update();
 
         Long start = System.currentTimeMillis();
-        for (int i = 0; i < 100000; i++) {
+        for (int i = 0; i < 100; i++) {
             user = new User();
             user.setUserName("jack");
             user.updateById(1);
