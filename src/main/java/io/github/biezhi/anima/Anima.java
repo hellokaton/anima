@@ -291,6 +291,12 @@ public class Anima {
         return this;
     }
 
+    /**
+     * Add custom Type converter
+     *
+     * @param converters converter see {@link Converter}
+     * @return Anima
+     */
     public Anima addConverter(Converter<?>... converters) {
         if (null == converters || converters.length == 0) {
             throw new AnimaException("converters not be null.");
