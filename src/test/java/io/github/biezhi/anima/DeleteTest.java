@@ -39,4 +39,9 @@ public class DeleteTest extends BaseTest {
         Anima.deleteById(User.class, 5);
     }
 
+    @Test
+    public void testDelete5(){
+        Anima.execute("delete from users where id = ?", 2);
+    }
+
 }

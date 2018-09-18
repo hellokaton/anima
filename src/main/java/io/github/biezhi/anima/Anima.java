@@ -155,6 +155,16 @@ public class Anima {
     }
 
     /**
+     * Create anima with url, like Sqlite or h2
+     *
+     * @param url jdbc url
+     * @return Anima
+     */
+    public static Anima open(String url, Quirks quirks) {
+        return open(url, null, null, quirks);
+    }
+
+    /**
      * Create anima with datasource
      *
      * @param dataSource datasource instance
@@ -162,6 +172,16 @@ public class Anima {
      */
     public static Anima open(DataSource dataSource) {
         return open(new Sql2o(dataSource));
+    }
+
+    /**
+     * Create anima with datasource and quirks
+     *
+     * @param dataSource datasource instance
+     * @return Anima
+     */
+    public static Anima open(DataSource dataSource, Quirks quirks) {
+        return open(new Sql2o(dataSource, quirks));
     }
 
     /**
