@@ -86,7 +86,6 @@ public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactor
                         throw new Sql2oException("Error trying to convert column " + propertyPath + " to type " + setter.getType(), e);
                     }
                 }
-
                 public Class<?> getType() {
                     return setter.getType();
                 }

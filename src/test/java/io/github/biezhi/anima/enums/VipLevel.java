@@ -1,8 +1,10 @@
 package io.github.biezhi.anima.enums;
 
+import io.github.biezhi.anima.annotation.EnumMapping;
 import lombok.Getter;
 
 @Getter
+@EnumMapping("code")
 public enum VipLevel {
 
     VIP1(1, "初级会员"),
