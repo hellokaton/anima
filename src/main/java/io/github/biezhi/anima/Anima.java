@@ -98,6 +98,10 @@ public class Anima {
 
     private static Anima instance;
 
+    /**
+     * see {@link #of()}
+     * @return
+     */
     @Deprecated
     public static Anima me() {
         return of();
