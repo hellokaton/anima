@@ -32,11 +32,14 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.sql2o.Sql2o;
+import org.sql2o.converters.Converter;
 import org.sql2o.quirks.Quirks;
 import org.sql2o.quirks.QuirksDetector;
 
 import javax.sql.DataSource;
 import java.io.Serializable;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -285,6 +288,16 @@ public class Anima {
      */
     public Anima useSQLLimit(boolean useSQLLimit) {
         this.useSQLLimit = useSQLLimit;
+        return this;
+    }
+
+    public Anima addConverter(Converter<?>... converters) {
+        for (Converter<?> converter : converters) {
+            Type[]   types        = converter.getClass().getGenericInterfaces();
+            Type[]   params       = ((ParameterizedType) types[0]).getActualTypeArguments();
+            Class<?> type = (Class) params[0];
+            sql2o.getQuirks().addConverter(type, converter);
+        }
         return this;
     }
 

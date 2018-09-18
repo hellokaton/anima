@@ -1,5 +1,6 @@
 package org.sql2o.quirks;
 
+import lombok.extern.slf4j.Slf4j;
 import org.sql2o.converters.Convert;
 import org.sql2o.converters.Converter;
 import org.sql2o.converters.java8.LocalDateConverter;
@@ -17,6 +18,7 @@ import java.util.UUID;
  * @author aldenquimby@gmail.com
  * @since 4/6/14
  */
+@Slf4j
 public class NoQuirks implements Quirks {
 
     protected final Map<Class<?>, Converter<?>> converters;
@@ -41,6 +43,15 @@ public class NoQuirks implements Quirks {
         Converter<?> c = converters.get(ofClass);
         // if no "local" converter let's look in global
         return c != null ? (Converter<E>) c : Convert.getConverterIfExists(ofClass);
+    }
+
+    @Override
+    public void addConverter(Class<?> type, Converter<?> converter) {
+        log.info("add converter [{}] {}", type.getName(), converter);
+        if (this.converters.containsKey(type)) {
+            this.converters.remove(type);
+        }
+        this.converters.put(type, converter);
     }
 
     @Override

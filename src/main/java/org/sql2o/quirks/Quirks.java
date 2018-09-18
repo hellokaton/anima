@@ -4,6 +4,7 @@ import org.sql2o.converters.Converter;
 
 import java.io.InputStream;
 import java.sql.*;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -14,14 +15,15 @@ import java.util.UUID;
  * @since 4/6/14
  */
 public interface Quirks {
+
     /**
      * @param ofClass
      * @param <E>
      * @return converter for class
      */
-
     <E> Converter<E> converterOf(Class<E> ofClass);
 
+    void addConverter(Class<?> type, Converter<?> converter);
 
     /**
      * @return name of column at index {@code colIdx} for result set {@code meta}

@@ -102,7 +102,7 @@ public class AnimaUtils {
                     if (value instanceof Enum) {
                         EnumMapping enumMapping = field.getAnnotation(EnumMapping.class);
                         if (null == enumMapping) {
-                            columnValueList.add(value.toString());
+                            columnValueList.add(value);
                         } else {
                             if (enumMapping.value().equals(EnumMapping.TO_STRING)) {
                                 columnValueList.add(value.toString());

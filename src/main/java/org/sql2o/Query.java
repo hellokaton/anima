@@ -128,7 +128,7 @@ public class Query implements AutoCloseable {
         }
         int i = 0;
         for (Object paramValue : paramValues) {
-            paramIndexValues.put(++i, paramValue);
+            paramIndexValues.put(++i, this.converterValue(paramValue));
         }
         return this;
     }
@@ -139,9 +139,23 @@ public class Query implements AutoCloseable {
         }
         int i = 0;
         for (Object paramValue : paramValues) {
-            paramIndexValues.put(++i, paramValue);
+            paramIndexValues.put(++i, this.converterValue(paramValue));
         }
         return this;
+    }
+
+    private <T> Object converterValue(Object value) {
+        if(value instanceof Enum){
+            Converter<T> converter = (Converter<T>) this.getQuirks().converterOf(value.getClass());
+            if (null != converter) {
+                try {
+                    return converter.toDatabaseParam((T) value);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        return value;
     }
 
     public void close() {
