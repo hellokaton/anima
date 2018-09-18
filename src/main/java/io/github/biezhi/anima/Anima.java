@@ -98,7 +98,12 @@ public class Anima {
 
     private static Anima instance;
 
+    @Deprecated
     public static Anima me() {
+        return of();
+    }
+
+    public static Anima of() {
         if (null == instance.sql2o) {
             throw new AnimaException(SQL2O_IS_NULL);
         }

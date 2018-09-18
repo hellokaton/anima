@@ -401,7 +401,7 @@ public class Query implements AutoCloseable {
             closeConnectionIfNecessary();
         }
 
-        if (Anima.me().isEnableSQLStatistic() && log.isDebugEnabled()) {
+        if (Anima.of().isEnableSQLStatistic() && log.isDebugEnabled()) {
             long end = System.currentTimeMillis();
             log.debug("total: {} ms; executed update [{}]", end - start, this.getName() == null ? "No name" : this.getName());
         }

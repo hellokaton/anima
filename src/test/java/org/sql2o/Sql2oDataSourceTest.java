@@ -1,5 +1,6 @@
 package org.sql2o;
 
+import io.github.biezhi.anima.Anima;
 import junit.framework.TestCase;
 import org.h2.jdbcx.JdbcConnectionPool;
 
@@ -24,8 +25,8 @@ public class Sql2oDataSourceTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         DataSource ds = JdbcConnectionPool.create(url, user, pass);
-
         sql2o = new Sql2o(ds);
+        Anima.open(sql2o);
     }
 
     public void testExecuteAndFetchWithNulls() {
@@ -35,6 +36,7 @@ public class Sql2oDataSourceTest extends TestCase {
                         "text varchar(255), " +
                         "aNumber int, " +
                         "aLongNumber bigint)";
+
         sql2o.open().createQuery(sql).setName("testExecuteAndFetchWithNulls").executeUpdate();
 
         sql2o.runInTransaction((connection, argument) -> {

@@ -1,5 +1,6 @@
 package org.sql2o.issues;
 
+import io.github.biezhi.anima.Anima;
 import org.hsqldb.jdbcDriver;
 import org.junit.Assert;
 import org.junit.Test;
@@ -55,6 +56,8 @@ public class IssuesTest {
         }
 
         this.sql2o = new Sql2o(url, user, pass);
+
+        Anima.open(sql2o);
 
         this.url = url;
         this.user = user;
