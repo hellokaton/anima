@@ -891,7 +891,7 @@ public class AnimaQuery<T extends Model> {
      * @return model list
      */
     public List<T> limit(int limit) {
-        if (Anima.me().isUseSQLLimit()) {
+        if (Anima.of().isUseSQLLimit()) {
             isSQLLimit = true;
             paramValues.add(limit);
             return all();
@@ -1071,7 +1071,7 @@ public class AnimaQuery<T extends Model> {
      * @return S
      */
     public <S> S queryOne(Class<S> type, String sql, List<Object> params) {
-        if (Anima.me().isUseSQLLimit()) {
+        if (Anima.of().isUseSQLLimit()) {
             sql += " LIMIT 1";
         }
         List<S> list = queryList(type, sql, params);
@@ -1343,7 +1343,7 @@ public class AnimaQuery<T extends Model> {
         if (addOrderBy) {
             sqlParams.setOrderBy(this.orderBySQL.toString());
         }
-        return Anima.me().getDialect().select(sqlParams);
+        return Anima.of().getDialect().select(sqlParams);
     }
 
     /**
@@ -1358,7 +1358,7 @@ public class AnimaQuery<T extends Model> {
                 .pkName(this.primaryKeyColumn)
                 .conditionSQL(this.conditionSQL)
                 .build();
-        return Anima.me().getDialect().count(sqlParams);
+        return Anima.of().getDialect().count(sqlParams);
     }
 
     /**
@@ -1379,7 +1379,7 @@ public class AnimaQuery<T extends Model> {
                 .orderBy(this.orderBySQL.toString())
                 .pageRow(pageRow)
                 .build();
-        return Anima.me().getDialect().paginate(sqlParams);
+        return Anima.of().getDialect().paginate(sqlParams);
     }
 
     /**
@@ -1397,7 +1397,7 @@ public class AnimaQuery<T extends Model> {
                 .pkName(this.primaryKeyColumn)
                 .build();
 
-        return Anima.me().getDialect().insert(sqlParams);
+        return Anima.of().getDialect().insert(sqlParams);
     }
 
     /**
@@ -1418,7 +1418,7 @@ public class AnimaQuery<T extends Model> {
                 .conditionSQL(this.conditionSQL)
                 .build();
 
-        return Anima.me().getDialect().update(sqlParams);
+        return Anima.of().getDialect().update(sqlParams);
     }
 
     /**
@@ -1436,7 +1436,7 @@ public class AnimaQuery<T extends Model> {
                 .pkName(this.primaryKeyColumn)
                 .conditionSQL(this.conditionSQL)
                 .build();
-        return Anima.me().getDialect().delete(sqlParams);
+        return Anima.of().getDialect().delete(sqlParams);
     }
 
     public AnimaQuery<T> useSQL() {
@@ -1515,7 +1515,7 @@ public class AnimaQuery<T extends Model> {
         if (AnimaQuery.sql2o != null) {
             return AnimaQuery.sql2o;
         }
-        Sql2o sql2o = Anima.me().getSql2o();
+        Sql2o sql2o = Anima.of().getSql2o();
         if (null == sql2o) {
             throw new AnimaException("SQL2O instance not is null.");
         }
