@@ -8,6 +8,7 @@ import io.github.biezhi.anima.annotation.Table;
 import io.github.biezhi.anima.exception.AnimaException;
 import io.github.biezhi.anima.utils.AnimaUtils;
 import io.github.biezhi.anima.utils.English;
+import lombok.experimental.UtilityClass;
 
 import java.lang.invoke.SerializedLambda;
 import java.lang.reflect.Field;
@@ -26,20 +27,21 @@ import static java.util.stream.Collectors.toMap;
  * @author biezhi
  * @date 2018/3/19
  */
-public final class AnimaCache {
+@UtilityClass
+public class AnimaCache {
 
-    static final Map<Class<?>, String>              CACHE_TABLE_NAME      = new HashMap<>(8);
-    static final Map<Class<?>, String>              CACHE_PK_COLUMN_NAME  = new HashMap<>(8);
-    static final Map<Class<?>, String>              CACHE_PK_FIELD_NAME   = new HashMap<>(8);
-    static final Map<Class<?>, Map<String, String>> MODEL_COLUMN_MAPPINGS = new HashMap<>(8);
-    static final Map<SerializedLambda, String>      CACHE_LAMBDA_NAME     = new HashMap<>(8);
-    static final Map<SerializedLambda, String>      CACHE_FIELD_NAME      = new HashMap<>(8);
+    public static final Map<Class, MethodAccess> METHOD_ACCESS_MAP = new HashMap<>();
 
-    public static final  Map<Class, MethodAccess> METHOD_ACCESS_MAP  = new HashMap<>();
-    private static final Map<String, String>      GETTER_METHOD_NAME = new HashMap<>();
-    private static final Map<String, String>      SETTER_METHOD_NAME = new HashMap<>();
-    private static final Map<String, String>      FIELD_COLUMN_NAME  = new HashMap<>();
+    private static final Map<Class<?>, String>              CACHE_TABLE_NAME      = new HashMap<>(8);
+    private static final Map<Class<?>, String>              CACHE_PK_COLUMN_NAME  = new HashMap<>(8);
+    private static final Map<Class<?>, String>              CACHE_PK_FIELD_NAME   = new HashMap<>(8);
+    private static final Map<Class<?>, Map<String, String>> MODEL_COLUMN_MAPPINGS = new HashMap<>(8);
+    private static final Map<SerializedLambda, String>      CACHE_LAMBDA_NAME     = new HashMap<>(8);
+    private static final Map<SerializedLambda, String>      CACHE_FIELD_NAME      = new HashMap<>(8);
 
+    private static final Map<String, String>     GETTER_METHOD_NAME     = new HashMap<>();
+    private static final Map<String, String>     SETTER_METHOD_NAME     = new HashMap<>();
+    private static final Map<String, String>     FIELD_COLUMN_NAME      = new HashMap<>();
     private static final Map<Class, List<Field>> MODEL_AVAILABLE_FIELDS = new HashMap<>();
 
     /**

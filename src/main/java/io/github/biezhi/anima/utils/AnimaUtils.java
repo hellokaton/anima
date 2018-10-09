@@ -96,7 +96,7 @@ public class AnimaUtils {
         List<Object> columnValueList = new ArrayList<>();
         for (Field field : computeModelFields(model.getClass())) {
             try {
-                Object value = invokeMethod(model, AnimaCache.getGetterName(field.getName()), EMPTY_ARG);
+                Object value = invokeMethod(model, getGetterName(field.getName()), EMPTY_ARG);
                 if (null == value) {
                     if (allowNull) {
                         columnValueList.add(null);
@@ -114,7 +114,7 @@ public class AnimaUtils {
     public static <T extends Model> String buildColumns(List<String> excludedColumns, Class<T> modelClass) {
         StringBuilder sql = new StringBuilder();
         for (Field field : computeModelFields(modelClass)) {
-            String columnName = AnimaCache.getColumnName(field);
+            String columnName = getColumnName(field);
             if (!isIgnore(field) && !excludedColumns.contains(columnName)) {
                 sql.append(columnName).append(',');
             }
@@ -143,7 +143,7 @@ public class AnimaUtils {
                     break; // custom interface implementation
                 }
                 SerializedLambda serializedLambda = (SerializedLambda) replacement;
-                return AnimaCache.getLambdaColumnName(serializedLambda);
+                return getLambdaColumnName(serializedLambda);
             } catch (Exception e) {
                 throw new AnimaException("get lambda column name fail", e);
             }
@@ -161,7 +161,7 @@ public class AnimaUtils {
                     break; // custom interface implementation
                 }
                 SerializedLambda serializedLambda = (SerializedLambda) replacement;
-                return AnimaCache.getLambdaFieldName(serializedLambda);
+                return getLambdaFieldName(serializedLambda);
             } catch (Exception e) {
                 throw new AnimaException("get lambda column name fail", e);
             }
@@ -185,10 +185,10 @@ public class AnimaUtils {
      * @return primary key value
      */
     public static <S extends Model> Object getAndRemovePrimaryKey(S model) {
-        String fieldName = AnimaCache.getPKField(model.getClass());
-        Object value     = invokeMethod(model, AnimaCache.getGetterName(fieldName), EMPTY_ARG);
+        String fieldName = getPKField(model.getClass());
+        Object value     = invokeMethod(model, getGetterName(fieldName), EMPTY_ARG);
         if (null != value) {
-            invokeMethod(model, AnimaCache.getSetterName(fieldName), NULL_ARG);
+            invokeMethod(model, getSetterName(fieldName), NULL_ARG);
         }
         return value;
     }
