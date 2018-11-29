@@ -6,6 +6,7 @@ import io.github.biezhi.anima.exception.AnimaException;
 import io.github.biezhi.anima.utils.AnimaUtils;
 
 import java.lang.reflect.Field;
+import java.util.List;
 
 import static io.github.biezhi.anima.core.AnimaCache.getGetterName;
 
@@ -61,12 +62,18 @@ public interface Dialect {
         StringBuilder columnNames = new StringBuilder();
         StringBuilder placeholder = new StringBuilder();
 
-        for (Field field : AnimaCache.computeModelFields(sqlParams.getModelClass())) {
-            columnNames.append(",").append(AnimaCache.getColumnName(field));
-            placeholder.append(",?");
+        List<Field> fields = AnimaCache.computeModelFields(sqlParams.getModelClass());
+
+        for (int i = 0; i < fields.size(); i++) {
+            if(null != sqlParams.getColumnValues().get(i)){
+                Field field = fields.get(i);
+                columnNames.append(",").append(" ").append(AnimaCache.getColumnName(field));
+                placeholder.append(", ?");
+            }
         }
-        sql.append("(").append(columnNames.substring(1)).append(")").append(" VALUES (")
-                .append(placeholder.substring(1)).append(")");
+
+        sql.append("(").append(columnNames.substring(2)).append(")").append(" VALUES (")
+                .append(placeholder.substring(2)).append(")");
         return sql.toString();
     }
 
