@@ -35,12 +35,9 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.github.biezhi.anima.core.AnimaCache.computeModelColumnMappings;
-import static io.github.biezhi.anima.core.AnimaCache.getGetterName;
-import static io.github.biezhi.anima.core.AnimaCache.getSetterName;
+import static io.github.biezhi.anima.core.AnimaCache.*;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -786,8 +783,8 @@ public class AnimaQuery<T extends Model> {
     public T byId(Object id) {
         this.beforeCheck();
         this.where(primaryKeyColumn, id);
-        String sql = this.buildSelectSQL(false);
-        T model = this.queryOne(modelClass, sql, paramValues);
+        String sql   = this.buildSelectSQL(false);
+        T      model = this.queryOne(modelClass, sql, paramValues);
         if (null != model) {
             this.setJoin(Collections.singletonList(model));
         }
@@ -812,8 +809,8 @@ public class AnimaQuery<T extends Model> {
      */
     public T one() {
         this.beforeCheck();
-        String sql = this.buildSelectSQL(true);
-        T model = this.queryOne(modelClass, sql, paramValues);
+        String sql   = this.buildSelectSQL(true);
+        T      model = this.queryOne(modelClass, sql, paramValues);
         if (null != model && null != joinParams) {
             this.setJoin(Collections.singletonList(model));
         }
@@ -827,7 +824,7 @@ public class AnimaQuery<T extends Model> {
      */
     public List<T> all() {
         this.beforeCheck();
-        String sql = this.buildSelectSQL(true);
+        String  sql    = this.buildSelectSQL(true);
         List<T> models = this.queryList(modelClass, sql, paramValues);
         this.setJoin(models);
         return models;
@@ -950,12 +947,12 @@ public class AnimaQuery<T extends Model> {
         this.beforeCheck();
         Connection conn = getConn();
         try {
-            String countSql = useSQL ? "SELECT COUNT(*) FROM (" + sql + ") tmp" : buildCountSQL(sql);
-            long count = conn.createQuery(countSql).withParams(params).executeAndFetchFirst(Long.class);
+            String  countSql = useSQL ? "SELECT COUNT(*) FROM (" + sql + ") tmp" : buildCountSQL(sql);
+            long    count    = conn.createQuery(countSql).withParams(params).executeAndFetchFirst(Long.class);
             Page<T> pageBean = new Page<>(count, pageRow.getPageNum(), pageRow.getPageSize());
             if (count > 0) {
-                String pageSQL = this.buildPageSQL(sql, pageRow);
-                List<T> list = conn.createQuery(pageSQL).withParams(params).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeAndFetch(modelClass);
+                String  pageSQL = this.buildPageSQL(sql, pageRow);
+                List<T> list    = conn.createQuery(pageSQL).withParams(params).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeAndFetch(modelClass);
                 this.setJoin(list);
                 pageBean.setRows(list);
             }
@@ -1055,7 +1052,7 @@ public class AnimaQuery<T extends Model> {
     public <S> S queryOne(Class<S> type, String sql, Object[] params) {
         Connection conn = getConn();
         try {
-            return conn.createQuery(sql).withParams(params).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeAndFetchFirst(type);
+            return conn.createQuery(sql).withParams(params).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeScalar(type);
         } finally {
             this.closeConn(conn);
             this.clean(null);
@@ -1201,8 +1198,8 @@ public class AnimaQuery<T extends Model> {
      */
     public <S extends Model> ResultKey save(S model) {
         List<Object> columnValues = AnimaUtils.toColumnValues(model, true);
-        String sql = this.buildInsertSQL(model, columnValues);
-        Connection conn = getConn();
+        String       sql          = this.buildInsertSQL(model, columnValues);
+        Connection   conn         = getConn();
         try {
             List<Object> params = columnValues.stream().filter(Objects::nonNull).collect(toList());
             return new ResultKey(conn.createQuery(sql)
@@ -1246,7 +1243,7 @@ public class AnimaQuery<T extends Model> {
      */
     public <S extends Model> int deleteByModel(S model) {
         this.beforeCheck();
-        String sql = this.buildDeleteSQL(model);
+        String       sql             = this.buildDeleteSQL(model);
         List<Object> columnValueList = AnimaUtils.toColumnValues(model, false);
         return this.execute(sql, columnValueList);
     }
@@ -1258,7 +1255,7 @@ public class AnimaQuery<T extends Model> {
      */
     public int update() {
         this.beforeCheck();
-        String sql = this.buildUpdateSQL(null, updateColumns);
+        String       sql             = this.buildUpdateSQL(null, updateColumns);
         List<Object> columnValueList = new ArrayList<>();
         updateColumns.forEach((key, value) -> columnValueList.add(value));
         columnValueList.addAll(paramValues);
@@ -1286,7 +1283,7 @@ public class AnimaQuery<T extends Model> {
      */
     public <S extends Model> int updateById(S model, Serializable id) {
         this.where(primaryKeyColumn, id);
-        String sql = this.buildUpdateSQL(model, null);
+        String       sql             = this.buildUpdateSQL(model, null);
         List<Object> columnValueList = AnimaUtils.toColumnValues(model, false);
         columnValueList.add(id);
         return this.execute(sql, columnValueList);
@@ -1547,8 +1544,8 @@ public class AnimaQuery<T extends Model> {
             try {
                 Object leftValue = AnimaUtils.invokeMethod(model, getGetterName(joinParam.getOnLeft()), AnimaUtils.EMPTY_ARG);
 
-                String sql = "SELECT * FROM " + AnimaCache.getTableName(joinParam.getJoinModel()) + " WHERE " + joinParam.getOnRight() + " = ?";
-                Field field = model.getClass().getDeclaredField(joinParam.getFieldName());
+                String sql   = "SELECT * FROM " + AnimaCache.getTableName(joinParam.getJoinModel()) + " WHERE " + joinParam.getOnRight() + " = ?";
+                Field  field = model.getClass().getDeclaredField(joinParam.getFieldName());
                 if (field.getType().equals(List.class)) {
                     if (AnimaUtils.isNotEmpty(joinParam.getOrderBy())) {
                         sql += " ORDER BY " + joinParam.getOrderBy();
