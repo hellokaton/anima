@@ -15,6 +15,7 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import static io.github.biezhi.anima.utils.AnimaUtils.methodToFieldName;
@@ -30,19 +31,19 @@ import static java.util.stream.Collectors.toMap;
 @UtilityClass
 public class AnimaCache {
 
-    public static final Map<Class, MethodAccess> METHOD_ACCESS_MAP = new HashMap<>();
+    public static final Map<Class, MethodAccess> METHOD_ACCESS_MAP = new ConcurrentHashMap<>();
 
-    private static final Map<Class<?>, String>              CACHE_TABLE_NAME      = new HashMap<>(8);
-    private static final Map<Class<?>, String>              CACHE_PK_COLUMN_NAME  = new HashMap<>(8);
-    private static final Map<Class<?>, String>              CACHE_PK_FIELD_NAME   = new HashMap<>(8);
-    private static final Map<Class<?>, Map<String, String>> MODEL_COLUMN_MAPPINGS = new HashMap<>(8);
-    private static final Map<SerializedLambda, String>      CACHE_LAMBDA_NAME     = new HashMap<>(8);
-    private static final Map<SerializedLambda, String>      CACHE_FIELD_NAME      = new HashMap<>(8);
+    private static final Map<Class<?>, String>              CACHE_TABLE_NAME      = new ConcurrentHashMap<>(8);
+    private static final Map<Class<?>, String>              CACHE_PK_COLUMN_NAME  = new ConcurrentHashMap<>(8);
+    private static final Map<Class<?>, String>              CACHE_PK_FIELD_NAME   = new ConcurrentHashMap<>(8);
+    private static final Map<Class<?>, Map<String, String>> MODEL_COLUMN_MAPPINGS = new ConcurrentHashMap<>(8);
+    private static final Map<SerializedLambda, String>      CACHE_LAMBDA_NAME     = new ConcurrentHashMap<>(8);
+    private static final Map<SerializedLambda, String>      CACHE_FIELD_NAME      = new ConcurrentHashMap<>(8);
 
-    private static final Map<String, String>     GETTER_METHOD_NAME     = new HashMap<>();
-    private static final Map<String, String>     SETTER_METHOD_NAME     = new HashMap<>();
-    private static final Map<String, String>     FIELD_COLUMN_NAME      = new HashMap<>();
-    private static final Map<Class, List<Field>> MODEL_AVAILABLE_FIELDS = new HashMap<>();
+    private static final Map<String, String>     GETTER_METHOD_NAME     = new ConcurrentHashMap<>();
+    private static final Map<String, String>     SETTER_METHOD_NAME     = new ConcurrentHashMap<>();
+    private static final Map<String, String>     FIELD_COLUMN_NAME      = new ConcurrentHashMap<>();
+    private static final Map<Class, List<Field>> MODEL_AVAILABLE_FIELDS = new ConcurrentHashMap<>();
 
     /**
      * Get the column mapping based on the model Class type
