@@ -28,6 +28,7 @@ import io.github.biezhi.anima.utils.AnimaUtils;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.sql2o.Connection;
+import org.sql2o.Query;
 import org.sql2o.Sql2o;
 
 import java.io.Serializable;
@@ -1052,7 +1053,11 @@ public class AnimaQuery<T extends Model> {
     public <S> S queryOne(Class<S> type, String sql, Object[] params) {
         Connection conn = getConn();
         try {
-            return conn.createQuery(sql).withParams(params).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeScalar(type);
+            Query query = conn.createQuery(sql).withParams(params).setAutoDeriveColumnNames(true).throwOnMappingFailure(false);
+            if (AnimaUtils.isBasicType(type)) {
+                return query.executeScalar(type);
+            }
+            return query.executeAndFetchFirst(type);
         } finally {
             this.closeConn(conn);
             this.clean(null);
