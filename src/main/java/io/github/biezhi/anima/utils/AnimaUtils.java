@@ -134,24 +134,16 @@ public class AnimaUtils {
     }
 
     public static String getLambdaColumnName(Serializable lambda) {
-        for (Class<?> cl = lambda.getClass(); cl != null; cl = cl.getSuperclass()) {
-            try {
-                Method m = cl.getDeclaredMethod("writeReplace");
-                m.setAccessible(true);
-                Object replacement = m.invoke(lambda);
-                if (!(replacement instanceof SerializedLambda)) {
-                    break; // custom interface implementation
-                }
-                SerializedLambda serializedLambda = (SerializedLambda) replacement;
-                return getLambdaColumnName(serializedLambda);
-            } catch (Exception e) {
-                throw new AnimaException("get lambda column name fail", e);
-            }
-        }
-        return null;
+        SerializedLambda serializedLambda = computeSerializedLambda(lambda);
+        return AnimaCache.getLambdaColumnName(serializedLambda);
     }
 
     public static String getLambdaFieldName(Serializable lambda) {
+        SerializedLambda serializedLambda = computeSerializedLambda(lambda);
+        return AnimaCache.getLambdaFieldName(serializedLambda);
+    }
+
+    private static SerializedLambda computeSerializedLambda(Serializable lambda) {
         for (Class<?> cl = lambda.getClass(); cl != null; cl = cl.getSuperclass()) {
             try {
                 Method m = cl.getDeclaredMethod("writeReplace");
@@ -160,8 +152,7 @@ public class AnimaUtils {
                 if (!(replacement instanceof SerializedLambda)) {
                     break; // custom interface implementation
                 }
-                SerializedLambda serializedLambda = (SerializedLambda) replacement;
-                return getLambdaFieldName(serializedLambda);
+                return (SerializedLambda) replacement;
             } catch (Exception e) {
                 throw new AnimaException("get lambda column name fail", e);
             }
