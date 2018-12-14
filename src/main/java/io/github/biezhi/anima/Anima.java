@@ -66,40 +66,34 @@ public class Anima {
     /**
      * Global table prefix
      */
-    @Getter
-    @Setter
     private String tablePrefix;
 
     /**
      * Database dialect, default by MySQL
      */
-    @Getter
-    @Setter
     private Dialect dialect = new MySQLDialect();
 
     /**
      * The type of rollback when an exception occurs, default by RuntimeException
      */
-    @Setter
     private Class<? extends Exception> rollbackException = RuntimeException.class;
 
     /**
      * SQL performance statistics are enabled, which is enabled by default,
      * and outputs the elapsed time required.
      */
-    @Getter
     private boolean enableSQLStatistic = true;
 
     /**
      * use the limit statement of SQL and use "limit ?" when enabled, the way to retrieve a fixed number of rows.
      */
-    @Getter
     private boolean useSQLLimit = true;
 
     private static Anima instance;
 
     /**
      * see {@link #of()}
+     *
      * @return
      */
     @Deprecated
@@ -108,7 +102,7 @@ public class Anima {
     }
 
     public static Anima of() {
-        if (null == instance.sql2o) {
+        if (null == instance || null == instance.sql2o) {
             throw new AnimaException(SQL2O_IS_NULL);
         }
         return instance;
@@ -235,7 +229,7 @@ public class Anima {
             return Atomic.ok();
         } catch (Exception e) {
             boolean isRollback = false;
-            if (me().rollbackException.isInstance(e)) {
+            if (of().rollbackException.isInstance(e)) {
                 AnimaQuery.rollback();
                 isRollback = true;
             }
@@ -256,6 +250,10 @@ public class Anima {
         return this;
     }
 
+    public Class<? extends Exception> rollbackException() {
+        return this.rollbackException;
+    }
+
     /**
      * Set the global table prefix, like "t_"
      *
@@ -265,6 +263,10 @@ public class Anima {
     public Anima tablePrefix(String tablePrefix) {
         this.tablePrefix = tablePrefix;
         return this;
+    }
+
+    public String tablePrefix() {
+        return this.tablePrefix;
     }
 
     /**
@@ -278,6 +280,10 @@ public class Anima {
         return this;
     }
 
+    public Dialect dialect() {
+        return this.dialect;
+    }
+
     /**
      * Set whether SQL statistics are enabled.
      *
@@ -289,6 +295,10 @@ public class Anima {
         return this;
     }
 
+    public boolean isEnableSQLStatistic() {
+        return this.enableSQLStatistic;
+    }
+
     /**
      * Set the use of SQL limit.
      *
@@ -298,6 +308,10 @@ public class Anima {
     public Anima useSQLLimit(boolean useSQLLimit) {
         this.useSQLLimit = useSQLLimit;
         return this;
+    }
+
+    public boolean isUseSQLLimit(){
+        return this.useSQLLimit;
     }
 
     /**

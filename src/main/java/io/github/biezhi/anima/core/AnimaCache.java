@@ -108,7 +108,7 @@ public class AnimaCache {
             if (null != table && AnimaUtils.isNotEmpty(table.name())) {
                 return table.name();
             }
-            return getTableName(type.getSimpleName(), Anima.me().getTablePrefix());
+            return getTableName(type.getSimpleName(), Anima.of().tablePrefix());
         });
     }
 

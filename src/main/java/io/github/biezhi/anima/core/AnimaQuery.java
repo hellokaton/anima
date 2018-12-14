@@ -1347,7 +1347,7 @@ public class AnimaQuery<T extends Model> {
         if (addOrderBy) {
             sqlParams.setOrderBy(this.orderBySQL.toString());
         }
-        return Anima.of().getDialect().select(sqlParams);
+        return Anima.of().dialect().select(sqlParams);
     }
 
     /**
@@ -1362,7 +1362,7 @@ public class AnimaQuery<T extends Model> {
                 .pkName(this.primaryKeyColumn)
                 .conditionSQL(this.conditionSQL)
                 .build();
-        return Anima.of().getDialect().count(sqlParams);
+        return Anima.of().dialect().count(sqlParams);
     }
 
     /**
@@ -1383,7 +1383,7 @@ public class AnimaQuery<T extends Model> {
                 .orderBy(this.orderBySQL.toString())
                 .pageRow(pageRow)
                 .build();
-        return Anima.of().getDialect().paginate(sqlParams);
+        return Anima.of().dialect().paginate(sqlParams);
     }
 
     /**
@@ -1402,7 +1402,7 @@ public class AnimaQuery<T extends Model> {
                 .pkName(this.primaryKeyColumn)
                 .build();
 
-        return Anima.of().getDialect().insert(sqlParams);
+        return Anima.of().dialect().insert(sqlParams);
     }
 
     /**
@@ -1423,7 +1423,7 @@ public class AnimaQuery<T extends Model> {
                 .conditionSQL(this.conditionSQL)
                 .build();
 
-        return Anima.of().getDialect().update(sqlParams);
+        return Anima.of().dialect().update(sqlParams);
     }
 
     /**
@@ -1441,7 +1441,7 @@ public class AnimaQuery<T extends Model> {
                 .pkName(this.primaryKeyColumn)
                 .conditionSQL(this.conditionSQL)
                 .build();
-        return Anima.of().getDialect().delete(sqlParams);
+        return Anima.of().dialect().delete(sqlParams);
     }
 
     public AnimaQuery<T> useSQL() {
