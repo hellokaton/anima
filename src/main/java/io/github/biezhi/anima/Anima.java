@@ -45,6 +45,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static io.github.biezhi.anima.enums.ErrorCode.SQL2O_IS_NULL;
+import static io.github.biezhi.anima.utils.Functions.ifReturn;
+import static io.github.biezhi.anima.utils.Functions.ifReturnOrThrow;
 
 /**
  * Anima
@@ -102,10 +104,9 @@ public class Anima {
     }
 
     public static Anima of() {
-        if (null == instance || null == instance.sql2o) {
-            throw new AnimaException(SQL2O_IS_NULL);
-        }
-        return instance;
+        return ifReturnOrThrow(
+                null != instance && null != instance.sql2o,
+                instance, new AnimaException(SQL2O_IS_NULL));
     }
 
     /**
@@ -228,11 +229,15 @@ public class Anima {
             AnimaQuery.commit();
             return Atomic.ok();
         } catch (Exception e) {
-            boolean isRollback = false;
-            if (of().rollbackException.isInstance(e)) {
-                AnimaQuery.rollback();
-                isRollback = true;
-            }
+
+            boolean isRollback = ifReturn(
+                    of().rollbackException.isInstance(e),
+                    () -> {
+                        AnimaQuery.rollback();
+                        return true;
+                    },
+                    () -> false);
+
             return Atomic.error(e).rollback(isRollback);
         } finally {
             AnimaQuery.endTransaction();
@@ -310,7 +315,7 @@ public class Anima {
         return this;
     }
 
-    public boolean isUseSQLLimit(){
+    public boolean isUseSQLLimit() {
         return this.useSQLLimit;
     }
 

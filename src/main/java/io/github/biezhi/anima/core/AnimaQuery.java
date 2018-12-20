@@ -39,6 +39,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static io.github.biezhi.anima.core.AnimaCache.*;
+import static io.github.biezhi.anima.utils.Functions.*;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -63,7 +64,7 @@ public class AnimaQuery<T extends Model> {
     /**
      * The currently connected ThreadLocal, which stores the connection objects for SQL2O.
      */
-    private static ThreadLocal<Connection> connectionThreadLocal = new ThreadLocal<>();
+    private static ThreadLocal<Connection> localConnection = new ThreadLocal<>();
 
     /**
      * Storage condition clause.
@@ -784,11 +785,13 @@ public class AnimaQuery<T extends Model> {
     public T byId(Object id) {
         this.beforeCheck();
         this.where(primaryKeyColumn, id);
-        String sql   = this.buildSelectSQL(false);
-        T      model = this.queryOne(modelClass, sql, paramValues);
-        if (null != model) {
-            this.setJoin(Collections.singletonList(model));
-        }
+
+        String sql = this.buildSelectSQL(false);
+
+        T model = this.queryOne(modelClass, sql, paramValues);
+
+        ifNotNullThen(model, () -> this.setJoin(Collections.singletonList(model)));
+
         return model;
     }
 
@@ -810,11 +813,14 @@ public class AnimaQuery<T extends Model> {
      */
     public T one() {
         this.beforeCheck();
-        String sql   = this.buildSelectSQL(true);
-        T      model = this.queryOne(modelClass, sql, paramValues);
-        if (null != model && null != joinParams) {
-            this.setJoin(Collections.singletonList(model));
-        }
+
+        String sql = this.buildSelectSQL(true);
+
+        T model = this.queryOne(modelClass, sql, paramValues);
+
+        ifThen(null != model && null != joinParams,
+                () -> this.setJoin(Collections.singletonList(model)));
+
         return model;
     }
 
@@ -847,10 +853,10 @@ public class AnimaQuery<T extends Model> {
      */
     public Stream<T> stream() {
         List<T> all = all();
-        if (null == all || all.isEmpty()) {
-            return Stream.empty();
-        }
-        return all.stream();
+
+        return ifReturn(null == all || all.isEmpty(),
+                Stream.empty(),
+                Objects.requireNonNull(all).stream());
     }
 
     /**
@@ -890,16 +896,18 @@ public class AnimaQuery<T extends Model> {
      * @return model list
      */
     public List<T> limit(int limit) {
-        if (Anima.of().isUseSQLLimit()) {
-            isSQLLimit = true;
-            paramValues.add(limit);
-            return all();
-        }
-        List<T> all = all();
-        if (all.size() > limit) {
-            return all.stream().limit(limit).collect(toList());
-        }
-        return all;
+        return ifReturn(Anima.of().isUseSQLLimit(),
+                () -> {
+                    isSQLLimit = true;
+                    paramValues.add(limit);
+                    return all();
+                },
+                () -> {
+                    List<T> all = all();
+                    return ifReturn(all.size() > limit,
+                            all.stream().limit(limit).collect(toList()),
+                            all);
+                });
     }
 
     /**
@@ -948,15 +956,26 @@ public class AnimaQuery<T extends Model> {
         this.beforeCheck();
         Connection conn = getConn();
         try {
-            String  countSql = useSQL ? "SELECT COUNT(*) FROM (" + sql + ") tmp" : buildCountSQL(sql);
-            long    count    = conn.createQuery(countSql).withParams(params).executeAndFetchFirst(Long.class);
+            String countSql = useSQL ? "SELECT COUNT(*) FROM (" + sql + ") tmp" : buildCountSQL(sql);
+
+            long count = conn.createQuery(countSql)
+                    .withParams(params)
+                    .executeAndFetchFirst(Long.class);
+
             Page<T> pageBean = new Page<>(count, pageRow.getPageNum(), pageRow.getPageSize());
-            if (count > 0) {
-                String  pageSQL = this.buildPageSQL(sql, pageRow);
-                List<T> list    = conn.createQuery(pageSQL).withParams(params).setAutoDeriveColumnNames(true).throwOnMappingFailure(false).executeAndFetch(modelClass);
+
+            ifThen(count > 0, () -> {
+                String pageSQL = this.buildPageSQL(sql, pageRow);
+                List<T> list = conn.createQuery(pageSQL)
+                        .withParams(params)
+                        .setAutoDeriveColumnNames(true)
+                        .throwOnMappingFailure(false)
+                        .executeAndFetch(modelClass);
+
                 this.setJoin(list);
                 pageBean.setRows(list);
-            }
+            });
+
             return pageBean;
         } finally {
             this.closeConn(conn);
@@ -1022,21 +1041,21 @@ public class AnimaQuery<T extends Model> {
      * @return AnimaQuery
      */
     public AnimaQuery<T> join(JoinParam joinParam) {
-        if (null == joinParam) {
-            throw new AnimaException("Join param not null");
-        }
-        if (null == joinParam.getJoinModel()) {
-            throw new AnimaException("Join param [model] not null");
-        }
-        if (AnimaUtils.isEmpty(joinParam.getFieldName())) {
-            throw new AnimaException("Join param [as] not empty");
-        }
-        if (AnimaUtils.isEmpty(joinParam.getOnLeft())) {
-            throw new AnimaException("Join param [onLeft] not empty");
-        }
-        if (AnimaUtils.isEmpty(joinParam.getOnRight())) {
-            throw new AnimaException("Join param [onRight] not empty");
-        }
+        ifNullThrow(joinParam,
+                new AnimaException("Join param not null"));
+
+        ifNullThrow(joinParam.getJoinModel(),
+                new AnimaException("Join param [model] not null"));
+
+        ifNullThrow(AnimaUtils.isEmpty(joinParam.getFieldName()),
+                new AnimaException("Join param [as] not empty"));
+
+        ifNullThrow(AnimaUtils.isEmpty(joinParam.getOnLeft()),
+                new AnimaException("Join param [onLeft] not empty"));
+
+        ifNullThrow(AnimaUtils.isEmpty(joinParam.getOnRight()),
+                new AnimaException("Join param [onRight] not empty"));
+
         this.joinParams.add(joinParam);
         return this;
     }
@@ -1053,11 +1072,14 @@ public class AnimaQuery<T extends Model> {
     public <S> S queryOne(Class<S> type, String sql, Object[] params) {
         Connection conn = getConn();
         try {
-            Query query = conn.createQuery(sql).withParams(params).setAutoDeriveColumnNames(true).throwOnMappingFailure(false);
-            if (AnimaUtils.isBasicType(type)) {
-                return query.executeScalar(type);
-            }
-            return query.executeAndFetchFirst(type);
+            Query query = conn.createQuery(sql)
+                    .withParams(params)
+                    .setAutoDeriveColumnNames(true)
+                    .throwOnMappingFailure(false);
+
+            return ifReturn(AnimaUtils.isBasicType(type),
+                    () -> query.executeScalar(type),
+                    () -> query.executeAndFetchFirst(type));
         } finally {
             this.closeConn(conn);
             this.clean(null);
@@ -1176,7 +1198,10 @@ public class AnimaQuery<T extends Model> {
     public int execute(String sql, Object... params) {
         Connection conn = getConn();
         try {
-            return conn.createQuery(sql).withParams(params).executeUpdate().getResult();
+            return conn.createQuery(sql)
+                    .withParams(params)
+                    .executeUpdate()
+                    .getResult();
         } finally {
             this.closeConn(conn);
             this.clean(conn);
@@ -1206,7 +1231,11 @@ public class AnimaQuery<T extends Model> {
         String       sql          = this.buildInsertSQL(model, columnValues);
         Connection   conn         = getConn();
         try {
-            List<Object> params = columnValues.stream().filter(Objects::nonNull).collect(toList());
+
+            List<Object> params = columnValues.stream()
+                    .filter(Objects::nonNull)
+                    .collect(toList());
+
             return new ResultKey(conn.createQuery(sql)
                     .withParams(params)
                     .executeUpdate()
@@ -1309,20 +1338,22 @@ public class AnimaQuery<T extends Model> {
         StringBuilder sql = new StringBuilder(this.buildUpdateSQL(model, null));
 
         List<Object> columnValueList = AnimaUtils.toColumnValues(model, false);
-        if (null != primaryKey) {
+
+        ifNotNullThen(primaryKey, () -> {
             sql.append(" WHERE ").append(this.primaryKeyColumn).append(" = ?");
             columnValueList.add(primaryKey);
-        }
+        });
+
         return this.execute(sql.toString(), columnValueList);
     }
 
     private void setArguments(Object[] args) {
         for (int i = 0; i < args.length; i++) {
-            if (i == args.length - 1) {
-                conditionSQL.append("?");
-            } else {
-                conditionSQL.append("?, ");
-            }
+
+            ifThen(i == args.length - 1,
+                    () -> conditionSQL.append("?"),
+                    () -> conditionSQL.append("?, "));
+
             paramValues.add(args[i]);
         }
     }
@@ -1344,9 +1375,8 @@ public class AnimaQuery<T extends Model> {
                 .isSQLLimit(isSQLLimit)
                 .build();
 
-        if (addOrderBy) {
-            sqlParams.setOrderBy(this.orderBySQL.toString());
-        }
+        ifThen(addOrderBy, () -> sqlParams.setOrderBy(this.orderBySQL.toString()));
+
         return Anima.of().dialect().select(sqlParams);
     }
 
@@ -1453,9 +1483,7 @@ public class AnimaQuery<T extends Model> {
      * pre check
      */
     private void beforeCheck() {
-        if (null == this.modelClass) {
-            throw new AnimaException(ErrorCode.FROM_NOT_NULL);
-        }
+        ifNullThrow(this.modelClass, new AnimaException(ErrorCode.FROM_NOT_NULL));
     }
 
     /**
@@ -1464,67 +1492,63 @@ public class AnimaQuery<T extends Model> {
      * @return Connection
      */
     private Connection getConn() {
-        Connection connection = connectionThreadLocal.get();
-        if (null == connection) {
-            return this.getSql2o().open();
-        }
-        return connection;
+        Connection connection = localConnection.get();
+        return ifNotNullReturn(connection, connection, this.getSql2o().open());
     }
 
     /**
      * Begin a transaction.
      */
     public static void beginTransaction() {
-        if (null == connectionThreadLocal.get()) {
-            Connection connection = getSql2o().beginTransaction();
-            connectionThreadLocal.set(connection);
-        }
+        ifNullThen(localConnection.get(),
+                () -> {
+                    Connection connection = getSql2o().beginTransaction();
+                    localConnection.set(connection);
+                });
     }
 
     /**
      * End a transaction.
      */
     public static void endTransaction() {
-        if (null != connectionThreadLocal.get()) {
-            Connection connection = connectionThreadLocal.get();
-            if (connection.isRollbackOnClose()) {
-                connection.close();
-            }
-            connectionThreadLocal.remove();
-        }
+        ifNotNullThen(localConnection.get(),
+                () -> {
+                    Connection connection = localConnection.get();
+                    ifThen(connection.isRollbackOnClose(), connection::close);
+                    localConnection.remove();
+                });
     }
 
     /**
      * Commit connection
      */
     public static void commit() {
-        connectionThreadLocal.get().commit();
+        localConnection.get().commit();
     }
 
     /**
      * Roll back connection
      */
     public static void rollback() {
-        if (null != connectionThreadLocal.get()) {
-            log.warn("Rollback connection.");
-            connectionThreadLocal.get().rollback();
-        }
+        ifNotNullThen(localConnection.get(),
+                () -> {
+                    log.warn("Rollback connection.");
+                    localConnection.get().rollback();
+                });
     }
 
     public AnimaQuery<T> bindSQL2o(Sql2o sql2o) {
-        this.sql2o = sql2o;
+        AnimaQuery.sql2o = sql2o;
         return this;
     }
 
     public static Sql2o getSql2o() {
-        if (AnimaQuery.sql2o != null) {
-            return AnimaQuery.sql2o;
-        }
-        Sql2o sql2o = Anima.of().getSql2o();
-        if (null == sql2o) {
-            throw new AnimaException("SQL2O instance not is null.");
-        }
-        return sql2o;
+        return ifNotNullReturn(sql2o,
+                () -> {
+                    Sql2o sql2o = Anima.of().getSql2o();
+                    ifNullThrow(sql2o, new AnimaException("SQL2O instance not is null."));
+                    return sql2o;
+                });
     }
 
     /**
@@ -1533,7 +1557,8 @@ public class AnimaQuery<T extends Model> {
      * @param models model list
      */
     private void setJoin(List<T> models) {
-        if (null == models || models.isEmpty() || joinParams.size() == 0) {
+        if (null == models || models.isEmpty() ||
+                joinParams.size() == 0) {
             return;
         }
         models.stream().filter(Objects::nonNull).forEach(this::setJoin);
@@ -1547,10 +1572,18 @@ public class AnimaQuery<T extends Model> {
     private void setJoin(T model) {
         for (JoinParam joinParam : joinParams) {
             try {
-                Object leftValue = AnimaUtils.invokeMethod(model, getGetterName(joinParam.getOnLeft()), AnimaUtils.EMPTY_ARG);
+                Object leftValue = AnimaUtils.invokeMethod(
+                        model,
+                        getGetterName(joinParam.getOnLeft()),
+                        AnimaUtils.EMPTY_ARG);
 
-                String sql   = "SELECT * FROM " + AnimaCache.getTableName(joinParam.getJoinModel()) + " WHERE " + joinParam.getOnRight() + " = ?";
-                Field  field = model.getClass().getDeclaredField(joinParam.getFieldName());
+                String sql = "SELECT * FROM " + AnimaCache.getTableName(joinParam.getJoinModel()) +
+                        " WHERE " + joinParam.getOnRight() + " = ?";
+
+                Field field = model.getClass()
+                        .getDeclaredField(joinParam.getFieldName());
+
+
                 if (field.getType().equals(List.class)) {
                     if (AnimaUtils.isNotEmpty(joinParam.getOrderBy())) {
                         sql += " ORDER BY " + joinParam.getOrderBy();
@@ -1558,6 +1591,7 @@ public class AnimaQuery<T extends Model> {
                     List<? extends Model> list = this.queryList(joinParam.getJoinModel(), sql, new Object[]{leftValue});
                     AnimaUtils.invokeMethod(model, getSetterName(joinParam.getFieldName()), new Object[]{list});
                 }
+
                 if (field.getType().equals(joinParam.getJoinModel())) {
                     Object joinObject = this.queryOne(joinParam.getJoinModel(), sql, new Object[]{leftValue});
                     AnimaUtils.invokeMethod(model, getSetterName(joinParam.getFieldName()), new Object[]{joinObject});
@@ -1569,9 +1603,8 @@ public class AnimaQuery<T extends Model> {
     }
 
     private void closeConn(Connection connection) {
-        if (null == connectionThreadLocal.get() && null != connection) {
-            connection.close();
-        }
+        ifThen(localConnection.get() == null && connection != null,
+                () -> connection.close());
     }
 
     /**
@@ -1587,9 +1620,9 @@ public class AnimaQuery<T extends Model> {
         this.paramValues.clear();
         this.excludedColumns.clear();
         this.updateColumns.clear();
-        if (null == connectionThreadLocal.get() && null != conn) {
-            conn.close();
-        }
+
+        ifThen(localConnection.get() == null && conn != null,
+                () -> conn.close());
     }
 
 }

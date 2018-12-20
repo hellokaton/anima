@@ -9,6 +9,7 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 import static io.github.biezhi.anima.core.AnimaCache.getGetterName;
+import static io.github.biezhi.anima.utils.Functions.ifThen;
 
 /**
  * Database Dialect
@@ -65,15 +66,17 @@ public interface Dialect {
         List<Field> fields = AnimaCache.computeModelFields(sqlParams.getModelClass());
 
         for (int i = 0; i < fields.size(); i++) {
-            if(null != sqlParams.getColumnValues().get(i)){
+            if (null != sqlParams.getColumnValues().get(i)) {
                 Field field = fields.get(i);
                 columnNames.append(",").append(" ").append(AnimaCache.getColumnName(field));
                 placeholder.append(", ?");
             }
         }
 
-        sql.append("(").append(columnNames.substring(2)).append(")").append(" VALUES (")
-                .append(placeholder.substring(2)).append(")");
+        ifThen(columnNames.length() > 0 && placeholder.length() > 0,
+                () -> sql.append("(").append(columnNames.substring(2)).append(")").append(" VALUES (")
+                        .append(placeholder.substring(2)).append(")"));
+
         return sql.toString();
     }
 
