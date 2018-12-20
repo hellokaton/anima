@@ -18,21 +18,17 @@ package io.github.biezhi.anima.utils;
 import com.blade.reflectasm.MethodAccess;
 import io.github.biezhi.anima.Model;
 import io.github.biezhi.anima.core.AnimaCache;
-import io.github.biezhi.anima.enums.OrderBy;
 import io.github.biezhi.anima.exception.AnimaException;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.sql2o.converters.Converter;
 
-import java.awt.*;
 import java.io.Serializable;
 import java.lang.invoke.SerializedLambda;
-import java.lang.reflect.Array;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
-import java.util.List;
 
 import static io.github.biezhi.anima.core.AnimaCache.*;
 
@@ -222,6 +218,12 @@ public class AnimaUtils {
                 type.equals(Double.class) ||
                 type.equals(float.class) ||
                 type.equals(Float.class);
+    }
+
+    public static Class getConverterType(Converter<?> converter) {
+        Type[] types  = converter.getClass().getGenericInterfaces();
+        Type[] params = ((ParameterizedType) types[0]).getActualTypeArguments();
+        return (Class) params[0];
     }
 
 }
