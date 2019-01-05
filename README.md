@@ -51,7 +51,7 @@ supports multiple relational mappings, and is a database manipulation tool.
 <dependency>
     <groupId>io.github.biezhi</groupId>
     <artifactId>anima</artifactId>
-    <version>0.2.6-SNAPSHOT</version>
+    <version>0.2.7-SNAPSHOT</version>
 </dependency>
 ```
 
