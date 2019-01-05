@@ -60,7 +60,7 @@ Here's the `RELEASE` version.
 **As Gradle**
 
 ```java
-compile 'io.github.biezhi:anima:0.2.5'
+compile 'io.github.biezhi:anima:0.2.6'
 ```
 
 **As Maven**
@@ -69,7 +69,7 @@ compile 'io.github.biezhi:anima:0.2.5'
 <dependency>
     <groupId>io.github.biezhi</groupId>
     <artifactId>anima</artifactId>
-    <version>0.2.5</version>
+    <version>0.2.6</version>
 </dependency>
 ```
 

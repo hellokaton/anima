@@ -237,7 +237,7 @@ public class Query implements AutoCloseable {
                 if (rs != null) {
                     rs.close();
                     // log the query
-                    if (Anima.me().isEnableSQLStatistic() && log.isDebugEnabled()) {
+                    if (Anima.of().isEnableSQLStatistic() && log.isDebugEnabled()) {
                         long afterClose = System.currentTimeMillis();
                         log.debug("Total       => {} ms, execution: {} ms, reading and parsing: {} ms; executed [{}]", afterClose - start,
                                 afterExecQuery - start,
@@ -417,7 +417,7 @@ public class Query implements AutoCloseable {
             if (rs.next()) {
                 Object o = getQuirks().getRSVal(rs, 1);
 
-                if (Anima.me().isEnableSQLStatistic() && log.isDebugEnabled()) {
+                if (Anima.of().isEnableSQLStatistic() && log.isDebugEnabled()) {
                     long end = System.currentTimeMillis();
                     log.debug("total: {} ms; executed scalar [{}]", end - start, this.getName() == null ? "No name" : this.getName());
                 }
@@ -589,7 +589,7 @@ public class Query implements AutoCloseable {
             closeConnectionIfNecessary();
         }
 
-        if (Anima.me().isEnableSQLStatistic() && log.isDebugEnabled()) {
+        if (Anima.of().isEnableSQLStatistic() && log.isDebugEnabled()) {
             long end = System.currentTimeMillis();
             log.debug("total: {} ms; executed batch [{}]", end - start, this.getName() == null ? "No name" : this.getName());
         }

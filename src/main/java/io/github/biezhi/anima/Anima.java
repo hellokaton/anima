@@ -38,13 +38,12 @@ import org.sql2o.quirks.QuirksDetector;
 
 import javax.sql.DataSource;
 import java.io.Serializable;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static io.github.biezhi.anima.enums.ErrorCode.SQL2O_IS_NULL;
+import static io.github.biezhi.anima.utils.Functions.*;
+import static java.util.stream.Collectors.joining;
 
 /**
  * Anima
@@ -66,40 +65,34 @@ public class Anima {
     /**
      * Global table prefix
      */
-    @Getter
-    @Setter
     private String tablePrefix;
 
     /**
      * Database dialect, default by MySQL
      */
-    @Getter
-    @Setter
     private Dialect dialect = new MySQLDialect();
 
     /**
      * The type of rollback when an exception occurs, default by RuntimeException
      */
-    @Setter
     private Class<? extends Exception> rollbackException = RuntimeException.class;
 
     /**
      * SQL performance statistics are enabled, which is enabled by default,
      * and outputs the elapsed time required.
      */
-    @Getter
     private boolean enableSQLStatistic = true;
 
     /**
      * use the limit statement of SQL and use "limit ?" when enabled, the way to retrieve a fixed number of rows.
      */
-    @Getter
     private boolean useSQLLimit = true;
 
     private static Anima instance;
 
     /**
      * see {@link #of()}
+     *
      * @return
      */
     @Deprecated
@@ -108,10 +101,9 @@ public class Anima {
     }
 
     public static Anima of() {
-        if (null == instance.sql2o) {
-            throw new AnimaException(SQL2O_IS_NULL);
-        }
-        return instance;
+        return ifReturnOrThrow(null != instance && null != instance.sql2o,
+                instance,
+                new AnimaException(SQL2O_IS_NULL));
     }
 
     /**
@@ -234,11 +226,15 @@ public class Anima {
             AnimaQuery.commit();
             return Atomic.ok();
         } catch (Exception e) {
-            boolean isRollback = false;
-            if (me().rollbackException.isInstance(e)) {
-                AnimaQuery.rollback();
-                isRollback = true;
-            }
+
+            boolean isRollback = ifReturn(
+                    of().rollbackException.isInstance(e),
+                    () -> {
+                        AnimaQuery.rollback();
+                        return true;
+                    },
+                    () -> false);
+
             return Atomic.error(e).rollback(isRollback);
         } finally {
             AnimaQuery.endTransaction();
@@ -256,6 +252,10 @@ public class Anima {
         return this;
     }
 
+    public Class<? extends Exception> rollbackException() {
+        return this.rollbackException;
+    }
+
     /**
      * Set the global table prefix, like "t_"
      *
@@ -265,6 +265,10 @@ public class Anima {
     public Anima tablePrefix(String tablePrefix) {
         this.tablePrefix = tablePrefix;
         return this;
+    }
+
+    public String tablePrefix() {
+        return this.tablePrefix;
     }
 
     /**
@@ -278,6 +282,10 @@ public class Anima {
         return this;
     }
 
+    public Dialect dialect() {
+        return this.dialect;
+    }
+
     /**
      * Set whether SQL statistics are enabled.
      *
@@ -287,6 +295,10 @@ public class Anima {
     public Anima enableSQLStatistic(boolean enableSQLStatistic) {
         this.enableSQLStatistic = enableSQLStatistic;
         return this;
+    }
+
+    public boolean isEnableSQLStatistic() {
+        return this.enableSQLStatistic;
     }
 
     /**
@@ -300,6 +312,10 @@ public class Anima {
         return this;
     }
 
+    public boolean isUseSQLLimit() {
+        return this.useSQLLimit;
+    }
+
     /**
      * Add custom Type converter
      *
@@ -307,13 +323,11 @@ public class Anima {
      * @return Anima
      */
     public Anima addConverter(Converter<?>... converters) {
-        if (null == converters || converters.length == 0) {
-            throw new AnimaException("converters not be null.");
-        }
+        ifThrow(null == converters || converters.length == 0,
+                new AnimaException("converters not be null."));
+
         for (Converter<?> converter : converters) {
-            Type[]   types  = converter.getClass().getGenericInterfaces();
-            Type[]   params = ((ParameterizedType) types[0]).getActualTypeArguments();
-            Class<?> type   = (Class) params[0];
+            Class<?> type = AnimaUtils.getConverterType(converter);
             sql2o.getQuirks().addConverter(type, converter);
         }
         return this;
@@ -342,13 +356,14 @@ public class Anima {
      * Set the query to fix columns with lambda
      *
      * @param functions column lambdas
-     * @param <T>
-     * @param <R>
      * @return Select
      */
     @SafeVarargs
     public static <T extends Model, R> Select select(TypeFunction<T, R>... functions) {
-        return select(Arrays.stream(functions).map(AnimaUtils::getLambdaColumnName).collect(Collectors.joining(", ")));
+        return select(
+                Arrays.stream(functions)
+                        .map(AnimaUtils::getLambdaColumnName)
+                        .collect(joining(", ")));
     }
 
     /**
@@ -387,11 +402,8 @@ public class Anima {
      * @param <T>
      */
     public static <T extends Model> void saveBatch(List<T> models) {
-        atomic(() -> {
-            for (T model : models) {
-                save(model);
-            }
-        }).catchException(e -> log.error("Batch save model error, message: {}", e));
+        atomic(() -> models.forEach(Anima::save))
+                .catchException(e -> log.error("Batch save model error, message: {}", e));
     }
 
     /**
@@ -404,8 +416,9 @@ public class Anima {
      */
     @SafeVarargs
     public static <T extends Model, S extends Serializable> void deleteBatch(Class<T> model, S... ids) {
-        AnimaQuery<T> animaQuery = new AnimaQuery<>(model);
-        atomic(() -> Arrays.stream(ids).forEach(animaQuery::deleteById)).catchException(e -> log.error("Batch save model error, message: {}", e));
+        atomic(() -> Arrays.stream(ids)
+                .forEach(new AnimaQuery<>(model)::deleteById))
+                .catchException(e -> log.error("Batch save model error, message: {}", e));
     }
 
     /**

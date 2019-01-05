@@ -6,10 +6,10 @@
 
     <groupId>io.github.biezhi</groupId>
     <artifactId>anima</artifactId>
-    <version>0.2.5</version>
+    <version>0.2.7-SNAPSHOT</version>
 
     <name>anima</name>
-    <url>https://biezhi.github.io/anima</url>
+    <url>https://github.com/biezhi/anima</url>
     <description>Operate the database like a stream</description>
 
     <licenses>
@@ -44,12 +44,14 @@
             <version>1.7.25</version>
             <scope>provided</scope>
         </dependency>
+
         <dependency>
             <groupId>postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>9.1-901.jdbc4</version>
             <scope>provided</scope>
         </dependency>
+
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
@@ -77,60 +79,70 @@
             <version>1.2.3</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>5.1.41</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <version>1.4.196</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
             <version>3.21.0.1</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>org.hsqldb</groupId>
             <artifactId>hsqldb</artifactId>
             <version>2.3.5</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>mssql-jdbc</artifactId>
             <version>6.4.0.jre8</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>23.0</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
             <version>3.2.0</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.12</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
             <version>1.10.19</version>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
     <repositories>
@@ -170,25 +182,24 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>cobertura-maven-plugin</artifactId>
                 <version>2.7</version>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.ow2.asm</groupId>
-                        <artifactId>asm</artifactId>
-                        <version>5.0.4</version>
-                    </dependency>
-                </dependencies>
                 <configuration>
                     <formats>
                         <format>html</format>
                         <format>xml</format>
                     </formats>
                     <instrumentation>
+                        <ignores>
+                            <ignore>org.sql2o.*</ignore>
+                            <ignore>io.github.biezhi.anima.annotation</ignore>
+                            <ignore>io.github.biezhi.anima.exception</ignore>
+                        </ignores>
                         <excludes>
-                            <exclude>org/sql2o/**.class</exclude>
-                            <exclude>org/sql2o/**.java</exclude>
+                            <exclude>org.sql2o/**/*.class</exclude>
+                            <exclude>io/github/biezhi/anima/annotation/*.class</exclude>
+                            <exclude>io/github/biezhi/anima/exception/*.class</exclude>
                         </excludes>
                     </instrumentation>
-                    <check/>
+                    <check />
                 </configuration>
             </plugin>
         </plugins>
