@@ -17,7 +17,7 @@ public class Model {
     /**
      * The query object for the current model.
      */
-    private AnimaQuery<? extends Model> query = new AnimaQuery<>(this.getClass());
+    private transient AnimaQuery<? extends Model> query = new AnimaQuery<>(this.getClass());
 
     /**
      * Save model
