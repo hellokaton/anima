@@ -831,7 +831,7 @@ public class AnimaQuery<T extends Model> {
      */
     public List<T> all() {
         this.beforeCheck();
-        String  sql    = this.buildSelectSQL(true);
+        String sql = this.buildSelectSQL(true);
         List<T> models = this.queryList(modelClass, sql, paramValues);
         this.setJoin(models);
         return models;
@@ -1228,8 +1228,8 @@ public class AnimaQuery<T extends Model> {
      */
     public <S extends Model> ResultKey save(S model) {
         List<Object> columnValues = AnimaUtils.toColumnValues(model, true);
-        String       sql          = this.buildInsertSQL(model, columnValues);
-        Connection   conn         = getConn();
+        String sql = this.buildInsertSQL(model, columnValues);
+        Connection conn = getConn();
         try {
 
             List<Object> params = columnValues.stream()
@@ -1277,7 +1277,7 @@ public class AnimaQuery<T extends Model> {
      */
     public <S extends Model> int deleteByModel(S model) {
         this.beforeCheck();
-        String       sql             = this.buildDeleteSQL(model);
+        String sql = this.buildDeleteSQL(model);
         List<Object> columnValueList = AnimaUtils.toColumnValues(model, false);
         return this.execute(sql, columnValueList);
     }
@@ -1289,7 +1289,7 @@ public class AnimaQuery<T extends Model> {
      */
     public int update() {
         this.beforeCheck();
-        String       sql             = this.buildUpdateSQL(null, updateColumns);
+        String sql = this.buildUpdateSQL(null, updateColumns);
         List<Object> columnValueList = new ArrayList<>();
         updateColumns.forEach((key, value) -> columnValueList.add(value));
         columnValueList.addAll(paramValues);
@@ -1317,7 +1317,7 @@ public class AnimaQuery<T extends Model> {
      */
     public <S extends Model> int updateById(S model, Serializable id) {
         this.where(primaryKeyColumn, id);
-        String       sql             = this.buildUpdateSQL(model, null);
+        String sql = this.buildUpdateSQL(model, null);
         List<Object> columnValueList = AnimaUtils.toColumnValues(model, false);
         columnValueList.add(id);
         return this.execute(sql, columnValueList);
@@ -1493,7 +1493,10 @@ public class AnimaQuery<T extends Model> {
      */
     private Connection getConn() {
         Connection connection = localConnection.get();
-        return ifNotNullReturn(connection, connection, this.getSql2o().open());
+        if (connection != null) {
+            return connection;
+        }
+        return getSql2o().open();
     }
 
     /**
