@@ -210,15 +210,15 @@
             <id>release</id>
             <distributionManagement>
                 <snapshotRepository>
-                    <id>oss</id>
+                    <id>ossrh</id>
                     <url>
-                        https://oss.sonatype.org/content/repositories/snapshots/
+                        https://s01.oss.sonatype.org/content/repositories/snapshots/
                     </url>
                 </snapshotRepository>
                 <repository>
-                    <id>oss</id>
+                    <id>ossrh</id>
                     <url>
-                        https://oss.sonatype.org/service/local/staging/deploy/maven2/
+                        https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/
                     </url>
                 </repository>
             </distributionManagement>
@@ -281,15 +281,15 @@
             <id>snapshots</id>
             <distributionManagement>
                 <snapshotRepository>
-                    <id>oss</id>
+                    <id>ossrh</id>
                     <url>
-                        https://oss.sonatype.org/content/repositories/snapshots/
+                        https://s01.oss.sonatype.org/content/repositories/snapshots/
                     </url>
                 </snapshotRepository>
                 <repository>
-                    <id>oss</id>
+                    <id>ossrh</id>
                     <url>
-                        https://oss.sonatype.org/service/local/staging/deploy/maven2/
+                        https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/
                     </url>
                 </repository>
             </distributionManagement>
