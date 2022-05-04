@@ -51,7 +51,7 @@ supports multiple relational mappings, and is a database manipulation tool.
 <dependency>
     <groupId>com.hellokaton</groupId>
     <artifactId>anima</artifactId>
-    <version>0.3.0</version>
+    <version>0.3.1</version>
 </dependency>
 ```
 
@@ -60,7 +60,7 @@ Here's the `RELEASE` version.
 **As Gradle**
 
 ```java
-compile 'com.hellokaton:anima:0.3.0'
+compile 'com.hellokaton:anima:0.3.1'
 ```
 
 **As Maven**
@@ -69,7 +69,7 @@ compile 'com.hellokaton:anima:0.3.0'
 <dependency>
     <groupId>com.hellokaton</groupId>
     <artifactId>anima</artifactId>
-    <version>0.3.0</version>
+    <version>0.3.1</version>
 </dependency>
 ```
 

@@ -6,7 +6,7 @@
 
     <groupId>com.hellokaton</groupId>
     <artifactId>anima</artifactId>
-    <version>0.3.0</version>
+    <version>0.3.1</version>
 
     <name>anima</name>
     <url>https://github.com/hellokaton/anima</url>
@@ -35,7 +35,7 @@
         <dependency>
             <groupId>com.hellokaton</groupId>
             <artifactId>blade-asm</artifactId>
-            <version>0.1.0</version>
+            <version>0.1.1</version>
         </dependency>
 
         <dependency>
