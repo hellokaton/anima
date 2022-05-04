@@ -15,7 +15,7 @@
  */
 package com.hellokaton.anima.utils;
 
-import com.blade.reflectasm.MethodAccess;
+import com.hellokaton.blade.asm.MethodAccess;
 import com.hellokaton.anima.Model;
 import com.hellokaton.anima.core.AnimaCache;
 import com.hellokaton.anima.exception.AnimaException;

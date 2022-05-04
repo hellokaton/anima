@@ -1,6 +1,6 @@
 package com.hellokaton.anima.core;
 
-import com.blade.reflectasm.MethodAccess;
+import com.hellokaton.blade.asm.MethodAccess;
 import com.hellokaton.anima.Anima;
 import com.hellokaton.anima.annotation.Column;
 import com.hellokaton.anima.annotation.Ignore;
