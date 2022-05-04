@@ -1,6 +1,6 @@
 package org.sql2o.reflection;
 
-import io.github.biezhi.anima.annotation.Column;
+import com.hellokaton.anima.annotation.Column;
 import org.sql2o.Sql2oException;
 import org.sql2o.tools.AbstractCache;
 import org.sql2o.tools.UnderscoreToCamelCase;
@@ -215,8 +215,8 @@ public class PojoMetadata {
     }
 
     /**
-     * Try to read the {@link io.github.biezhi.anima.annotation.Column} annotation and return the name of the column.
-     * Returns null if no {@link io.github.biezhi.anima.annotation.Column} annotation is present or if the name of the column is empty
+     * Try to read the {@link Column} annotation and return the name of the column.
+     * Returns null if no {@link Column} annotation is present or if the name of the column is empty
      */
     private String readAnnotatedColumnName(AnnotatedElement classMember, boolean isJpaColumnInClasspath) {
         if (isJpaColumnInClasspath) {

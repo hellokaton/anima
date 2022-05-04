@@ -1,6 +1,6 @@
 package org.sql2o;
 
-import io.github.biezhi.anima.Anima;
+import com.hellokaton.anima.Anima;
 import lombok.extern.slf4j.Slf4j;
 import org.sql2o.converters.Converter;
 import org.sql2o.converters.ConverterException;

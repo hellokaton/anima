@@ -1,6 +1,6 @@
 package org.sql2o;
 
-import io.github.biezhi.anima.Anima;
+import com.hellokaton.anima.Anima;
 import junit.framework.TestCase;
 import org.h2.jdbcx.JdbcConnectionPool;
 

@@ -1,7 +1,7 @@
 package org.sql2o.reflect;
 
 import com.google.common.collect.ImmutableMap;
-import io.github.biezhi.anima.annotation.Column;
+import com.hellokaton.anima.annotation.Column;
 import junit.framework.TestCase;
 import org.junit.Test;
 import org.sql2o.reflection.PojoMetadata;
