@@ -10,12 +10,12 @@ supports multiple relational mappings, and is a database manipulation tool.
 
 **[Document](https://github.com/biezhi/anima/wiki)**
 
-[![Travis Build](https://travis-ci.org/biezhi/anima.svg?branch=master)](https://travis-ci.org/biezhi/anima)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/3abf98fb260340cea9808d169cc47d8b)](https://www.codacy.com/app/biezhi/anima?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=biezhi/anima&amp;utm_campaign=Badge_Grade)
-[![](https://img.shields.io/maven-central/v/io.github.biezhi/anima.svg)](https://mvnrepository.com/artifact/io.github.biezhi/anima)
-[![codecov](https://codecov.io/gh/biezhi/anima/branch/master/graph/badge.svg)](https://codecov.io/gh/biezhi/anima) 
+[![Travis Build](https://travis-ci.org/hellokaton/anima.svg?branch=master)](https://travis-ci.org/hellokaton/anima)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/3abf98fb260340cea9808d169cc47d8b)](https://www.codacy.com/app/hellokaton/anima?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=hellokaton/anima&amp;utm_campaign=Badge_Grade)
+[![](https://img.shields.io/maven-central/v/com.hellokaton/anima.svg)](https://mvnrepository.com/artifact/com.hellokaton/anima)
+[![codecov](https://codecov.io/gh/hellokaton/anima/branch/master/graph/badge.svg)](https://codecov.io/gh/hellokaton/anima) 
 [![License](https://img.shields.io/badge/license-Apache2-blue.svg)](https://github.com/biezhi/anima/blob/master/LICENSE)
-[![Twitter URL](https://img.shields.io/twitter/url/https/twitter.com/biezhii.svg?style=social&label=Follow%20Twitter)](https://twitter.com/biezhii)
+[![Twitter URL](https://img.shields.io/twitter/url/https/twitter.com/hellokaton.svg?style=social&label=Follow%20Twitter)](https://twitter.com/hellokaton)
 
 ## Feature
 
