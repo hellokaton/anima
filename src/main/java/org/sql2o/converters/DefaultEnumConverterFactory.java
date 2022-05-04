@@ -1,7 +1,7 @@
 package org.sql2o.converters;
 
-import io.github.biezhi.anima.annotation.EnumMapping;
-import io.github.biezhi.anima.exception.AnimaException;
+import com.hellokaton.anima.annotation.EnumMapping;
+import com.hellokaton.anima.exception.AnimaException;
 
 import java.lang.reflect.Field;
 import java.util.EnumSet;

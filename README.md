@@ -49,9 +49,9 @@ supports multiple relational mappings, and is a database manipulation tool.
 </repository>
 
 <dependency>
-    <groupId>io.github.biezhi</groupId>
+    <groupId>com.hellokaton</groupId>
     <artifactId>anima</artifactId>
-    <version>0.2.7-SNAPSHOT</version>
+    <version>0.3.0</version>
 </dependency>
 ```
 
@@ -60,16 +60,16 @@ Here's the `RELEASE` version.
 **As Gradle**
 
 ```java
-compile 'io.github.biezhi:anima:0.2.6'
+compile 'com.hellokaton:anima:0.3.0'
 ```
 
 **As Maven**
 
 ```xml
 <dependency>
-    <groupId>io.github.biezhi</groupId>
+    <groupId>com.hellokaton</groupId>
     <artifactId>anima</artifactId>
-    <version>0.2.6</version>
+    <version>0.3.0</version>
 </dependency>
 ```
 
@@ -355,4 +355,4 @@ See [here](https://github.com/biezhi/anima/tree/master/src/test/java/io/github/b
 
 ## License
 
-Apache2
+[Apache2](https://github.com/hellokaton/anima/blob/dev/LICENSE)

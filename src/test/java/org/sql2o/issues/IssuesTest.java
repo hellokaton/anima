@@ -1,6 +1,6 @@
 package org.sql2o.issues;
 
-import io.github.biezhi.anima.Anima;
+import com.hellokaton.anima.Anima;
 import org.hsqldb.jdbcDriver;
 import org.junit.Assert;
 import org.junit.Test;
